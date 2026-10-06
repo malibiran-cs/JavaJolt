@@ -1,4 +1,4 @@
-package edu.data;
+package edu.batstateu.javajolt.data;
 
 public class OperatorsQuestions {
     
