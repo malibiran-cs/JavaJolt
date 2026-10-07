@@ -1,5 +1,7 @@
 package edu.enums;
 
-public class Difficulty {
-    
+public enum Difficulty {
+    GGEZ,
+    NORMAL,
+    LUNATIC
 }
