@@ -1,11 +1,11 @@
-package edu.data;
+package edu.batstateu.javajolt.data;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.question.Question;
-import edu.question.types.*;
-import edu.enums.*;
+import edu.batstateu.javajolt.question.Question;
+import edu.batstateu.javajolt.question.types.*;
+import edu.batstateu.javajolt.question.enums.*;
 
 public class VariablesQuestions {
     // VARIABLES QUESTIONS

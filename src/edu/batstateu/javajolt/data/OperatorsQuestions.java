@@ -1,13 +1,13 @@
-package edu.data;
+package edu.batstateu.javajolt.data;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.question.Question;
-import edu.enums.Difficulty;
-import edu.enums.Topic;
-import edu.question.types.IdentificationQuestion;
-import edu.question.types.MultipleChoiceQuestion;
+import edu.batstateu.javajolt.question.Question;
+import edu.batstateu.javajolt.question.enums.Difficulty;
+import edu.batstateu.javajolt.question.enums.Topic;
+import edu.batstateu.javajolt.question.types.IdentificationQuestion;
+import edu.batstateu.javajolt.question.types.MultipleChoiceQuestion;
 
 public class OperatorsQuestions {
     protected static final List<Question> getQuestions() {
