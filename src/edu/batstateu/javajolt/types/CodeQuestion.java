@@ -51,6 +51,7 @@ public class CodeQuestion extends Question {
           .append("Required Concepts: " + getRequiredConcepts()).append("\n")
           .append("Required Imports: " + getRequiredImports()).append("\n\n")
           .append("Template (MUST BE FOLLOWED):\n" + getTemplate()).append("\n\n")
+          .append("Type END in its own line to finish input.\n")
           .append("Write your code:\n\n");
 
         return sb.toString();
