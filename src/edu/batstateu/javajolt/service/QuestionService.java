@@ -7,7 +7,7 @@ import edu.batstateu.javajolt.data.QuestionBank;
 import edu.batstateu.javajolt.enums.*;
 
 public class QuestionService {
-    private QuestionBank questionBank;
+    private final QuestionBank questionBank;
 
     public QuestionService(QuestionBank questionBank) {
         this.questionBank = questionBank;

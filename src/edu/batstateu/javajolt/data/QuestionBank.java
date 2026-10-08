@@ -6,7 +6,7 @@ import java.util.List;
 import edu.batstateu.javajolt.Question;
 
 public class QuestionBank {
-    private List<Question> questions = new ArrayList<>();
+    private final List<Question> questions = new ArrayList<>();
 
     public QuestionBank() {
         questions.addAll(VariablesQuestions.getQuestions());

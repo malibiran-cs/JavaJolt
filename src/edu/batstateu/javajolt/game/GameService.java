@@ -9,15 +9,16 @@ import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.*;
 import edu.batstateu.javajolt.service.QuestionService;
+import edu.batstateu.javajolt.ui.GameUI;
 
 public class GameService {
-    private QuestionService questionService;
+    private final QuestionService questionService;
 
-    private List<Question> operatorsQuestions;
+    private final List<Question> operatorsQuestions;
 
-    private List<Question> ggezOperatorsQuestions;
-    private List<Question> normalOperatorsQuestions;
-    private List<Question> lunaticOperatorsQuestions;
+    private final List<Question> ggezOperatorsQuestions;
+    private final List<Question> normalOperatorsQuestions;
+    private final List<Question> lunaticOperatorsQuestions;
     // NOTE: EVENTUALLY MAKE A BIGGER CONTAINER THAT CONTAINS ALL TOPIC, DIVIDE BY DIFFICULTY
 
     public GameService(QuestionService questionService) {
@@ -39,9 +40,17 @@ public class GameService {
                 questionService.getQuestionsByDifficulty(
                         operatorsQuestions, Difficulty.LUNATIC);
     }
+
+    public GameService(QuestionService questionService, GameUI ui) {
+        this(questionService);
+    }
+
+    public void run() {
+        startSession();
+    }
         
 
-    Scanner input = new Scanner(System.in);
+    private final Scanner input = new Scanner(System.in);
     // SERVICE METHODS
         // INITIALIZE PLAYER
     private Player createPlayer() {
@@ -58,30 +67,21 @@ public class GameService {
         int level = input.nextInt();
         input.nextLine();
         
-        switch (level) {
-            case 1:
-                return Difficulty.GGEZ;
-            case 2:
-                return Difficulty.NORMAL;
-                // NOTE: TYPE 3 QUESTIONS IN PROGRESS
-            case 3:
-                return Difficulty.LUNATIC;
-            default:
-                throw new IllegalArgumentException("Invalid input was entered, please try again.");
-        }
+        return switch (level) {
+            case 1 -> Difficulty.GGEZ;
+            case 2 -> Difficulty.NORMAL;
+            case 3 -> Difficulty.LUNATIC;
+            default -> throw new IllegalArgumentException(
+                    "Invalid input was entered, please try again.");
+        };
     }
         // DIFFICULTY-BASED QUESTIONS SETTER
     private List<Question> setQuestionList(Difficulty difficulty) {
-        switch (difficulty) {
-            case GGEZ:
-                return ggezOperatorsQuestions;
-            case NORMAL:
-                return normalOperatorsQuestions;
-            case LUNATIC:
-                return lunaticOperatorsQuestions;
-            default:
-                throw new IllegalArgumentException("Invalid input was entered, please try again.");
-        }
+        return switch (difficulty) {
+            case GGEZ -> ggezOperatorsQuestions;
+            case NORMAL -> normalOperatorsQuestions;
+            case LUNATIC -> lunaticOperatorsQuestions;
+        };
     }
 
 

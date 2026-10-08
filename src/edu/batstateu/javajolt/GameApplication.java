@@ -1,8 +1,11 @@
 package edu.batstateu.javajolt;
 
-import edu.batstateu.javajolt.game.GameService;
+import java.util.NoSuchElementException;
+
 import edu.batstateu.javajolt.data.QuestionBank;
+import edu.batstateu.javajolt.game.GameService;
 import edu.batstateu.javajolt.service.QuestionService;
+import edu.batstateu.javajolt.ui.GameUI;
 
 public class GameApplication {
     public static void main(String[] args) {
@@ -11,9 +14,16 @@ public class GameApplication {
         QuestionService questionService =
                 new QuestionService(questionBank);
 
-        GameService gameService =
-                new GameService(questionService);
+        GameUI ui = new GameUI();
 
-        gameService.startSession();
+        GameService gameService =
+                new GameService(questionService, ui);
+
+        try {
+            gameService.run();
+        } catch (NoSuchElementException e) {
+
+            System.out.println("\nInput closed. Thank you!");
+        }
     }
 }
