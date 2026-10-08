@@ -7,6 +7,8 @@ public abstract class Question {
     private String question;
     private Topic topic;
     private Difficulty difficulty;
+
+    private InputMode inputMode;
     
     // CONSTRUCTOR
     public Question(int id, String question, Topic topic, Difficulty difficulty) {
@@ -55,4 +57,13 @@ public abstract class Question {
         this.difficulty = difficulty;
     }
 
+    public InputMode getInputMode() {
+        return InputMode.SINGLE_LINE;
+    }
+
+    public void setInputMode(InputMode inputMode) {
+        this.inputMode = inputMode;
+    }
+
+    
 }

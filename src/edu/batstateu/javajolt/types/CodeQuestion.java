@@ -89,5 +89,8 @@ public class CodeQuestion extends Question {
         this.template = template;
     }
 
-    
+    @Override 
+    public InputMode getInputMode() {
+        return InputMode.MULTI_LINE;
+    }
 }
