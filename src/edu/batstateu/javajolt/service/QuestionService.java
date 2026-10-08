@@ -29,7 +29,6 @@ public class QuestionService {
     }
 
     // ANSWER EVALUATOR
-    // No instanceof needed: Java picks the right isCorrect() for each question type (polymorphism)
     public boolean isCorrect(Question question, String userInput) {
         return question.isCorrect(userInput);
     }
