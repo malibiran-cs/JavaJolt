@@ -1,7 +1,6 @@
-package edu.batstateu.javajolt.question;
+package edu.batstateu.javajolt;
 
-import edu.batstateu.javajolt.question.enums.Difficulty;
-import edu.batstateu.javajolt.question.enums.Topic;
+import edu.batstateu.javajolt.enums.*;
 
 public abstract class Question {
     private int id;

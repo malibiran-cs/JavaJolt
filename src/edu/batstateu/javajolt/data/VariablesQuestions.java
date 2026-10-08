@@ -3,9 +3,9 @@ package edu.batstateu.javajolt.data;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.batstateu.javajolt.question.Question;
-import edu.batstateu.javajolt.question.types.*;
-import edu.batstateu.javajolt.question.enums.*;
+import edu.batstateu.javajolt.Question;
+import edu.batstateu.javajolt.enums.*;
+import edu.batstateu.javajolt.types.*;
 
 public class VariablesQuestions {
     // VARIABLES QUESTIONS

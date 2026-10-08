@@ -2,9 +2,9 @@ package edu.batstateu.javajolt.game;
 
 import java.util.List;
 
+import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
-import edu.batstateu.javajolt.question.Question;
-import edu.batstateu.javajolt.question.enums.Difficulty;
+import edu.batstateu.javajolt.enums.Difficulty;
 
 public class GameSession {
     private Player player;

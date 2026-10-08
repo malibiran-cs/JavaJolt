@@ -1,10 +1,9 @@
-package edu.batstateu.javajolt.question.types;
+package edu.batstateu.javajolt.types;
 
 import java.util.List;
 
-import edu.batstateu.javajolt.question.Question;
-import edu.batstateu.javajolt.question.enums.Difficulty;
-import edu.batstateu.javajolt.question.enums.Topic;
+import edu.batstateu.javajolt.Question;
+import edu.batstateu.javajolt.enums.*;
 
 public class MultipleChoiceQuestion extends Question {
     private List<String> choices;

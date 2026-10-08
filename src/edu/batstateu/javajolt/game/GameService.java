@@ -5,11 +5,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
+import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
-import edu.batstateu.javajolt.question.Question;
-import edu.batstateu.javajolt.question.enums.Difficulty;
-import edu.batstateu.javajolt.question.enums.Topic;
-import edu.batstateu.javajolt.question.service.QuestionService;
+import edu.batstateu.javajolt.enums.*;
+import edu.batstateu.javajolt.service.QuestionService;
 
 public class GameService {
     private QuestionService questionService;
