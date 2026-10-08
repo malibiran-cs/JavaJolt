@@ -19,6 +19,7 @@ public class CodeQuestion extends Question {
                           "\tpublic static void main(String[] args) {\n" +
                           "\t\t// WRITE YOUR CODE HERE\n" +
                           "\t}\n}";
+    private String playerProgram;
 
     // CONSTRUCTOR
     public CodeQuestion(int id, String question, Topic topic, Difficulty difficulty, String expectedOutput,
@@ -94,4 +95,14 @@ public class CodeQuestion extends Question {
     public InputMode getInputMode() {
         return InputMode.MULTI_LINE;
     }
+
+    public String getPlayerProgram() {
+        return playerProgram;
+    }
+
+    public void setPlayerProgram(String playerProgram) {
+        this.playerProgram = playerProgram;
+    }
+
+    
 }
