@@ -39,7 +39,10 @@ public class GameUI {
             + " HP: " + player.getHp() + " XP: " + player.getScore());
         System.out.println(THIN);
         System.out.println(question.display());
-        return readLine();
+        return switch(question.getInputMode()) {
+            case SINGLE_LINE -> readLine();
+            case MULTI_LINE -> readMultiLine();
+        };
     }
 
     public void showCorrect(Question question) {
@@ -132,7 +135,19 @@ public class GameUI {
         return choice;
     }
  
+    // INPUT READERS
+
     private String readLine() {
         return scanner.nextLine();
+    }
+
+    private String readMultiLine() {
+        StringBuilder source = new StringBuilder();
+        while(true) {
+            String line = scanner.nextLine();
+            if(line.equals("END")) break;
+            source.append(line).append("\n");
+        }
+        return source.toString();
     }
 }
