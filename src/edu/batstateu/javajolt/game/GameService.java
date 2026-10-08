@@ -13,6 +13,7 @@ import edu.batstateu.javajolt.ui.GameUI;
 
 public class GameService {
     private final QuestionService questionService;
+    private final GameUI ui;
 
     private final List<Question> operatorsQuestions;
 
@@ -22,28 +23,28 @@ public class GameService {
     // NOTE: EVENTUALLY MAKE A BIGGER CONTAINER THAT CONTAINS ALL TOPIC, DIVIDE BY DIFFICULTY
 
     public GameService(QuestionService questionService) {
-
-        this.questionService = questionService;
-
-        operatorsQuestions =
-                questionService.getQuestionsByTopic(Topic.OPERATORS);
-
-        ggezOperatorsQuestions =
-                questionService.getQuestionsByDifficulty(
-                        operatorsQuestions, Difficulty.GGEZ);
-
-        normalOperatorsQuestions =
-                questionService.getQuestionsByDifficulty(
-                        operatorsQuestions, Difficulty.NORMAL);
-
-        lunaticOperatorsQuestions =
-                questionService.getQuestionsByDifficulty(
-                        operatorsQuestions, Difficulty.LUNATIC);
+    this(questionService, new GameUI());
     }
 
     public GameService(QuestionService questionService, GameUI ui) {
-        this(questionService);
-    }
+    this.questionService = questionService;
+    this.ui = ui;
+
+    operatorsQuestions =
+            questionService.getQuestionsByTopic(Topic.OPERATORS);
+
+    ggezOperatorsQuestions =
+            questionService.getQuestionsByDifficulty(
+                    operatorsQuestions, Difficulty.GGEZ);
+
+    normalOperatorsQuestions =
+            questionService.getQuestionsByDifficulty(
+                    operatorsQuestions, Difficulty.NORMAL);
+
+    lunaticOperatorsQuestions =
+            questionService.getQuestionsByDifficulty(
+                    operatorsQuestions, Difficulty.LUNATIC);
+}
 
     public void run() {
         startSession();
