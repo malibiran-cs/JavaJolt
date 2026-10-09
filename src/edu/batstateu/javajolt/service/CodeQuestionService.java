@@ -1,82 +1,74 @@
 package edu.batstateu.javajolt.service;
 
-import java.io.BufferedReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
-import edu.batstateu.javajolt.types.CodeQuestion;
 
 public class CodeQuestionService {
-    private CodeQuestion codeQuestion;
+    private static final int TIMEOUT_SECONDS = 5;
 
-    public CodeQuestionService(CodeQuestion codeQuestion) {
-        this.codeQuestion = codeQuestion;
-    }
+    // concepts -> compile -> run -> compare
+    public boolean judge(String source, String expectedOutput, List<String> requiredConcepts) {
+        if (!hasRequiredConcepts(source, requiredConcepts)) return false;
 
-    public void compileUserProgram(String source) throws IOException {
-        Path dir = Files.createTempDirectory("javajolt");
+        Path dir = null;
         try {
-            Path file = dir.resolve("Code.java");
-            Files.writeString(file, source);
+            dir = Files.createTempDirectory("javajolt");
+            if (!compile(source, dir)) return false;
 
-            JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-
-            int result = compiler.run(null, null, null, "-d", dir.toString(), file.toString());
-            if (result != 0) return;
-
+            String output = run(dir);             
+            return output != null
+                    && normalize(output).equals(normalize(expectedOutput));
+        } catch (IOException | InterruptedException e) {
+            return false;
         } finally {
-            deleteRecursively(dir); 
+            if (dir != null) deleteRecursively(dir);  
         }
     }
 
-    public Process runPlayerProgram() throws IOException {
-        Process process = new ProcessBuilder("java", "Code")
-                                .redirectErrorStream(true)
-                                .start();
-        return process;
-    }
-
-    private String getProgramOutput(Process process) throws IOException, InterruptedException{
-        BufferedReader reader = new BufferedReader(
-            new InputStreamReader(process.getInputStream()));
-
-        StringBuilder output = new StringBuilder();
-        String line;
-        while((line = reader.readLine()) != null) {
-            output.append(line).append("\n");
-        }
-        process.waitFor();
-        return output.toString();
-    }
-
-    public Boolean compareToExpectedOutput(String output, Process process) throws IOException, InterruptedException {
-        String userOutput = getProgramOutput(process);
-        String expectedOutput = codeQuestion.getExpectedOutput();
-        if(userOutput.equals(expectedOutput)) return true;
-        return false;
-    }
-
-    public Boolean checkRequiredConcepts() {
-        List<String> requiredConcepts = codeQuestion.getRequiredConcepts();
-        String playerProgram = codeQuestion.getPlayerProgram();
-        for(String concept : requiredConcepts) {
-            if(!playerProgram.contains(concept)) return false;
+    private boolean hasRequiredConcepts(String source, List<String> requiredConcepts) {
+        for (String concept : requiredConcepts) {
+            if (!source.contains(concept)) return false;
         }
         return true;
     }
 
-    private void deleteRecursively(Path dir) {
-    try (var paths = Files.walk(dir)) {
-        paths.sorted(Comparator.reverseOrder())    // files before their folder
-             .forEach(p -> p.toFile().delete());
-    } catch (IOException ignored) { }
-}
+    private boolean compile(String source, Path dir) throws IOException {
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        if (compiler == null) {
+            throw new IllegalStateException("Code questions need a JDK, not just a JRE.");
+        }
+        Path file = dir.resolve("Code.java");
+        Files.writeString(file, source);
+        return compiler.run(null, null, null, "-d", dir.toString(), file.toString()) == 0;
+    }
+
+    private String run(Path dir) throws IOException, InterruptedException {
+        Process process = new ProcessBuilder("java", "-cp", dir.toString(), "Code")
+                .redirectErrorStream(true)
+                .start();
+        if (!process.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+            process.destroyForcibly();
+            return null;
+        }
+        return new String(process.getInputStream().readAllBytes());
+    }
+
+    private String normalize(String text) {
+        return text.trim().replace("\r\n", "\n");
+    }
+
+    private void deleteRecursively(Path dir) { 
+        try (var paths = Files.walk(dir)) {
+            paths.sorted(Comparator.reverseOrder())    
+                .forEach(p -> p.toFile().delete());
+        } catch (IOException ignored) { }
+     }
 }
