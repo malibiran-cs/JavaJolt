@@ -31,6 +31,18 @@ public class OperatorsQuestions {
             )
         );
 
+        questions.add(new CodeQuestion(
+                    5,
+                    "Using operators, print the sum of 7 and 5, then on the next line "
+                        + "print the remainder of 17 divided by 5.",
+                    Topic.OPERATORS,
+                    Difficulty.GGEZ,
+                    "12\n2",
+                    List.of("+", "%"),
+                    List.of()
+            )
+        );
+
         return questions;
     }
 }
