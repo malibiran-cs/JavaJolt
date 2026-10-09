@@ -97,32 +97,26 @@ public class GameService {
 
         // START SESSION
     public void startSession() {
-        Player player = createPlayer();
-        Difficulty difficulty = determineUserLevel();
+         ui.showWelcome();
+        Player player = new Player(ui.askName(), 10, 0);
+        Difficulty difficulty = ui.askDifficulty();
         List<Question> questions = setSequence(setQuestionList(difficulty));
         GameSession gameSession = new GameSession(player, difficulty, questions);
 
-        System.out.println("=== JAVA QUIZ GAME ===\n");
         int index = 1;
-    
-
-        for(Question question: questions) {
+        for (Question question : questions) {
             gameSession.setCurrentQuestionIndex(index);
-            
-            // Each question type formats its own prompt (no instanceof needed)
-            System.out.print(question.display());
-            String userInput = input.nextLine();
-            boolean isCorrect = questionService.isCorrect(question, userInput);
 
-            if(isCorrect) {
-                System.out.println("\nCORRECT!\n");
-            }
-            else {
-                System.out.println("\nBZZZZT!\n");
-            }
+            String userInput = ui.askQuestion(question, index, questions.size(), player);
 
+            if (questionService.isCorrect(question, userInput)) {
+                ui.showCorrect(question);
+            } else {
+                ui.showWrong(question, player);
+            }
             index++;
         }
+        ui.showGoodbye(player);
     }
     
 }
