@@ -2,6 +2,8 @@ package edu.batstateu.javajolt.ui;
 
 import java.util.Scanner;
 
+import javax.naming.InvalidNameException;
+
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Difficulty;
@@ -74,10 +76,17 @@ public class GameUI {
         while (true) {
             System.out.print("Enter your name: ");
             String name = readLine().trim();
-            if (!name.isEmpty()) {
+            
+            try {
+                if (name.isEmpty()) {
+                    throw new InvalidNameException(
+                        "Name Cannot be empty. Please type your name."
+                    );
+                }
                 return name;
+            } catch (InvalidNameException e) {
+                System.out.println(e.getMessage());
             }
-            System.out.println("Please type a name.");
         }
     }
  
