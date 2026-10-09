@@ -33,7 +33,7 @@
  
 - Continued creating the skeleton of the game 
  
-  ![Game Skeleton](../pictures/skeleton.png) 
+  ![Game Skeleton](../pictures/skeleton.jpg) 
  
   ![Second Meeting](../pictures/secMeet.png) 
  
@@ -76,7 +76,17 @@
  
 - Started digesting the different parts of the system 
  
- 
-## October 8, 2026 ✅ 
- 
-- Started disseminating the different parts of the system
+## October 8, 2026 ✅
+
+- Basic System Logic: Implemented the initial program flow, from entering the user's name to selecting a difficulty level.
+- Question File Formatting: Organized and standardized the question format for easier management and integration.
+- Foundational Question Loop: Developed the basic loop for displaying and processing questions.
+- Exception Handling: Implemented error handling and appropriate feedback messages for invalid inputs and unexpected errors.
+
+## October 9, 2026 ✅
+
+- Type 3 QuestionService Logic: Revised the logic for processing Type 3 questions.
+- Console UI Output: Improved the console output for better readability and user interaction.
+- Type 3 Test Cases: Added test cases to verify the functionality of Type 3 questions.
+- Name Validation Exception: Updated InvalidNameException handling in GameUI.java to validate user input and provide feedback when the name is empty. 
+
