@@ -4,6 +4,7 @@ import java.util.List;
 
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.enums.*;
+import edu.batstateu.javajolt.service.CodeQuestionService;;
 
 public class CodeQuestion extends Question {
     private String expectedOutput;
@@ -19,7 +20,8 @@ public class CodeQuestion extends Question {
                           "\tpublic static void main(String[] args) {\n" +
                           "\t\t// WRITE YOUR CODE HERE\n" +
                           "\t}\n}";
-    private String playerProgram;
+    private static final CodeQuestionService JUDGE = new CodeQuestionService();
+
 
     // CONSTRUCTOR
     public CodeQuestion(int id, String question, Topic topic, Difficulty difficulty, String expectedOutput,
@@ -34,8 +36,8 @@ public class CodeQuestion extends Question {
     // For now: compares the player's code to the expected answer, ignoring extra spaces.
     // requiredConcepts is not used yet; it can be checked here later.
     @Override 
-    public boolean isCorrect(String outputString) {
-        return normalize(outputString).equals(normalize(expectedOutput));
+    public boolean isCorrect(String userInput) {
+        return JUDGE.judge(userInput, expectedOutput, requiredConcepts);
     }
 
     private String normalize(String text) {
@@ -95,14 +97,5 @@ public class CodeQuestion extends Question {
     public InputMode getInputMode() {
         return InputMode.MULTI_LINE;
     }
-
-    public String getPlayerProgram() {
-        return playerProgram;
-    }
-
-    public void setPlayerProgram(String playerProgram) {
-        this.playerProgram = playerProgram;
-    }
-
-    
+   
 }
