@@ -4,7 +4,6 @@ import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
-import edu.batstateu.javajolt.exception.NoQuestionsException;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.ui.GameUI;
 import java.util.List;
@@ -43,7 +42,7 @@ public class GameService {
 
                 playLesson(session);
                 ui.showResult(session, hasPassed(session));
-            } catch (NoQuestionsException e) {
+            } catch (Exception e) {
                 ui.showMessage(e.getMessage());
             }
 
