@@ -15,23 +15,40 @@ public class CodeQuestionService {
     private static final int TIMEOUT_SECONDS = 5;
 
     // concepts -> compile -> run -> compare
-    public boolean judge(String source, String expectedOutput, List<String> requiredConcepts) {
-        if (!hasRequiredConcepts(source, requiredConcepts)) return false;
+    
+public boolean judge(String source, String expectedOutput,
+                     List<String> requiredConcepts) {
+    if (!hasRequiredConcepts(source, requiredConcepts)) {
+        return false;
+    }
 
-        Path dir = null;
-        try {
-            dir = Files.createTempDirectory("javajolt");
-            if (!compile(source, dir)) return false;
+    Path dir = null;
 
-            String output = run(dir);             
-            return output != null
-                    && normalize(output).equals(normalize(expectedOutput));
-        } catch (IOException | InterruptedException e) {
+    try {
+        dir = Files.createTempDirectory("javajolt");
+
+        if (!compile(source, dir)) {
             return false;
-        } finally {
-            if (dir != null) deleteRecursively(dir);  
+        }
+
+        String output = run(dir);
+
+        return output != null
+                && normalize(output).equals(normalize(expectedOutput));
+
+    } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return false;
+
+    } catch (IOException e) {
+        return false;
+
+    } finally {
+        if (dir != null) {
+            deleteRecursively(dir);
         }
     }
+}
 
     private boolean hasRequiredConcepts(String source, List<String> requiredConcepts) {
         for (String concept : requiredConcepts) {
@@ -50,16 +67,40 @@ public class CodeQuestionService {
         return compiler.run(null, null, null, "-d", dir.toString(), file.toString()) == 0;
     }
 
-    private String run(Path dir) throws IOException, InterruptedException {
-        Process process = new ProcessBuilder("java", "-cp", dir.toString(), "Code")
-                .redirectErrorStream(true)
-                .start();
+   
+private String run(Path dir) throws IOException, InterruptedException {
+    Path outputFile = dir.resolve("output.txt");
+
+    Process process = new ProcessBuilder(
+            "java", "-cp", dir.toString(), "Code"
+    )
+            .redirectErrorStream(true)
+            .redirectOutput(outputFile.toFile())
+            .start();
+
+    try {
         if (!process.waitFor(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
             process.destroyForcibly();
+            process.waitFor();
             return null;
         }
-        return new String(process.getInputStream().readAllBytes());
+
+        if (Files.size(outputFile) > 64 * 1024) {
+            return null;
+        }
+
+        if (process.exitValue() != 0) {
+            return null;
+        }
+
+        return Files.readString(outputFile);
+
+    } finally {
+        if (process.isAlive()) {
+            process.destroyForcibly();
+        }
     }
+}
 
     private String normalize(String text) {
         return text.trim().replace("\r\n", "\n");
