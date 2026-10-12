@@ -1,19 +1,18 @@
 package edu.batstateu.javajolt.service;
 
+import edu.batstateu.javajolt.entity.Player;
+import edu.batstateu.javajolt.entity.SaveData;
+import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.exception.SaveFileException;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-import edu.batstateu.javajolt.entity.Player;
-import edu.batstateu.javajolt.entity.SaveData;
-import edu.batstateu.javajolt.enums.Difficulty;
-import edu.batstateu.javajolt.exception.SaveFileException;
-
 public class SaveService {
     private static final Path SAVE_PATH = Path.of("Javajolt", "saves", "player.properties");
-    // PROPERTIES IN THE PLAYER PROPERTIES FILE
+    // Player Properties
     private static final String KEY_NAME = "name";
     private static final String KEY_SCORE = "score";
     private static final String KEY_DIFFICULTY = "difficulty";
@@ -34,7 +33,18 @@ public class SaveService {
     }
 
     public void save(Player player, Difficulty difficulty) throws SaveFileException {
-        throw new UnsupportedOperationException("TODO: save");
+        ensureSaveDirectory();
+
+        Properties props = new Properties();
+        props.setProperty(KEY_NAME, player.getName());
+        props.setProperty(KEY_SCORE, String.valueOf(player.getScore()));
+        props.setProperty(KEY_DIFFICULTY, difficulty.name());
+
+        try (java.io.Writer writer = Files.newBufferedWriter(saveFile)) {
+            props.store(writer, "JavaJolt player save");
+        } catch (IOException e) {
+            throw new SaveFileException("Could not write save file: " + saveFile, e);
+        }
     }
 
     public SaveData load() throws SaveFileException {
@@ -57,7 +67,16 @@ public class SaveService {
     }
 
     private void ensureSaveDirectory() throws SaveFileException {
-        throw new UnsupportedOperationException("TODO: ensureSaveDirectory");
+        Path parent = saveFile.getParent();
+        if (parent == null) {
+            return;
+        }
+
+        try {
+            Files.createDirectories(parent);
+        } catch (IOException e) {
+            throw new SaveFileException("Could not create save directory: " + parent, e);
+        }
     }
 
     private String require(Properties props, String key) {

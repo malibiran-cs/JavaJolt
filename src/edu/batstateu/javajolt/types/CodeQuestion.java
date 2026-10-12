@@ -1,47 +1,41 @@
 package edu.batstateu.javajolt.types;
 
+import edu.batstateu.javajolt.Question;
+import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.InputMode;
+import edu.batstateu.javajolt.enums.Topic;
+import edu.batstateu.javajolt.service.CodeQuestionService;
 import java.util.List;
 
-import edu.batstateu.javajolt.Question;
-import edu.batstateu.javajolt.enums.*;
-import edu.batstateu.javajolt.service.CodeQuestionService;;
-
+// The player writes a whole program. It is compiled and run, and its output is compared to expectedOutput.
 public class CodeQuestion extends Question {
     private String expectedOutput;
-    private List<String> requiredConcepts;
-    
-    // NEW ATTRIBUTES
-    // Note: May be useful later for instructions, as Editor UI may not have intellisense/autocomplete capabilities
-    // user needs all the help they need if that's the case
-    private List<String> requiredImports;
-    // FIXED TEMPLATE STRING
-    // For further instructions, assumes a Code.java file will be written beforehand (handled somewhere else not here)
-    String template = "public class Code {\n" +
-                          "\tpublic static void main(String[] args) {\n" +
-                          "\t\t// WRITE YOUR CODE HERE\n" +
-                          "\t}\n}";
+    private List<String> requiredConcepts; // text the real code must contain, e.g. "%" or "if"
+    private List<String> requiredImports;  // shown to the player as a hint (the player must still write the import)
+
+    // The starting point shown to the player
+        private final String template = """
+            public class Code {
+            	public static void main(String[] args) {
+            		// WRITE YOUR CODE HERE
+            	}
+            }""";
+
     private static final CodeQuestionService JUDGE = new CodeQuestionService();
 
-
     // CONSTRUCTOR
-    public CodeQuestion(int id, String question, Topic topic, Difficulty difficulty, String expectedOutput,
-            List<String> requiredConcepts, List<String> requiredImports) {
-        super(id, question, topic, difficulty);
+    public CodeQuestion(int id, String question, Topic topic, Difficulty difficulty, String explanation,
+            String expectedOutput, List<String> requiredConcepts, List<String> requiredImports) {
+        super(id, question, topic, difficulty, explanation);
         this.expectedOutput = expectedOutput;
         this.requiredConcepts = requiredConcepts;
         this.requiredImports = requiredImports;
     }
 
-    // ANSWER EVALUATOR (STILL A SIMPLE VERSION)
-    // For now: compares the player's code to the expected answer, ignoring extra spaces.
-    // requiredConcepts is not used yet; it can be checked here later.
-    @Override 
+    // ANSWER EVALUATOR: concepts -> compile -> run -> compare
+    @Override
     public boolean isCorrect(String userInput) {
         return JUDGE.judge(userInput, expectedOutput, requiredConcepts);
-    }
-
-    private String normalize(String text) {
-        return text.trim();
     }
 
     // DISPLAY
@@ -49,15 +43,31 @@ public class CodeQuestion extends Question {
     @Override
     public String display() {
         StringBuilder sb = new StringBuilder();
-        sb.append(getQuestion()).append("\n\n")
-          .append("Expected Output: " + getExpectedOutput()).append("\n")
-          .append("Required Concepts: " + getRequiredConcepts()).append("\n")
-          .append("Required Imports: " + getRequiredImports()).append("\n\n")
-          .append("Template (MUST BE FOLLOWED):\n" + getTemplate()).append("\n\n")
-          .append("Type END in its own line to finish input.\n")
+        sb.append(getQuestion()).append("\n\n");
+
+        sb.append("Expected output:\n");
+        for (String line : expectedOutput.split("\n")) {
+            sb.append("  ").append(line).append("\n");
+        }
+
+        if (!requiredConcepts.isEmpty()) {
+            sb.append("\nYour code must use: ").append(String.join("  ", requiredConcepts)).append("\n");
+        }
+        if (!requiredImports.isEmpty()) {
+            sb.append("Imports you will need: ").append(String.join(", ", requiredImports)).append("\n");
+        }
+
+        sb.append("\nTemplate (MUST BE FOLLOWED):\n").append(template).append("\n\n")
+          .append("Type END on its own line to finish.\n")
           .append("Write your code:\n\n");
 
         return sb.toString();
+    }
+
+    // Code answers span many lines
+    @Override
+    public InputMode getInputMode() {
+        return InputMode.MULTI_LINE;
     }
 
     // GETTERS AND SETTERS
@@ -88,14 +98,4 @@ public class CodeQuestion extends Question {
     public String getTemplate() {
         return template;
     }
-
-    public void setTemplate(String template) {
-        this.template = template;
-    }
-
-    @Override 
-    public InputMode getInputMode() {
-        return InputMode.MULTI_LINE;
-    }
-   
 }

@@ -1,21 +1,23 @@
 package edu.batstateu.javajolt;
 
-import edu.batstateu.javajolt.enums.*;
+import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.InputMode;
+import edu.batstateu.javajolt.enums.Topic;
 
 public abstract class Question {
     private int id;
     private String question;
     private Topic topic;
     private Difficulty difficulty;
+    private String explanation; // shown after every answer, right or wrong
 
-    private InputMode inputMode;
-    
     // CONSTRUCTOR
-    public Question(int id, String question, Topic topic, Difficulty difficulty) {
+    public Question(int id, String question, Topic topic, Difficulty difficulty, String explanation) {
         this.id = id;
         this.question = question;
         this.topic = topic;
         this.difficulty = difficulty;
+        this.explanation = explanation;
     }
 
     // ANSWER EVALUATOR (each question type decides what "correct" means)
@@ -23,6 +25,11 @@ public abstract class Question {
 
     // DISPLAY (each question type formats its own prompt)
     public abstract String display();
+
+    // INPUT MODE: most questions take one line; a question type can override this (CodeQuestion does)
+    public InputMode getInputMode() {
+        return InputMode.SINGLE_LINE;
+    }
 
     // GETTERS AND SETTERS
     public int getId() {
@@ -57,13 +64,11 @@ public abstract class Question {
         this.difficulty = difficulty;
     }
 
-    public InputMode getInputMode() {
-        return InputMode.SINGLE_LINE;
+    public String getExplanation() {
+        return explanation;
     }
 
-    public void setInputMode(InputMode inputMode) {
-        this.inputMode = inputMode;
+    public void setExplanation(String explanation) {
+        this.explanation = explanation;
     }
-
-    
 }

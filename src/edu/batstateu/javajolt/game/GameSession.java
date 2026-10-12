@@ -1,24 +1,46 @@
 package edu.batstateu.javajolt.game;
 
-import java.util.List;
-
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.Topic;
+import java.util.List;
 
 public class GameSession {
     private Player player;
+    private Topic topic;
     private Difficulty difficulty;
     private List<Question> questions;
     private int currentQuestionIndex;
-    
-    // CONSTRUCTOR
-    public GameSession(Player player, Difficulty difficulty, List<Question> questions) {
+    private int correctCount;
+    private int mistakeCount;
+    private int xpEarned;
+
+    // Constructor
+    public GameSession(Player player, Topic topic, Difficulty difficulty, List<Question> questions) {
         this.player = player;
+        this.topic = topic;
         this.difficulty = difficulty;
         this.questions = questions;
     }
 
+    // State Updaters
+    public void recordCorrect(int points) {
+        correctCount++;
+        xpEarned += points;
+    }
+
+    public void recordMistake() {
+        mistakeCount++;
+    }
+
+    // Percentage
+    public int getAccuracyPercent() {
+        if (questions.isEmpty()) {
+            return 0;
+        }
+        return correctCount * 100 / questions.size();
+    }
 
     // GETTERS AND SETTERS
     public Player getPlayer() {
@@ -27,6 +49,14 @@ public class GameSession {
 
     public void setPlayer(Player player) {
         this.player = player;
+    }
+
+    public Topic getTopic() {
+        return topic;
+    }
+
+    public void setTopic(Topic topic) {
+        this.topic = topic;
     }
 
     public Difficulty getDifficulty() {
@@ -51,5 +81,17 @@ public class GameSession {
 
     public void setCurrentQuestionIndex(int currentQuestionIndex) {
         this.currentQuestionIndex = currentQuestionIndex;
+    }
+
+    public int getCorrectCount() {
+        return correctCount;
+    }
+
+    public int getMistakeCount() {
+        return mistakeCount;
+    }
+
+    public int getXpEarned() {
+        return xpEarned;
     }
 }

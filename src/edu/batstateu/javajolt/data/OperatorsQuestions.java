@@ -1,47 +1,91 @@
 package edu.batstateu.javajolt.data;
 
+import edu.batstateu.javajolt.Question;
+import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.Topic;
+import edu.batstateu.javajolt.types.CodeQuestion;
+import edu.batstateu.javajolt.types.IdentificationQuestion;
+import edu.batstateu.javajolt.types.MultipleChoiceQuestion;
 import java.util.ArrayList;
 import java.util.List;
 
-import edu.batstateu.javajolt.Question;
-import edu.batstateu.javajolt.enums.*;
-import edu.batstateu.javajolt.types.*;
-
 public class OperatorsQuestions {
-    // OPERATORS QUESTIONS
     protected static final List<Question> getQuestions() {
         List<Question> questions = new ArrayList<>();
 
+        // BEGINNER
         questions.add(new MultipleChoiceQuestion(
-                    3,
-                    "What is an example of an operator in java?",
-                    Topic.OPERATORS,
-                    Difficulty.GGEZ,
-                    List.of("A. .add()", "B. .equals()", "C. ="),
-                    "C"
-            )
-        );
+                201,
+                "Which operator gives the remainder of a division?",
+                Topic.OPERATORS,
+                Difficulty.BEGINNER,
+                "% is the modulus operator: 10 % 3 is 1. The / operator divides, * multiplies, and ^ is not \"power\" in Java.",
+                List.of("A. /", "B. %", "C. *", "D. ^"),
+                "B"
+        ));
+
+        questions.add(new MultipleChoiceQuestion(
+                202,
+                "What does 7 / 2 give when both numbers are ints?",
+                Topic.OPERATORS,
+                Difficulty.BEGINNER,
+                "Dividing two ints drops the decimal part, so 7 / 2 is 3, not 3.5.",
+                List.of("A. 3.5", "B. 4", "C. 3", "D. 3.0"),
+                "C"
+        ));
+
+        questions.add(new MultipleChoiceQuestion(
+                203,
+                "Which operator checks whether two values are equal?",
+                Topic.OPERATORS,
+                Difficulty.BEGINNER,
+                "== compares two values. A single = assigns a value to a variable.",
+                List.of("A. =", "B. ==", "C. :=", "D. equals"),
+                "B"
+        ));
 
         questions.add(new IdentificationQuestion(
-                    4,
-                    "Who was the first president of the Philippines?",
-                    Topic.OPERATORS,
-                    Difficulty.GGEZ,
-                    List.of("Emilio Aguinaldo")
-            )
-        );
+                204,
+                "What is the result of 10 % 4? (type the number)",
+                Topic.OPERATORS,
+                Difficulty.BEGINNER,
+                "10 divided by 4 is 2 with a remainder of 2, and % gives that remainder.",
+                List.of("2")
+        ));
 
+        // (the team's original code question, moved into the Operators ID range)
         questions.add(new CodeQuestion(
-                    5,
-                    "Using operators, print the sum of 7 and 5, then on the next line "
+                205,
+                "Using operators, print the sum of 7 and 5, then on the next line "
                         + "print the remainder of 17 divided by 5.",
-                    Topic.OPERATORS,
-                    Difficulty.GGEZ,
-                    "12\n2",
-                    List.of("+", "%"),
-                    List.of()
-            )
-        );
+                Topic.OPERATORS,
+                Difficulty.BEGINNER,
+                "Use + to add and % to get a remainder: System.out.println(7 + 5); then System.out.println(17 % 5);",
+                "12\n2",
+                List.of("+", "%"),
+                List.of()
+        ));
+
+        // INTERMEDIATE
+        questions.add(new MultipleChoiceQuestion(
+                206,
+                "What is the value of 2 + 3 * 4?",
+                Topic.OPERATORS,
+                Difficulty.INTERMEDIATE,
+                "Multiplication happens before addition: 3 * 4 is 12, then 2 + 12 is 14.",
+                List.of("A. 20", "B. 14", "C. 24", "D. 9"),
+                "B"
+        ));
+
+        questions.add(new MultipleChoiceQuestion(
+                207,
+                "What does true && false evaluate to?",
+                Topic.OPERATORS,
+                Difficulty.INTERMEDIATE,
+                "&& (AND) is true only when both sides are true. Here one side is false, so the result is false.",
+                List.of("A. true", "B. false", "C. null", "D. An error"),
+                "B"
+        ));
 
         return questions;
     }

@@ -1,25 +1,25 @@
 package edu.batstateu.javajolt.types;
 
+import edu.batstateu.javajolt.Question;
+import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.Topic;
 import java.util.List;
 
-import edu.batstateu.javajolt.Question;
-import edu.batstateu.javajolt.enums.*;
-
 public class MultipleChoiceQuestion extends Question {
-    private List<String> choices;
-    private String answer; // the correct LETTER only, e.g. "C" (no period)
-    
+    private List<String> choices; // written as "A. ...", "B. ...", and so on
+    private String answer;        // the correct LETTER only, e.g. "C" (no period)
+
     // CONSTRUCTOR
-    public MultipleChoiceQuestion(int id, String question, Topic topic, Difficulty difficulty, List<String> choices,
-            String answer) {
-        super(id, question, topic, difficulty);
+    public MultipleChoiceQuestion(int id, String question, Topic topic, Difficulty difficulty,
+            String explanation, List<String> choices, String answer) {
+        super(id, question, topic, difficulty, explanation);
         this.choices = choices;
         this.answer = answer;
     }
 
     // ANSWER EVALUATOR
-    // Accepts "C", "c", "C." and "c)" as the same answer
-    @Override 
+    // Accepts "A", "a", "A." and "a)" as the same answer
+    @Override
     public boolean isCorrect(String userInput) {
         String in = userInput.trim().replaceAll("[.)]$", "");
         return in.equalsIgnoreCase(answer);
@@ -53,6 +53,4 @@ public class MultipleChoiceQuestion extends Question {
     public void setAnswer(String answer) {
         this.answer = answer;
     }
-
-    
 }

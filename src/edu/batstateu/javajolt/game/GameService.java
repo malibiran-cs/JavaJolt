@@ -1,97 +1,84 @@
 package edu.batstateu.javajolt.game;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
-import edu.batstateu.javajolt.enums.*;
+import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.Topic;
+import edu.batstateu.javajolt.exception.NoQuestionsException;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.ui.GameUI;
+import java.util.List;
 
+// The game rules and flow. All printing and typing lives in GameUI.
 public class GameService {
+    // Gameplay values used to calculate health, XP, and lesson completion.
+    private static final int STARTING_HP = 10;
+    private static final int DAMAGE_PER_MISTAKE = 3;
+    private static final int POINTS_PER_CORRECT = 10;
+    private static final int PASS_PERCENT = 70;
+
+    // Services used to load questions and communicate with the player.
     private final QuestionService questionService;
     private final GameUI ui;
 
-    private final List<Question> operatorsQuestions;
-
-    private final List<Question> ggezOperatorsQuestions;
-    private final List<Question> normalOperatorsQuestions;
-    private final List<Question> lunaticOperatorsQuestions;
-    // NOTE: EVENTUALLY MAKE A BIGGER CONTAINER THAT CONTAINS ALL TOPIC, DIVIDE BY DIFFICULTY
-
-    public GameService(QuestionService questionService) {
-    this(questionService, new GameUI());
-    }
-
+    // Creates a game service with its question and user-interface dependencies.
     public GameService(QuestionService questionService, GameUI ui) {
-    this.questionService = questionService;
-    this.ui = ui;
+        this.questionService = questionService;
+        this.ui = ui;
+    }
 
-    operatorsQuestions =
-            questionService.getQuestionsByTopic(Topic.OPERATORS);
-
-    ggezOperatorsQuestions =
-            questionService.getQuestionsByDifficulty(
-                    operatorsQuestions, Difficulty.GGEZ);
-
-    normalOperatorsQuestions =
-            questionService.getQuestionsByDifficulty(
-                    operatorsQuestions, Difficulty.NORMAL);
-
-    lunaticOperatorsQuestions =
-            questionService.getQuestionsByDifficulty(
-                    operatorsQuestions, Difficulty.LUNATIC);
-}
-
+    // Runs the welcome screen, lesson loop, and goodbye screen.
     public void run() {
-        startSession();
-    }
-        
+        ui.showWelcome();
+        Player player = new Player(ui.askName(), STARTING_HP, 0);
 
-    // SERVICE METHODS
-        // DIFFICULTY-BASED QUESTIONS SETTER
-    private List<Question> setQuestionList(Difficulty difficulty) {
-        return switch (difficulty) {
-            case GGEZ -> ggezOperatorsQuestions;
-            case NORMAL -> normalOperatorsQuestions;
-            case LUNATIC -> lunaticOperatorsQuestions;
-        };
-    }
+        boolean playing = true;
+        while (playing) {
+            Difficulty difficulty = ui.askDifficulty();
+            Topic topic = ui.askTopic();
 
+            try {
+                List<Question> questions = questionService.selectQuestions(topic, difficulty);
+                GameSession session = new GameSession(player, topic, difficulty, questions);
 
-        // QUESTION SEQUENCE SETTER
-    private List<Question> setSequence(List<Question> questions) {
-        if(questions == null) throw new NullPointerException("Failed to get lists of question, null value.");
-
-        List<Question> questionSequence = new ArrayList<>(questions);
-        Collections.shuffle(questionSequence);
-        return questionSequence;
-    }
-
-        // START SESSION
-    public void startSession() {
-         ui.showWelcome();
-        Player player = new Player(ui.askName(), 10, 0);
-        Difficulty difficulty = ui.askDifficulty();
-        List<Question> questions = setSequence(setQuestionList(difficulty));
-        GameSession gameSession = new GameSession(player, difficulty, questions);
-
-        int index = 1;
-        for (Question question : questions) {
-            gameSession.setCurrentQuestionIndex(index);
-
-            String userInput = ui.askQuestion(question, index, questions.size(), player);
-
-            if (questionService.isCorrect(question, userInput)) {
-                ui.showCorrect(question);
-            } else {
-                ui.showWrong(question, player);
+                playLesson(session);
+                ui.showResult(session, hasPassed(session));
+            } catch (NoQuestionsException e) {
+                ui.showMessage(e.getMessage());
             }
-            index++;
+
+            playing = ui.askPlayAgain();
         }
+
         ui.showGoodbye(player);
     }
-    
+
+    // Presents each question and updates the player's score, HP, and results.
+    private void playLesson(GameSession session) {
+        Player player = session.getPlayer();
+        List<Question> questions = session.getQuestions();
+        player.setHp(STARTING_HP); 
+
+        for (int i = 0; i < questions.size() && player.isAlive(); i++) {
+            Question question = questions.get(i);
+            session.setCurrentQuestionIndex(i + 1);
+
+            String answer = ui.askQuestion(question, i + 1, questions.size(), player);
+
+            if (questionService.isCorrect(question, answer)) {
+                player.addScore(POINTS_PER_CORRECT);
+                session.recordCorrect(POINTS_PER_CORRECT);
+                ui.showCorrect(question);
+            } else {
+                player.takeDamage(DAMAGE_PER_MISTAKE);
+                session.recordMistake();
+                ui.showWrong(question, player);
+            }
+        }
+    }
+
+    // A lesson passes only when the player survives and reaches the required accuracy.
+    private boolean hasPassed(GameSession session) {
+        return session.getPlayer().isAlive() && session.getAccuracyPercent() >= PASS_PERCENT;
+    }
 }

@@ -1,55 +1,64 @@
 package edu.batstateu.javajolt.ui;
 
-import java.util.Scanner;
-
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
-import edu.batstateu.javajolt.enums.*;
-import edu.batstateu.javajolt.exception.*;
+import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.Topic;
+import edu.batstateu.javajolt.exception.InvalidInputException;
+import edu.batstateu.javajolt.exception.InvalidNameException;
 import edu.batstateu.javajolt.game.GameSession;
+import java.util.Scanner;
 
-
+// Everything the player sees and types. No game rules live here.
 public class GameUI {
     private static final String LINE = "==========================================";
     private static final String THIN = "------------------------------------------";
+    private static final String NEW_LINE = System.lineSeparator();
 
     private final Scanner scanner = new Scanner(System.in);
 
+    // Screens
     public void showWelcome() {
         System.out.println(LINE);
-        System.out.println(" J A V A  J O L T");
-        System.out.println(" Learn Java, one level at a time.");
-        System.out.print(LINE);
+        System.out.println("            J A V A   J O L T");
+        System.out.println("   Learn Java, one level at a time.");
+        System.out.println(LINE);
         System.out.println();
     }
 
+    public void showMessage(String message) {
+        System.out.println(NEW_LINE + message + NEW_LINE);
+    }
+
     public void showGoodbye(Player player) {
-        System.out.println("\n" + LINE);
+        System.out.println(NEW_LINE + LINE);
         System.out.println(" Thanks for playing, " + player.getName() + "!");
         System.out.println(" Total XP: " + player.getScore());
         System.out.println(LINE);
     }
 
-    // - QUESTIONS -
-
+    // Questions
+    // Shows the question and returns whatever the player typed
     public String askQuestion(Question question, int number, int total, Player player) {
-        System.out.println("\n" + THIN);
+        System.out.println(NEW_LINE + THIN);
         System.out.println(" Question " + number + " of " + total
-            + " HP: " + player.getHp() + " XP: " + player.getScore());
+                + "     HP: " + player.getHp() + "     XP: " + player.getScore());
         System.out.println(THIN);
-        System.out.println(question.display());
-        return switch(question.getInputMode()) {
+        System.out.print(question.display());
+        return switch (question.getInputMode()) {
             case SINGLE_LINE -> readLine();
             case MULTI_LINE -> readMultiLine();
         };
     }
 
     public void showCorrect(Question question) {
-        System.out.println("\n Correct !");
+        System.out.println(NEW_LINE + " CORRECT!");
+        System.out.println(" " + question.getExplanation());
     }
 
     public void showWrong(Question question, Player player) {
-        System.out.println("\n NOT QUITE.");
+        System.out.println(NEW_LINE + " NOT QUITE.");
+        System.out.println(" " + question.getExplanation());
         if (player.isAlive()) {
             System.out.println(" HP left: " + player.getHp());
         } else {
@@ -58,27 +67,31 @@ public class GameUI {
     }
 
     public void showResult(GameSession session, boolean passed) {
-        System.out.println("\n" + LINE);
+        System.out.println(NEW_LINE + LINE);
         System.out.println(" LESSON " + (passed ? "COMPLETE!" : "OVER"));
         System.out.println(LINE);
+        System.out.println(" Topic:      " + session.getTopic().getLabel()
+                + " (" + session.getDifficulty().getLabel() + ")");
+        System.out.println(" Correct:    " + session.getCorrectCount() + " / " + session.getQuestions().size());
+        System.out.println(" Mistakes:   " + session.getMistakeCount());
+        System.out.println(" Accuracy:   " + session.getAccuracyPercent() + "%");
+        System.out.println(" XP earned:  " + session.getXpEarned());
         System.out.println(" Result:     " + (passed ? "PASSED" : "NOT PASSED - try this lesson again!"));
         if (!session.getPlayer().isAlive()) {
             System.out.println(" You ran out of HP before finishing.");
         }
         System.out.println(LINE);
     }
- 
-    // ---------- MENUS ----------
+
+    // Menus
     public String askName() {
         while (true) {
             System.out.print("Enter your name: ");
             String name = readLine().trim();
-            
+
             try {
                 if (name.isEmpty()) {
-                    throw new InvalidNameException(
-                        "Name Cannot be empty. Please type your name."
-                    );
+                    throw new InvalidNameException("Name cannot be empty. Please type your name.");
                 }
                 return name;
             } catch (InvalidNameException e) {
@@ -86,35 +99,35 @@ public class GameUI {
             }
         }
     }
- 
+
     public Difficulty askDifficulty() {
         Difficulty[] levels = Difficulty.values();
- 
+
         System.out.println("\nChoose your level:");
         for (int i = 0; i < levels.length; i++) {
-            System.out.println(" [" + (i + 1) + "] " + levels[i]);
+            System.out.println(" [" + (i + 1) + "] " + levels[i].getLabel());
         }
         return levels[askChoice("> ", 1, levels.length) - 1];
     }
- 
+
     public Topic askTopic() {
         Topic[] topics = Topic.values();
- 
+
         System.out.println("\nChoose a topic:");
         for (int i = 0; i < topics.length; i++) {
-            System.out.println(" [" + (i + 1) + "] " + topics[i]);
+            System.out.println(" [" + (i + 1) + "] " + topics[i].getLabel());
         }
         return topics[askChoice("> ", 1, topics.length) - 1];
     }
- 
+
     public boolean askPlayAgain() {
         System.out.println("\nWhat next?");
         System.out.println(" [1] Play another lesson");
         System.out.println(" [2] Exit");
         return askChoice("> ", 1, 2) == 1;
     }
- 
-    // ---------- INPUT HELPERS ----------
+
+    // Input Helpers
     // Keeps asking until the player types a whole number between min and max
     private int askChoice(String prompt, int min, int max) {
         while (true) {
@@ -126,7 +139,7 @@ public class GameUI {
             }
         }
     }
- 
+
     private int parseChoice(String text, int min, int max) throws InvalidInputException {
         int choice;
         try {
@@ -134,25 +147,27 @@ public class GameUI {
         } catch (NumberFormatException e) {
             throw new InvalidInputException("Please type a number from " + min + " to " + max + ".");
         }
- 
+
         if (choice < min || choice > max) {
             throw new InvalidInputException("Please choose a number from " + min + " to " + max + ".");
         }
         return choice;
     }
- 
-    // INPUT READERS
 
+    // Input Readers
     private String readLine() {
         return scanner.nextLine();
     }
 
+    // Reads lines until the player types END (any capitalization)
     private String readMultiLine() {
         StringBuilder source = new StringBuilder();
-        while(true) {
+        while (true) {
             String line = scanner.nextLine();
-            if(line.equals("END")) break;
-            source.append(line).append("\n");
+            if (line.trim().equalsIgnoreCase("END")) {
+                break;
+            }
+            source.append(line).append(NEW_LINE);
         }
         return source.toString();
     }

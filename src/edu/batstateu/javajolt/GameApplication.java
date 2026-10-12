@@ -1,11 +1,10 @@
 package edu.batstateu.javajolt;
 
-import java.util.NoSuchElementException;
-
 import edu.batstateu.javajolt.data.QuestionBank;
 import edu.batstateu.javajolt.game.GameService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.ui.GameUI;
+import java.util.NoSuchElementException;
 
 public class GameApplication {
     public static void main(String[] args) {

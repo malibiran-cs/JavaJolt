@@ -1,10 +1,14 @@
 package edu.batstateu.javajolt.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.data.QuestionBank;
-import edu.batstateu.javajolt.enums.*;
+import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.Topic;
+import edu.batstateu.javajolt.exception.NoQuestionsException;
 
 public class QuestionService {
     private final QuestionBank questionBank;
@@ -26,6 +30,20 @@ public class QuestionService {
         return questions.stream()
                         .filter(question -> question.getDifficulty() == difficulty)
                         .toList();
+    }
+
+    // SELECTION: questions for one topic and difficulty, in random order
+    public List<Question> selectQuestions(Topic topic, Difficulty difficulty) throws NoQuestionsException {
+        List<Question> matching = getQuestionsByDifficulty(getQuestionsByTopic(topic), difficulty);
+
+        if (matching.isEmpty()) {
+            throw new NoQuestionsException("No " + difficulty.getLabel() + " questions for "
+                    + topic.getLabel() + " yet. Try another topic or level.");
+        }
+
+        List<Question> sequence = new ArrayList<>(matching);
+        Collections.shuffle(sequence);
+        return sequence;
     }
 
     // ANSWER EVALUATOR
