@@ -3,7 +3,6 @@ package edu.batstateu.javajolt.game;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
@@ -51,31 +50,7 @@ public class GameService {
     }
         
 
-    private final Scanner input = new Scanner(System.in);
     // SERVICE METHODS
-        // INITIALIZE PLAYER
-    private Player createPlayer() {
-        System.out.println("Enter your name: ");
-        String name = input.nextLine();
-
-        return new Player(name, 10, 0);
-    }
-    
-        // DETERMINE USER LEVEL
-    private Difficulty determineUserLevel() {
-        System.out.println("Which level of proficiency do you currently have in Java? (1-3)");
-        System.out.println("1. GGEZ     2. NORMAL    3. LUNATIC\n");
-        int level = input.nextInt();
-        input.nextLine();
-        
-        return switch (level) {
-            case 1 -> Difficulty.GGEZ;
-            case 2 -> Difficulty.NORMAL;
-            case 3 -> Difficulty.LUNATIC;
-            default -> throw new IllegalArgumentException(
-                    "Invalid input was entered, please try again.");
-        };
-    }
         // DIFFICULTY-BASED QUESTIONS SETTER
     private List<Question> setQuestionList(Difficulty difficulty) {
         return switch (difficulty) {
