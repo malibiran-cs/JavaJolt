@@ -25,3 +25,6 @@ replay_pid*
 
 out/
 out-lint/
+
+# Ignore saves file for safety and git convenience
+/saves
