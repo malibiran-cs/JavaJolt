@@ -9,10 +9,21 @@ import edu.batstateu.javajolt.types.MultipleChoiceQuestion;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Question definitions for Java variable declarations, assignments, constants,
+ * and the distinction between primitive values and immutable strings.
+ */
 public class VariablesQuestions {
+    /**
+     * Builds the variables question set in increasing difficulty.
+     *
+     * <p>Each question has a stable ID so it can be referenced by the quiz
+     * system and checked for duplicates when the complete question bank loads.
+     */
     protected static final List<Question> getQuestions() {
         List<Question> questions = new ArrayList<>();
 
+        // Establish declaration syntax and the basic types used by later questions.
         // BEGINNER
         questions.add(new MultipleChoiceQuestion(
                 101,
@@ -85,6 +96,7 @@ public class VariablesQuestions {
                 "C"
         ));
 
+        // `final` changes the variable's assignment rules rather than its data type.
         questions.add(new IdentificationQuestion(
                 108,
                 "Which keyword makes a variable a constant that cannot be changed after it is assigned?",
@@ -95,6 +107,8 @@ public class VariablesQuestions {
         ));
 
         // ADVANCED
+        // This checks whether learners know that String methods return a new value
+        // instead of mutating the original String object.
         questions.add(new IdentificationQuestion(
                 109,
                 "What text does the variable s hold after this code runs?\n    String s = \"Java\";\n    s.toUpperCase();",
@@ -104,6 +118,8 @@ public class VariablesQuestions {
                 List.of("Java", "\"Java\"")
         ));
 
+        // Keep the constant example after `final` has been introduced so the naming
+        // convention and the read-only behavior are tested together.
         questions.add(new CodeQuestion(
                 110,
                 "Declare a constant int named MAX_HP with the value 10, then print it.",
