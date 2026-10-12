@@ -2,13 +2,10 @@ package edu.batstateu.javajolt.ui;
 
 import java.util.Scanner;
 
-import javax.naming.InvalidNameException;
-
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
-import edu.batstateu.javajolt.enums.Difficulty;
-import edu.batstateu.javajolt.enums.Topic;
-import edu.batstateu.javajolt.exception.InvalidInputException;
+import edu.batstateu.javajolt.enums.*;
+import edu.batstateu.javajolt.exception.*;
 import edu.batstateu.javajolt.game.GameSession;
 
 
