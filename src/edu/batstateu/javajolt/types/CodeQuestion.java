@@ -14,12 +14,12 @@ public class CodeQuestion extends Question {
     private List<String> requiredImports;  // shown to the player as a hint (the player must still write the import)
 
     // The starting point shown to the player
-        private final String template = """
-            public class Code {
-            	public static void main(String[] args) {
-            		// WRITE YOUR CODE HERE
-            	}
-            }""";
+    private final String template = """
+        public class Code {
+            public static void main(String[] args) {
+                // WRITE YOUR CODE HERE
+            }
+        }""";
 
     private static final CodeQuestionService JUDGE = new CodeQuestionService();
 
