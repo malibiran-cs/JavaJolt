@@ -53,7 +53,7 @@ public class CodeQuestionService {
     }
 
     // Replaces comments with a space and the inside of string/char literals with nothing
-    static String stripCommentsAndStrings(String src) {
+    private static String stripCommentsAndStrings(String src) {
         StringBuilder out = new StringBuilder();
         int i = 0;
         int n = src.length();
