@@ -8,6 +8,7 @@ import edu.batstateu.javajolt.exception.InvalidInputException;
 import edu.batstateu.javajolt.exception.InvalidNameException;
 import edu.batstateu.javajolt.game.GameSession;
 import java.util.Scanner;
+import java.util.List;
 
 // Everything the player sees and types. No game rules live here.
 public class GameUI {
@@ -110,22 +111,40 @@ public class GameUI {
         return levels[askChoice("> ", 1, levels.length) - 1];
     }
 
-    public Topic askTopic() {
-        Topic[] topics = Topic.values();
+    
+public Topic askTopic(List<Topic> availableTopics) {
+    System.out.println("\nChoose a topic:");
 
-        System.out.println("\nChoose a topic:");
-        for (int i = 0; i < topics.length; i++) {
-            System.out.println(" [" + (i + 1) + "] " + topics[i].getLabel());
-        }
-        return topics[askChoice("> ", 1, topics.length) - 1];
+    for (int i = 0; i < availableTopics.size(); i++) {
+        System.out.println(" [" + (i + 1) + "] "
+                + availableTopics.get(i).getLabel());
     }
 
-    public boolean askPlayAgain() {
-        System.out.println("\nWhat next?");
-        System.out.println(" [1] Play another lesson");
-        System.out.println(" [2] Exit");
-        return askChoice("> ", 1, 2) == 1;
+    int choice = askChoice("> ", 1, availableTopics.size());
+    return availableTopics.get(choice - 1);
+}
+
+    
+public int askNextAction() {
+    System.out.println("\nWhat would you like to do?");
+    System.out.println(" [1] Continue to another lesson");
+    System.out.println(" [2] Replay a lesson");
+    System.out.println(" [3] Exit");
+
+    return askChoice("> ", 1, 3);
+}
+
+public Topic askReplayTopic(List<Topic> completedTopics) {
+    System.out.println("\nChoose a completed topic to replay:");
+
+    for (int i = 0; i < completedTopics.size(); i++) {
+        System.out.println(" [" + (i + 1) + "] "
+                + completedTopics.get(i).getLabel());
     }
+
+    int choice = askChoice("> ", 1, completedTopics.size());
+    return completedTopics.get(choice - 1);
+}
 
     // Input Helpers
     // Keeps asking until the player types a whole number between min and max
