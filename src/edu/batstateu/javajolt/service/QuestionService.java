@@ -17,7 +17,7 @@ public class QuestionService {
     }
 
     // 1ST LAYER DIVISION
-    public List<Question> getQuestionsByTopic(Topic topic) {
+    private List<Question> getQuestionsByTopic(Topic topic) {
         return questionBank.getQuestions()
                            .stream()
                            .filter(question -> question.getTopic() == topic)
@@ -25,7 +25,7 @@ public class QuestionService {
     }
 
     // 2ND LAYER DIVISION
-    public List<Question> getQuestionsByDifficulty(List<Question> questions, Difficulty difficulty) {
+    private static List<Question> getQuestionsByDifficulty(List<Question> questions, Difficulty difficulty) {
         return questions.stream()
                         .filter(question -> question.getDifficulty() == difficulty)
                         .toList();
