@@ -130,7 +130,7 @@ public class CodeQuestionService {
             process.waitFor();
             return null;
         }
-        reader.join(1000);
+        reader.join();
 
         // A program that ended with an error (for example an exception) is not a correct answer,
         // and neither is one that printed far more than any expected output
