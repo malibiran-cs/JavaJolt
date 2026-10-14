@@ -56,9 +56,7 @@ public class Player {
     }
 
     public boolean isTopicMastered(Topic topic) {
-        return progress.isComplete(topic, Difficulty.BEGINNER)
-            && progress.isComplete(topic, Difficulty.INTERMEDIATE)
-            && progress.isComplete(topic, Difficulty.ADVANCED);
+        return progress.isTopicMastered(topic);
     }
     // GETTERS AND SETTERS
     public String getName() {

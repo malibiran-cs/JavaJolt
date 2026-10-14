@@ -39,8 +39,8 @@ public class PlayerProgress {
         List<Topic> out = new ArrayList<>();
 
         for(Topic t: Topic.values()) {
-            if(!isComplete(t, difficulty)) break;
             out.add(t);
+            if(!isComplete(t, difficulty)) break;
         }
         return out;
     }
