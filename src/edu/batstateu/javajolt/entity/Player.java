@@ -1,9 +1,13 @@
 package edu.batstateu.javajolt.entity;
 
+import java.util.List;
+
+import edu.batstateu.javajolt.enums.*;
 public class Player {
     private String name;
     private int hp;
     private int score; 
+    private PlayerProgress progress = new PlayerProgress();
 
     public Player(String name, int hp, int score) {
         this.name = name;
@@ -33,6 +37,30 @@ public class Player {
         return hp > 0;
     }
 
+    // PROGRESS METHODS
+    // NOTE: use this to access PlayerProgress methods
+    public PlayerProgress getProgress() {
+        return progress;
+    }
+
+    public boolean complete(Topic topic, Difficulty difficulty) {
+        return progress.complete(topic, difficulty);
+    }
+
+    public boolean isComplete(Topic topic, Difficulty difficulty) {
+        return progress.isComplete(topic, difficulty);
+    }
+
+    public List<Topic> getAvailableTopics(Difficulty difficulty) {
+        return progress.getAvailableTopics(difficulty);
+    }
+
+    public boolean isTopicMastered(Topic topic) {
+        return progress.isComplete(topic, Difficulty.BEGINNER)
+            && progress.isComplete(topic, Difficulty.INTERMEDIATE)
+            && progress.isComplete(topic, Difficulty.ADVANCED);
+    }
+    // GETTERS AND SETTERS
     public String getName() {
         return name;
     }
