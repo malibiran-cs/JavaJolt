@@ -5,6 +5,7 @@ import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.batstateu.javajolt.enums.*;
 
@@ -49,5 +50,30 @@ public class PlayerProgress {
         return isComplete(t, Difficulty.BEGINNER)
             && isComplete(t, Difficulty.INTERMEDIATE)
             && isComplete(t, Difficulty.ADVANCED);
+    }
+
+    // Returns a detached copy so savers can't mutate internal state.
+    public Map<Topic, EnumSet<Difficulty>> copyCompleted() {
+        Map<Topic, EnumSet<Difficulty>> copy = new EnumMap<>(Topic.class);
+        completedTopics.forEach((topic, diffs) -> {
+            // NOTE: fresh EnumSet per topic; addAll avoids copyOf() crash on empty sets.
+            EnumSet<Difficulty> fresh = EnumSet.noneOf(Difficulty.class);
+            fresh.addAll(diffs);
+            copy.put(topic, fresh);
+        });
+        return copy;
+    }
+
+    // Replaces current progress with loaded data (used on game load).
+    public void restore(Map<Topic, ? extends Set<Difficulty>> data) {
+        completedTopics.clear();
+        data.forEach((topic, diffs) -> {
+            EnumSet<Difficulty> fresh = EnumSet.noneOf(Difficulty.class);
+            fresh.addAll(diffs);
+            // NOTE: skip empties so map never holds meaningless Topic -> {} entries.
+            if (!fresh.isEmpty()) {
+                completedTopics.put(topic, fresh);
+            }
+        });
     }
 }

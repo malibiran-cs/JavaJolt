@@ -1,6 +1,8 @@
 package edu.batstateu.javajolt.entity;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import edu.batstateu.javajolt.enums.*;
 public class Player {
@@ -57,6 +59,11 @@ public class Player {
 
     public boolean isTopicMastered(Topic topic) {
         return progress.isTopicMastered(topic);
+    }
+
+    // Restores progress from loaded save data (used once at game start).
+    public void restoreProgress(Map<Topic, ? extends Set<Difficulty>> data) {
+        progress.restore(data);
     }
     // GETTERS AND SETTERS
     public String getName() {
