@@ -14,10 +14,7 @@ import java.util.List;
 import java.util.Set;
 
 public class GameService {
-    private static final int STARTING_HP = 10;
-    private static final int DAMAGE_PER_MISTAKE = 3;
-    private static final int POINTS_PER_CORRECT = 10;
-    private static final int PASS_PERCENT = 70;
+    
 
     private final QuestionService questionService;
     private final LessonService lessonService;
@@ -136,73 +133,40 @@ public class GameService {
         ui.showGoodbye(player);
     }
 
-    /**
-     * Returns completed Beginner topics and the first incomplete topic.
-     * This allows completed topics to remain replayable while preventing
-     * future topics from being unlocked prematurely.
-     */
-    private List<Topic> getAvailableBeginnerTopics(Set<Topic> completedTopics) {
-        List<Topic> availableTopics = new ArrayList<>();
-        for (Topic topic : Topic.values()) {
-            if (completedTopics.contains(topic)) {
-                availableTopics.add(topic);
-            } else {
-                availableTopics.add(topic);
-                break;
-            }
-        }
-        return availableTopics;
-    }
+    // /**
+    //  * Returns completed Beginner topics and the first incomplete topic.
+    //  * This allows completed topics to remain replayable while preventing
+    //  * future topics from being unlocked prematurely.
+    //  */
+    // private List<Topic> getAvailableBeginnerTopics(Set<Topic> completedTopics) {
+    //     List<Topic> availableTopics = new ArrayList<>();
+    //     for (Topic topic : Topic.values()) {
+    //         if (completedTopics.contains(topic)) {
+    //             availableTopics.add(topic);
+    //         } else {
+    //             availableTopics.add(topic);
+    //             break;
+    //         }
+    //     }
+    //     return availableTopics;
+    // }
 
-    /**
-     * Returns completed topics in the original enum order.
-     */
-    private List<Topic> getCompletedTopicsInOrder(Set<Topic> completedTopics) {
-        List<Topic> orderedTopics = new ArrayList<>();
-        for (Topic topic : Topic.values()) {
-            if (completedTopics.contains(topic)) {
-                orderedTopics.add(topic);
-            }
-        }
-        return orderedTopics;
-    }
+    // /**
+    //  * Returns completed topics in the original enum order.
+    //  */
+    // private List<Topic> getCompletedTopicsInOrder(Set<Topic> completedTopics) {
+    //     List<Topic> orderedTopics = new ArrayList<>();
+    //     for (Topic topic : Topic.values()) {
+    //         if (completedTopics.contains(topic)) {
+    //             orderedTopics.add(topic);
+    //         }
+    //     }
+    //     return orderedTopics;
+    // }
 
-    private void study(Topic topic, Difficulty difficulty) {
-        try {
-            List<LessonPage> pages = lessonService.loadPages(topic, difficulty);
-            if (pages.isEmpty()) {
-                ui.showMessage("There is no textbook for " + topic.getLabel() + " yet. Try Play now.");
-            } else {
-                ui.showLessonPages(pages);
-            }
-        } catch (LessonFileException e) {
-            ui.showMessage(e.getMessage());
-        }
-    }
+    
 
-    private void playLesson(GameSession session) {
-        Player player = session.getPlayer();
-        List<Question> questions = session.getQuestions();
-        // Restore HP at the beginning of each lesson.
-        player.setHp(STARTING_HP);
-        for (int i = 0; i < questions.size() && player.isAlive(); i++) {
-            Question question = questions.get(i);
-            session.setCurrentQuestionIndex(i + 1);
-            String answer = ui.askQuestion(question, i + 1, questions.size(), player);
-            if (questionService.isCorrect(question, answer)) {
-                player.addScore(POINTS_PER_CORRECT);
-                session.recordCorrect(POINTS_PER_CORRECT);
-                ui.showCorrect(question);
-            } else {
-                player.takeDamage(DAMAGE_PER_MISTAKE);
-                session.recordMistake();
-                ui.showWrong(question, player);
-            }
-        }
-    }
+    
 
-    private boolean hasPassed(GameSession session) {
-        return session.getPlayer().isAlive()
-                && session.getAccuracyPercent() >= PASS_PERCENT;
-    }
+    
 }
