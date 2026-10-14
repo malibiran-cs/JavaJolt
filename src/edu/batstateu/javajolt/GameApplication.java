@@ -2,6 +2,7 @@ package edu.batstateu.javajolt;
 
 import edu.batstateu.javajolt.data.QuestionBank;
 import edu.batstateu.javajolt.game.GameService;
+import edu.batstateu.javajolt.service.LessonService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.ui.GameUI;
 import java.util.NoSuchElementException;
@@ -12,11 +13,14 @@ public class GameApplication {
 
         QuestionService questionService =
                 new QuestionService(questionBank);
+        
+        LessonService lessonService = 
+                new LessonService();
 
         GameUI ui = new GameUI();
 
         GameService gameService =
-                new GameService(questionService, ui);
+                new GameService(questionService, lessonService, ui);
 
         try {
             gameService.run();

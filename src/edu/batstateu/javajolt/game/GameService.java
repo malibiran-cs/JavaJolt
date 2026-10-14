@@ -1,12 +1,13 @@
 package edu.batstateu.javajolt.game;
-
 import edu.batstateu.javajolt.Question;
+import edu.batstateu.javajolt.entity.LessonPage;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
+import edu.batstateu.javajolt.exception.LessonFileException;
+import edu.batstateu.javajolt.service.LessonService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.ui.GameUI;
-
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -19,10 +20,12 @@ public class GameService {
     private static final int PASS_PERCENT = 70;
 
     private final QuestionService questionService;
+    private final LessonService lessonService;
     private final GameUI ui;
 
-    public GameService(QuestionService questionService, GameUI ui) {
+    public GameService(QuestionService questionService, LessonService lessonService, GameUI ui) {
         this.questionService = questionService;
+        this.lessonService = lessonService;
         this.ui = ui;
     }
 
@@ -57,10 +60,10 @@ public class GameService {
                     ui.showMessage("All Beginner topics are completed! "
                             + "You can replay a lesson or exit.");
                     int action = ui.askNextAction();
-                    if (action == 3) {
-                        playing = false;
-                    } else if (action == 2) {
-                        selectedTopic = ui.askReplayTopic(new ArrayList<>(completedBeginnerTopics));
+                    switch (action) {
+                        case 3 -> playing = false;
+                        case 2 -> selectedTopic = ui.askReplayTopic(new ArrayList<>(completedBeginnerTopics));
+                        default -> { }
                     }
                     continue;
                 }
@@ -70,6 +73,10 @@ public class GameService {
                 topic = ui.askTopic(availableTopics);
             }
             firstLesson = false;
+
+            while (ui.askWantsToStudy(topic)) {
+                study(topic, difficulty);
+            }
 
             try {
                 List<Question> questions = questionService.selectQuestions(topic, difficulty);
@@ -99,27 +106,31 @@ public class GameService {
             }
 
             int action = ui.askNextAction();
-            if (action == 3) {
-                // Exit the game.
-                playing = false;
-            } else if (action == 2) {
-                // Replay a completed topic.
-                List<Topic> replayableTopics = new ArrayList<>();
-                if (difficulty == Difficulty.BEGINNER) {
-                    replayableTopics.addAll(getCompletedTopicsInOrder(completedBeginnerTopics));
-                } else {
-                    replayableTopics.addAll(List.of(Topic.values()));
+            switch (action) {
+                case 3 -> {
+                    // Exit the game.
+                    playing = false;
                 }
-                if (replayableTopics.isEmpty()) {
-                    ui.showMessage("No completed Beginner lessons available "
-                            + "to replay yet.");
-                } else {
-                    selectedTopic = ui.askReplayTopic(replayableTopics);
+                case 2 -> {
+                    // Replay a completed topic.
+                    List<Topic> replayableTopics = new ArrayList<>();
+                    if (difficulty == Difficulty.BEGINNER) {
+                        replayableTopics.addAll(getCompletedTopicsInOrder(completedBeginnerTopics));
+                    } else {
+                        replayableTopics.addAll(List.of(Topic.values()));
+                    }
+                    if (replayableTopics.isEmpty()) {
+                        ui.showMessage("No completed Beginner lessons available "
+                                + "to replay yet.");
+                    } else {
+                        selectedTopic = ui.askReplayTopic(replayableTopics);
+                    }
                 }
-            } else {
-                // Continue: the next loop selects the next unlocked
-                // Beginner topic automatically.
-                selectedTopic = null;
+                default -> {
+                    // Continue: the next loop selects the next unlocked
+                    // Beginner topic automatically.
+                    selectedTopic = null;
+                }
             }
         }
         ui.showGoodbye(player);
@@ -154,6 +165,19 @@ public class GameService {
             }
         }
         return orderedTopics;
+    }
+
+    private void study(Topic topic, Difficulty difficulty) {
+        try {
+            List<LessonPage> pages = lessonService.loadPages(topic, difficulty);
+            if (pages.isEmpty()) {
+                ui.showMessage("There is no textbook for " + topic.getLabel() + " yet. Try Play now.");
+            } else {
+                ui.showLessonPages(pages);
+            }
+        } catch (LessonFileException e) {
+            ui.showMessage(e.getMessage());
+        }
     }
 
     private void playLesson(GameSession session) {
