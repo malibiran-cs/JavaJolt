@@ -1,0 +1,264 @@
+JavaJolt lesson text: VARIABLES
+The game ignores everything above the first "## PAGE" line.
+
+Page format:  ## PAGE <number> [<LEVEL>]: <title>
+Levels:       BEGINNER, INTERMEDIATE, ADVANCED, ALL
+Width:        built for a 60-character console, plain ASCII.
+
+## PAGE 1 [BEGINNER]: What Is a Variable?
+
+Programs need to remember things: a player's name, their
+score, how much HP they have left.
+
+A variable is a named box that holds one value.
+
+    int score = 10;
+
+This line creates a box named score and puts the number 10
+inside it. Later, you can look inside the box by using its
+name, or put a different value in.
+
+Every variable has three parts:
+    a TYPE   (what kind of value it holds)
+    a NAME   (what you call the box)
+    a VALUE  (what is inside the box right now)
+
+## PAGE 2 [BEGINNER]: Declaring a Variable
+
+Creating a variable is called declaring it.
+
+    int score = 10;
+
+    int    -> the type
+    score  -> the name
+    =      -> store the value on the right into the box
+    10     -> the value
+    ;      -> every statement ends with a semicolon
+
+Here are two more:
+
+    int age = 15;
+    String name = "Ana";
+
+Note: in Java, = does not mean "equals" like in math.
+It means "put this value into that box".
+
+## PAGE 3 [BEGINNER]: Declaring Without a Value
+
+You can also create the box first and fill it later:
+
+    int lives;      // create the box (empty for now)
+    lives = 3;      // put 3 inside
+
+Anything after // is a comment. The computer ignores it.
+It is a note for people reading the code.
+
+Rule: give a variable a value BEFORE you use it.
+
+## PAGE 4 [BEGINNER]: Data Types
+
+The type tells Java what kind of value a variable holds.
+
+    Type      Stores                  Example
+    -------   ---------------------   -------------
+    int       whole numbers           42, -7, 0
+    double    numbers with decimals   3.14, 0.5
+    boolean   true or false           true
+    char      one character           'A'
+    String    text                    "Hello"
+
+Look closely at the quotes:
+    char   uses single quotes   'A'
+    String uses double quotes   "Hello"
+
+Look closely at the capital letters:
+    int, double, boolean, and char are all lowercase.
+    String starts with a capital S.
+
+Pick the type that matches the value:
+    age          -> int
+    price        -> double
+    isAlive      -> boolean
+    playerName   -> String
+
+## PAGE 5 [BEGINNER]: Naming Variables
+
+The compiler enforces these rules:
+
+  - A name starts with a letter (or _ or $), never a digit.
+  - A name has no spaces.
+  - A name cannot be a reserved word such as class, int,
+    or if.
+  - Capital letters matter: score and Score are two
+    different variables.
+
+    Valid:    playerScore    score2    _temp
+    Invalid:  2score    my score    class    player-score
+
+Good habit: write names in camelCase. Start with a small
+letter and capitalize each new word.
+
+    playerScore    maxHp    isAlive
+
+Choose names that say what the value is. A name like
+playerScore is much clearer than x.
+
+## PAGE 6 [BEGINNER]: Printing Variables
+
+To show a variable's value on the screen, use println:
+
+    int score = 10;
+    System.out.println(score);
+
+Output:
+    10
+
+Put text in double quotes and join it with + to build a
+message:
+
+    System.out.println("Score: " + score);
+
+Output:
+    Score: 10
+
+Text in quotes prints exactly as written. A name without
+quotes prints the value inside the variable:
+
+    System.out.println("score");    prints:  score
+    System.out.println(score);      prints:  10
+
+## PAGE 7 [BEGINNER]: Common Beginner Mistakes
+
+When your code has a mistake, the compiler tells you.
+Read the FIRST message and the line number it points to.
+
+Wrong capital letters:
+    Int age = 15;
+    string name = "Ana";
+  Java says "cannot find symbol". The types are int and
+  String. Capital letters matter.
+
+A missing semicolon:
+    int score = 10
+  Java says "';' expected".
+
+Using a variable before it has a value:
+    int lives;
+    System.out.println(lives);
+  Java says "variable lives might not have been
+  initialized". Give lives a value first.
+
+## PAGE 8 [INTERMEDIATE]: Changing a Variable
+
+A variable holds one value at a time. Assigning a new
+value replaces the old one.
+
+    int x = 5;
+    x = x + 3;
+    System.out.println(x);
+
+Output:
+    8
+
+How to read  x = x + 3;  : Java works out the RIGHT side
+first. x is 5, and 5 + 3 is 8. Then it stores 8 back into x.
+
+Do not write the type again when you change a value.
+
+    int x = 5;
+    int x = 8;     // error: variable x is already defined
+
+    int x = 5;
+    x = 8;         // correct
+
+## PAGE 9 [INTERMEDIATE]: Types Must Match
+
+A variable only accepts the kind of value it was
+declared to hold.
+
+    int count = 3.5;
+
+Java says "incompatible types: possible lossy conversion
+from double to int". An int cannot hold the .5, and Java
+will not throw it away on its own.
+
+Two ways to fix it:
+
+    double count = 3.5;       // use a type that fits
+    int count = (int) 3.5;    // cast: count becomes 3
+
+A cast cuts the decimal part off. It does not round, so
+(int) 3.9 is 3, not 4.
+
+The other direction is fine. A whole number fits into a
+double without trouble:
+
+    double price = 5;         // price holds 5.0
+
+## PAGE 10 [INTERMEDIATE]: Constants With final
+
+Some values should never change, such as the highest HP a
+player can have. Add the word final to lock a variable:
+
+    final int MAX_HP = 10;
+
+Trying to change it is a compile error:
+
+    MAX_HP = 20;
+
+Java says "cannot assign a value to final variable MAX_HP".
+
+By convention, constants are written in UPPER_CASE, with
+underscores between words:
+
+    final int MAX_HP = 10;
+    final int PASS_PERCENT = 70;
+
+Using constants instead of repeating a number makes code
+easier to read and easier to change in one place.
+
+## PAGE 11 [ADVANCED]: Strings Never Change
+
+A String cannot be changed after it is created. This is
+called being immutable.
+
+    String s = "Java";
+    s.toUpperCase();
+    System.out.println(s);
+
+Output:
+    Java
+
+toUpperCase() does not change s. It gives back a NEW
+String with capital letters, and this code throws it away.
+
+To keep the new String, store it in a variable:
+
+    s = s.toUpperCase();
+    System.out.println(s);
+
+Output:
+    JAVA
+
+## PAGE 12 [ADVANCED]: Comparing Strings
+
+To check whether two Strings have the same text, use
+equals(), not ==.
+
+    String name = "Ana";
+    System.out.println(name.equals("Ana"));    // true
+
+## PAGE 13 [ALL]: Recap
+
+  - A variable is a named box holding one value.
+  - Declare it with:   type name = value;
+  - Types: int, double, boolean, char, String.
+  - Names start with a letter, have no spaces, and are
+    case-sensitive. Use camelCase.
+  - println shows a variable's value on the screen.
+  - x = x + 3 works out the right side, then stores it.
+  - The value must fit the type, or you need a cast.
+  - final makes a constant. Write constants in UPPER_CASE.
+  - Strings never change. Methods return new Strings.
+
+Ready to test yourself? Choose Play now.

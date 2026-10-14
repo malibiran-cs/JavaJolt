@@ -1,14 +1,15 @@
 package edu.batstateu.javajolt.ui;
 
 import edu.batstateu.javajolt.Question;
+import edu.batstateu.javajolt.entity.LessonPage;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.exception.InvalidInputException;
 import edu.batstateu.javajolt.exception.InvalidNameException;
 import edu.batstateu.javajolt.game.GameSession;
-import java.util.Scanner;
 import java.util.List;
+import java.util.Scanner;
 
 // Everything the player sees and types. No game rules live here.
 public class GameUI {
@@ -82,6 +83,31 @@ public class GameUI {
             System.out.println(" You ran out of HP before finishing.");
         }
         System.out.println(LINE);
+    }
+
+    public boolean askWantsToStudy(Topic topic) {
+        System.out.println("\n" + topic.getLabel() + ":");
+        System.out.println(" [1] Play now");
+        System.out.println(" [2] Study first");
+        return askChoice("> ", 1, 2) == 2;
+    }
+
+    public void showLessonPages(List<LessonPage> pages) {
+        for (int i = 0; i < pages.size(); i++) {
+            LessonPage page = pages.get(i);
+            System.out.println("\n" + LINE);
+            System.out.println(" " + page.title() + "  (page " + (i + 1) + " of " + pages.size() + ")");
+            System.out.println(LINE);
+            page.body().forEach(System.out::println);
+
+            if (i < pages.size() - 1) {
+                System.out.print("\nPress ENTER for the next page (or type Q to stop reading): ");
+                if (readLine().trim().equalsIgnoreCase("q")) {
+                    return;
+                }
+            }
+        }
+        System.out.println("\nThat's the end of the textbook.");
     }
 
     // Menus
