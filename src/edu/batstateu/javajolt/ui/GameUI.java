@@ -160,18 +160,6 @@ public int askNextAction() {
     return askChoice("> ", 1, 3);
 }
 
-public Topic askReplayTopic(List<Topic> completedTopics) {
-    System.out.println("\nChoose a completed topic to replay:");
-
-    for (int i = 0; i < completedTopics.size(); i++) {
-        System.out.println(" [" + (i + 1) + "] "
-                + completedTopics.get(i).getLabel());
-    }
-
-    int choice = askChoice("> ", 1, completedTopics.size());
-    return completedTopics.get(choice - 1);
-}
-
     // Input Helpers
     // Keeps asking until the player types a whole number between min and max
     private int askChoice(String prompt, int min, int max) {
