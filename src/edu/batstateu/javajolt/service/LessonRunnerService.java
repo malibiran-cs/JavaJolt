@@ -9,12 +9,23 @@ import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.exception.LessonFileException;
 import edu.batstateu.javajolt.game.GameSession;
+import edu.batstateu.javajolt.ui.GameUI;
 
 public class LessonRunnerService {
     private static final int STARTING_HP = 10;
     private static final int DAMAGE_PER_MISTAKE = 3;
     private static final int POINTS_PER_CORRECT = 10;
     private static final int PASS_PERCENT = 70;
+
+    private QuestionService questionService;
+    private LessonService lessonService;
+    private GameUI ui;
+
+    public LessonRunnerService(QuestionService questionService, LessonService lessonService, GameUI ui) {
+        this.questionService = questionService;
+        this.lessonService = lessonService;
+        this.ui = ui;
+    }
 
     private void study(Topic topic, Difficulty difficulty) {
         try {
