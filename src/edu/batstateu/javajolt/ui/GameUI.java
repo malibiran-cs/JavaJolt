@@ -85,7 +85,7 @@ public class GameUI {
         System.out.println(LINE);
     }
 
-    public boolean askWantsToStudy(Topic topic) {
+    public boolean askPlayOrStudy(Topic topic) {
         System.out.println("\n" + topic.getLabel() + ":");
         System.out.println(" [1] Play now");
         System.out.println(" [2] Study first");
