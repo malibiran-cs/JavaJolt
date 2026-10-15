@@ -20,27 +20,51 @@ public class CodeQuestionService {
     private static final int TIMEOUT_SECONDS = 5;
     private static final int MAX_OUTPUT_CHARS = 64 * 1024;
 
+
+    // Checks the player's code by validating concepts, compiling and running it, comparing outputs, and cleaning up temporary files.
     public boolean judge(String source, String expectedOutput, List<String> requiredConcepts) {
+
+        // Returns false if the submitted code does not contain the required concepts.
         if (!hasRequiredConcepts(source, requiredConcepts)) return false;
 
+        // Stores the path of the temporary directory used to compile and run the code.
         Path dir = null;
+
         try {
+            // Creates a temporary directory to store files needed to run the submitted code.
             dir = Files.createTempDirectory("javajolt");
+
+            // Returns false if the submitted code cannot be compiled successfully.
             if (!compile(source, dir)) return false;
 
+            // Runs the compiled program and collects its output.
             String output = run(dir);
+
+            // Returns true only if the output is not null and matches the expected output after normalization.
             return output != null
                     && normalize(output).equals(normalize(expectedOutput));
+
         } catch (IOException e) {
+
+            // Displays an error message if a file operation or other input/output operation fails.
             System.err.println("[JavaJolt] Could not run your program: " + e.getMessage());
             return false;
+
         } catch (InterruptedException e) {
+
+            // Restores the interrupted status if the program execution is interrupted.
             Thread.currentThread().interrupt();
+
+            // Returns false because the program could not finish running normally.
             return false;
+
         } finally {
+
+            // Deletes the temporary directory and its contents if the directory was created.
             if (dir != null) deleteRecursively(dir);
         }
     }
+
 
     // Looks for each concept in the real code only. Words inside comments and strings don't count,
     // so "// + %" or "\"+ %\"" can't be used to fake it.
