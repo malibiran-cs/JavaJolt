@@ -2,26 +2,36 @@ package edu.batstateu.javajolt.game;
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.LessonPage;
 import edu.batstateu.javajolt.entity.Player;
+import edu.batstateu.javajolt.entity.SaveData;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.exception.LessonFileException;
+import edu.batstateu.javajolt.exception.SaveFileException;
+import edu.batstateu.javajolt.service.LessonRunnerService;
 import edu.batstateu.javajolt.service.LessonService;
 import edu.batstateu.javajolt.service.QuestionService;
+import edu.batstateu.javajolt.service.SaveService;
 import edu.batstateu.javajolt.ui.GameUI;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class GameService {
     // NOTE: Add a LessonRunnerService, it may or may not change the other current attributes/dependencies
     private final QuestionService questionService;
     private final LessonService lessonService;
+    private final LessonRunnerService lessonRunnerService;
+    private final SaveService saveService;
     private final GameUI ui;
 
-    public GameService(QuestionService questionService, LessonService lessonService, GameUI ui) {
+    public GameService(QuestionService questionService, LessonService lessonService, 
+                LessonRunnerService lessonRunnerService, SaveService saveService, GameUI ui) {
         this.questionService = questionService;
         this.lessonService = lessonService;
+        this.lessonRunnerService = lessonRunnerService;
+        this.saveService = saveService;
         this.ui = ui;
     }
 
@@ -35,135 +45,100 @@ public class GameService {
         REMINDER: Always look at the NAME or the intended PURPOSE of a method (extends to classes too), check code
                   inside the method and ask: does this match or adhere to the NAME/PURPOSE?
     */
-    public void run() {
+    public void run() throws SaveFileException {
         ui.showWelcome();
+        
+        // Load data
+        Player player;
+        Difficulty difficulty;
 
-        /*
-            This will be highly related to the following comments regarding the firstLesson logic,
-            The current implementation of player is incorrect as it creates a new player every run,
-            In summary for this and the firstLogic, RELY on the EXISTING data persistence logic
-        */
-        Player player = new Player(ui.askName(), STARTING_HP, 0);
+        SaveData saveData = loadSave();
+        if(saveData != null) {
+            player = new Player(saveData.name(), saveData.xp());
+
+            // Get completed topics
+            Map<Topic, Set<Difficulty>> completedTopics = saveData.completedTopics();
+            player.getProgress().restore(completedTopics);
+
+            difficulty = saveData.difficulty();
+        }
+        else {
+            player = new Player(ui.askName(), 0);
+            difficulty = Difficulty.BEGINNER;
+        }
 
         /*
             Ideally, after player inputs their name, that would serve as their identifier on which data to LOAD,
             This presents another problem which is that a duplicate name checker might be required as player enters a name
+
+            Notice the use of player.getProgress(), soon if multiple save data is desired, objects such as savedata
+            may also require to exist in each instance of player, like PlayerProgress
+
+            NOTE: THIS IS A POSSIBLE MAJOR IMPLEMENTATION IN THE FUTURE, DIFFERENT SAVE FILES FOR EACH NAME
         */
 
-        Set<Topic> completedBeginnerTopics = EnumSet.noneOf(Topic.class);
-        Difficulty difficulty = ui.askDifficulty();
+        // Difficulty checker
+        difficulty = checkDifficulty(player, difficulty);
+
         Topic selectedTopic = null;
 
-        /*
-            NOTE: This variable may be a dispensable variable, it seems to serve no logic,
-                It seems to be a mockup for data persistence, which wrongly lives inside the run() method,
-                There is a dedicated data persistence logic already somewhere in the program so this is not needed
-        */
-        boolean firstLesson = true;
-
-        // RECOMMENDATION: For the variables that have been noted, the LOAD operation could be used for better design
-
+        // Flags
         boolean playing = true;
 
         while (playing) {
-            /*
-                IF playing, GET all available topics (the rule is that topic must be either the first, or completed topics)
-                Currently, the logic only handles BEGINNER difficulty for all topics...
-
-                RECOMMENDATION: Update the logic to obtain availableTopics instead from the method getAvailableTopics (from PlayerProgress)
+            // Flags (might be useful, can add more,)
+            /* 
+                E.g. The isLessonComplete (meaning if all questions for a specific topic and difficulty)
+                     can be used to add more XP than XP gained per question, or check next player action!
             */
-            List<Topic> availableTopics;
-            if (difficulty == Difficulty.BEGINNER) {
-                availableTopics = getAvailableBeginnerTopics(completedBeginnerTopics);
-            } else {
-                availableTopics = List.of(Topic.values());
-            }
+            boolean isLessonComplete = false;
 
-            Topic topic;
-            if (selectedTopic != null) {
-                // Play the topic selected for replay.
-                topic = selectedTopic;
-                selectedTopic = null;
-
-                // NOTE: Same concern as with the firstLesson variable logic, may not be needed
-
-            } else if (firstLesson) {
-                /*
-                    This is the behavior currently controlled by firstLesson logic, can be taken out,
-                    
-                    RECOMMENDATION: Rely on the existing data persistence logic, also it does not make sense to only ask topics if its the player's FIRST LESSON,
-                                    the program should ALWAYS ask topics upon every new GAME SESSION, and when player chooses to REPLAY a topic MID SESSION,
-                                    the LOAD 
-                */
-                topic = ui.askTopic(availableTopics);
-
-
-                /*
-                    Currently, only the beginner case is handled, but other difficulties can be implemented later,
-                    Notice the design, a different logic is not really required as this could be reused for all difficulties
-                */
-            } else if (difficulty == Difficulty.BEGINNER) {
-                // Continue automatically to the next unlocked topic.
-                if (completedBeginnerTopics.size() == Topic.values().length) {
-                    ui.showMessage("All Beginner topics are completed! "
-                            + "You can replay a lesson or exit.");
-                    int action = ui.askNextAction();
-                    switch (action) {
-                        case 3 -> playing = false;
-
-                        // Redundant method, can use the same askTopic() method for simplicity
-                        case 2 -> selectedTopic = ui.askReplayTopic(new ArrayList<>(completedBeginnerTopics));
-                        default -> { }
-                    }
-                    continue;
-                }
-                topic = availableTopics.get(availableTopics.size() - 1);
-            } else {
-                // Note: Placeholder for unhandled difficulties, in reality all difficulty should have this
-                topic = ui.askTopic(availableTopics);
-            }
-            firstLesson = false;
+            // Ask topic from available topics (first, or completed topics)
+            List<Topic> availableTopics = player.getProgress().getAvailableTopics(difficulty);
+            Topic topic = ui.askTopic(availableTopics);
 
             /*
                 True means the player chose to study, options to move from the textbook UI can be implemented later
                 (some logic regarding switching ui likely already exists and can be reused)
                 False means quiz starts
             */
+            // Study logic (revise for when textbook implementation is robust)
             while (ui.askPlayOrStudy(topic)) {
-                study(topic, difficulty);
+                lessonRunnerService.study(topic, difficulty);
             }
+        
+            // Load questions based on chosen topic and currently saved difficulty, create new session
+            List<Question> questions = questionService.selectQuestions(topic, difficulty);
+            GameSession session = new GameSession(player, topic, difficulty, questions);
 
+            // Question loop for a lesson
+            lessonRunnerService.playLesson(session);
 
-            /*
-                Another logic that should not live inside run(), can be put in LessonRunnerService as it fits well 
-            */
-            try {
-                List<Question> questions = questionService.selectQuestions(topic, difficulty);
-                GameSession session = new GameSession(player, topic, difficulty, questions);
-                playLesson(session);
-
-                boolean passed = hasPassed(session);
-                ui.showResult(session, passed);
-                if (difficulty == Difficulty.BEGINNER && passed) {
-                    boolean newlyCompleted = completedBeginnerTopics.add(topic);
-                    if (newlyCompleted) {
-                        ui.showMessage("Topic completed!");
-                    }
-                    if (completedBeginnerTopics.size() == Topic.values().length) {
-                        ui.showMessage("Congratulations! You completed "
-                                + "all Beginner topics!");
-                    } else {
-                        List<Topic> updatedTopics = getAvailableBeginnerTopics(completedBeginnerTopics);
-                        Topic nextTopic = updatedTopics.get(updatedTopics.size() - 1);
-                        ui.showMessage("Next topic unlocked: " + nextTopic.getLabel());
-                    }
+            // Show results
+            boolean passed = lessonRunnerService.hasPassed(session);
+            ui.showResult(session, passed);
+            
+            // Add topic to completed topics in current difficulty and check progress
+            if(passed) {
+                player.getProgress().complete(topic, difficulty);
+                isLessonComplete = true;
+                if(player.getProgress().isDifficultyComplete(difficulty)) {
+                    ui.showMessage("Congratulations! You completed all topics for " +
+                        difficulty.getLabel() + " difficulty!"
+                    );
                 }
-            } catch (Exception e) {
-                ui.showMessage(e.getMessage() != null
-                        ? e.getMessage()
-                        : "An unexpected error occurred.");
+                else {
+                    List<Topic> updatedTopics = player.getProgress().getAvailableTopics(difficulty);
+                    Topic nextTopic = updatedTopics.get(updatedTopics.size() - 1);
+                    ui.showMessage("Next topic unlocked: " + nextTopic.getLabel());
+                }
             }
 
+            // Bonus XP once the whole lesson is cleared
+            if(isLessonComplete) {
+                player.addXp(lessonRunnerService.lessonCompleteBonus(difficulty));
+            }
+            
             /*
                 This can be put into a separate method, it should not live inside the run()
                 Since it's just logic for checking player action, it can still be inside GameService
@@ -175,66 +150,44 @@ public class GameService {
                     playing = false;
                 }
                 case 2 -> {
-                    // Replay a completed topic.
-                    List<Topic> replayableTopics = new ArrayList<>();
-                    if (difficulty == Difficulty.BEGINNER) {
-                        replayableTopics.addAll(getCompletedTopicsInOrder(completedBeginnerTopics));
-                    } else {
-                        replayableTopics.addAll(List.of(Topic.values()));
-                    }
-                    if (replayableTopics.isEmpty()) {
-                        ui.showMessage("No completed Beginner lessons available "
-                                + "to replay yet.");
-                    } else {
-                        selectedTopic = ui.askReplayTopic(replayableTopics);
-                    }
+                    ui.askTopic(player.getProgress().getAvailableTopics(difficulty));
                 }
                 default -> {
-                    // Continue: the next loop selects the next unlocked
-                    // Beginner topic automatically.
                     selectedTopic = null;
                 }
             }
+
+            // Finally, save data for next play
+            saveService.save(player, difficulty);
         }
         ui.showGoodbye(player);
     }
 
-    // NOTE: Rely on the existing logic to get the available and completed topics
+    // Loads the save when one exists. A missing, empty, or corrupt save starts a new game instead of crashing.
+    private SaveData loadSave() {
+        if(!saveService.hasSave()) {
+            return null;
+        }
+        try {
+            return saveService.load();
+        } catch (SaveFileException e) {
+            ui.showMessage("Could not read your save file. Starting a new game.");
+            return null;
+        }
+    }
 
-    // /**
-    //  * Returns completed Beginner topics and the first incomplete topic.
-    //  * This allows completed topics to remain replayable while preventing
-    //  * future topics from being unlocked prematurely.
-    //  */
-    // private List<Topic> getAvailableBeginnerTopics(Set<Topic> completedTopics) {
-    //     List<Topic> availableTopics = new ArrayList<>();
-    //     for (Topic topic : Topic.values()) {
-    //         if (completedTopics.contains(topic)) {
-    //             availableTopics.add(topic);
-    //         } else {
-    //             availableTopics.add(topic);
-    //             break;
-    //         }
-    //     }
-    //     return availableTopics;
-    // }
-
-    // /**
-    //  * Returns completed topics in the original enum order.
-    //  */
-    // private List<Topic> getCompletedTopicsInOrder(Set<Topic> completedTopics) {
-    //     List<Topic> orderedTopics = new ArrayList<>();
-    //     for (Topic topic : Topic.values()) {
-    //         if (completedTopics.contains(topic)) {
-    //             orderedTopics.add(topic);
-    //         }
-    //     }
-    //     return orderedTopics;
-    // }
-
-    
-
-    
-
-    
+    // Difficulty checker method
+    private Difficulty checkDifficulty(Player player, Difficulty difficulty) {
+    // A null difficulty means a brand new player
+        if(difficulty == null) difficulty = Difficulty.BEGINNER;
+        // Subsequent checks to progess -> INTERMEDIATE -> ADVANCED
+        if(player.getProgress().isDifficultyComplete(difficulty)) difficulty = Difficulty.INTERMEDIATE;
+        if(player.getProgress().isDifficultyComplete(difficulty)) difficulty = Difficulty.ADVANCED;
+        // ENDGAME ?...
+        if(player.getProgress().isDifficultyComplete(Difficulty.BEGINNER) &&
+            player.getProgress().isDifficultyComplete(Difficulty.INTERMEDIATE) &&
+            player.getProgress().isDifficultyComplete(Difficulty.ADVANCED)) 
+            difficulty = ui.askDifficulty();
+        return difficulty;
+    }
 }
