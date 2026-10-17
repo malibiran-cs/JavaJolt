@@ -1,4 +1,4 @@
-package edu.batstateu.javajolt.entity;
+package edu.batstateu.javajolt.service;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -9,7 +9,7 @@ import java.util.Set;
 
 import edu.batstateu.javajolt.enums.*;
 
-public class PlayerProgress {
+public class PlayerProgressService {
     /*
     Map to cleanly keep track and store completed topics
     STRUCTURE: {Topic} : {Set<Difficulty>}
@@ -35,8 +35,6 @@ public class PlayerProgress {
 
 
     public List<Topic> getAvailableTopics(Difficulty difficulty) {
-        // Temporary check, for beginner case only, can implement other difficulties later easily
-        if(difficulty != Difficulty.BEGINNER) return List.of(Topic.values());
         List<Topic> out = new ArrayList<>();
 
         for(Topic t: Topic.values()) {
@@ -52,6 +50,13 @@ public class PlayerProgress {
             && isComplete(t, Difficulty.ADVANCED);
     }
 
+    public boolean isDifficultyComplete(Difficulty difficulty) {
+        for(Topic t: Topic.values()) {
+            if(!isComplete(t, difficulty)) return false;
+        }
+        return true;
+    }
+
     // Returns a detached copy so savers can't mutate internal state.
     public Map<Topic, EnumSet<Difficulty>> copyCompleted() {
         Map<Topic, EnumSet<Difficulty>> copy = new EnumMap<>(Topic.class);
@@ -65,6 +70,7 @@ public class PlayerProgress {
     }
 
     // Replaces current progress with loaded data (used on game load).
+    // ? extends (Type) means that pass anything that is either of this (Type) or a subset/subclass of it
     public void restore(Map<Topic, ? extends Set<Difficulty>> data) {
         completedTopics.clear();
         data.forEach((topic, diffs) -> {

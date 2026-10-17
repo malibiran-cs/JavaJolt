@@ -18,10 +18,11 @@ import java.util.Properties;
 import java.util.Set;
 
 public class SaveService {
-    private static final Path SAVE_PATH = Path.of("Javajolt", "saves", "player.properties");
+    // Relative to the working directory (the project root when run from there).
+    private static final Path SAVE_PATH = Path.of("saves", "player.properties");
     // Player Properties
     private static final String KEY_NAME = "name";
-    private static final String KEY_SCORE = "score";
+    private static final String KEY_XP = "xp";
     private static final String KEY_DIFFICULTY = "difficulty";
     // Stored as comma-separated TOPIC:DIFFICULTY pairs, e.g. VARIABLES:BEGINNER,OPERATORS:BEGINNER.
     private static final String KEY_COMPLETED = "completedTopics";
@@ -46,7 +47,7 @@ public class SaveService {
 
         Properties props = new Properties();
         props.setProperty(KEY_NAME, player.getName());
-        props.setProperty(KEY_SCORE, String.valueOf(player.getScore()));
+        props.setProperty(KEY_XP, String.valueOf(player.getXp()));
         props.setProperty(KEY_DIFFICULTY, difficulty.name());
         props.setProperty(KEY_COMPLETED, encode(player.getProgress().copyCompleted()));
 
@@ -68,7 +69,7 @@ public class SaveService {
 
         try {
             String name = require(props, KEY_NAME);
-            int score = Integer.parseInt(require(props, KEY_SCORE));
+            int score = Integer.parseInt(require(props, KEY_XP));
             Difficulty difficulty = Difficulty.valueOf(require(props, KEY_DIFFICULTY));
             // NOTE: default to "" so old saves without this key still load as empty progress.
             Map<Topic, Set<Difficulty>> completed = decode(props.getProperty(KEY_COMPLETED, ""));

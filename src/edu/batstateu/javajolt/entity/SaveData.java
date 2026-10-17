@@ -5,7 +5,7 @@ import edu.batstateu.javajolt.enums.Topic;
 import java.util.Map;
 import java.util.Set;
 
-public record SaveData(String name, int score, Difficulty difficulty,
+public record SaveData(String name, int xp, Difficulty difficulty,
         // Snapshot of progress: Topic -> set of completed Difficulties.
         // Stored as structured data here; SaveService handles string encoding.
         Map<Topic, Set<Difficulty>> completedTopics) {

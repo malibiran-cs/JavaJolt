@@ -5,16 +5,18 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.batstateu.javajolt.enums.*;
+import edu.batstateu.javajolt.service.PlayerProgressService;
 public class Player {
+    private static final int STARTING_HP = 10;
     private String name;
-    private int hp;
+    private int hp = STARTING_HP;
+    private int xp;
     private int score; 
-    private PlayerProgress progress = new PlayerProgress();
+    private PlayerProgressService progress = new PlayerProgressService();
 
-    public Player(String name, int hp, int score) {
+    public Player(String name, int xp) {
         this.name = name;
-        this.hp = hp;
-        this.score = score;
+        this.xp = xp;
     }
 
     // HP Updater
@@ -31,6 +33,10 @@ public class Player {
         return score += amount;
     }
 
+    public int addXp(int amount) {
+        return xp += amount;
+    }
+
     public int deductScore(int deduction) {
         return score -= deduction;
     }
@@ -41,7 +47,7 @@ public class Player {
 
     // PROGRESS METHODS
     // NOTE: use this to access PlayerProgress methods
-    public PlayerProgress getProgress() {
+    public PlayerProgressService getProgress() {
         return progress;
     }
 
@@ -89,4 +95,22 @@ public class Player {
     public void setScore(int score) {
         this.score = score;
     }
+
+    public static int getStartingHp() {
+        return STARTING_HP;
+    }
+
+    public int getXp() {
+        return xp;
+    }
+
+    public void setXp(int xp) {
+        this.xp = xp;
+    }
+
+    public void setProgress(PlayerProgressService progress) {
+        this.progress = progress;
+    }
+
+    
 }
