@@ -12,7 +12,6 @@ import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.ui.GameUI;
 
 public class LessonRunnerService {
-    private static final int STARTING_HP = 10;
     private static final int DAMAGE_PER_MISTAKE = 3;
     private static final int POINTS_PER_CORRECT = 10;
     private static final int PASS_PERCENT = 70;
