@@ -1,5 +1,9 @@
-package edu.batstateu.javajolt.service;
+package edu.batstateu.javajolt.service; //Angelo
 
+import edu.batstateu.javajolt.entity.LessonPage;
+import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.Topic;
+import edu.batstateu.javajolt.exception.LessonFileException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,11 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import edu.batstateu.javajolt.entity.LessonPage;
-import edu.batstateu.javajolt.enums.Difficulty;
-import edu.batstateu.javajolt.enums.Topic;
-import edu.batstateu.javajolt.exception.LessonFileException;
 
 // Loads a topic's textbook (data/lessons/<topic>.txt) and picks the pages that fit the player's level
 public class LessonService {

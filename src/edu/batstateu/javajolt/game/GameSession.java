@@ -1,4 +1,4 @@
-package edu.batstateu.javajolt.game;
+package edu.batstateu.javajolt.game; // Angelo
 
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;

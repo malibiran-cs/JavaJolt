@@ -7,7 +7,7 @@ import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.ui.GameUI;
 import java.util.NoSuchElementException;
 
-public class GameApplication {
+public class GameApplication { //Angelo
     public static void main(String[] args) {
         QuestionBank questionBank = new QuestionBank();
 

@@ -110,7 +110,7 @@ public class GameService {
                 }
                 case 2 -> {
                     // Replay a completed topic.
-                    List<Topic> replayableTopics = new ArrayList<>();
+                    List<Topic> replayableTopics = new ArrayList<>(); // Angelo
                     if (difficulty == Difficulty.BEGINNER) {
                         replayableTopics.addAll(getCompletedTopicsInOrder(completedBeginnerTopics));
                     } else {

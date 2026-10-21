@@ -1,4 +1,4 @@
-package edu.batstateu.javajolt.exception;
+package edu.batstateu.javajolt.exception; //Angelo
 
 public class LessonFileException extends Exception {
     private static final long serialVersionUID = 1L;
