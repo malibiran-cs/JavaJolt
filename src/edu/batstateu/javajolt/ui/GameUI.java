@@ -35,7 +35,8 @@ public class GameUI { //Angelo
     public void showGoodbye(Player player) {
         System.out.println(NEW_LINE + LINE);
         System.out.println(" Thanks for playing, " + player.getName() + "!");
-        System.out.println(" Total XP: " + player.getScore());
+        System.out.println(" Total XP: " + player.getXp());
+        System.out.println(" Score:    " + player.getScore());
         System.out.println(LINE);
     }
 
@@ -44,7 +45,9 @@ public class GameUI { //Angelo
     public String askQuestion(Question question, int number, int total, Player player) {
         System.out.println(NEW_LINE + THIN);
         System.out.println(" Question " + number + " of " + total
-                + "     HP: " + player.getHp() + "     XP: " + player.getScore());
+                + "     HP: " + player.getHp()
+                + "     Score: " + player.getScore()
+                + "     XP: " + player.getXp());
         System.out.println(THIN);
         System.out.print(question.display());
         return switch (question.getInputMode()) {
@@ -77,7 +80,7 @@ public class GameUI { //Angelo
         System.out.println(" Correct:    " + session.getCorrectCount() + " / " + session.getQuestions().size());
         System.out.println(" Mistakes:   " + session.getMistakeCount());
         System.out.println(" Accuracy:   " + session.getAccuracyPercent() + "%");
-        System.out.println(" XP earned:  " + session.getXpEarned());
+        System.out.println(" Score:      " + session.getXpEarned());
         System.out.println(" Result:     " + (passed ? "PASSED" : "NOT PASSED - try this lesson again!"));
         if (!session.getPlayer().isAlive()) {
             System.out.println(" You ran out of HP before finishing.");
@@ -85,7 +88,7 @@ public class GameUI { //Angelo
         System.out.println(LINE);
     }
 
-    public boolean askWantsToStudy(Topic topic) {
+    public boolean askPlayOrStudy(Topic topic) {
         System.out.println("\n" + topic.getLabel() + ":");
         System.out.println(" [1] Play now");
         System.out.println(" [2] Study first");
@@ -127,6 +130,7 @@ public class GameUI { //Angelo
         }
     }
 
+    // SAVE FOR ENDGAME WHEN ALL IS COMPLETED IN THE 
     public Difficulty askDifficulty() {
         Difficulty[] levels = Difficulty.values();
 
@@ -158,18 +162,6 @@ public int askNextAction() {
     System.out.println(" [3] Exit");
 
     return askChoice("> ", 1, 3);
-}
-
-public Topic askReplayTopic(List<Topic> completedTopics) {
-    System.out.println("\nChoose a completed topic to replay:");
-
-    for (int i = 0; i < completedTopics.size(); i++) {
-        System.out.println(" [" + (i + 1) + "] "
-                + completedTopics.get(i).getLabel());
-    }
-
-    int choice = askChoice("> ", 1, completedTopics.size());
-    return completedTopics.get(choice - 1);
 }
 
     // Input Helpers
