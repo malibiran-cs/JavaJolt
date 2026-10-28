@@ -1,0 +1,231 @@
+JavaJolt lesson text: OPERATORS
+The game ignores everything above the first "## PAGE" line.
+
+Page format:  ## PAGE <number> [ALL]: <title>
+[ALL] = shown to every player (no difficulty levels).
+Width:        built for a 60-character console, plain ASCII.
+
+## PAGE 1 [ALL]: What Are Operators?
+
+An operator is a symbol that does something to values.
+The values it works on are called operands.
+
+    7 + 5
+
+Here + is the operator, and 7 and 5 are the operands.
+The result of this expression is 12.
+
+Java has four families of operators:
+
+    arithmetic    + - * / %      do math
+    assignment    = += -= ...    store values in variables
+    comparison    == != < > ...  compare two values
+    logical       && || !        combine true/false values
+
+This topic goes through each family, one at a time.
+
+## PAGE 2 [ALL]: Arithmetic Operators
+
+    Operator   Meaning      Example    Result
+    --------   ----------   --------   ------
+    +          add          7 + 5      12
+    -          subtract     7 - 5      2
+    *          multiply     7 * 5      35
+    /          divide       7 / 2      3
+    %          remainder    7 % 2      1
+
+The % operator is called modulus. It gives what is left
+over after dividing.
+
+    17 % 5   ->   2     (17 is 3 groups of 5, with 2 left)
+    10 % 4   ->   2
+    8 % 2    ->   0     (nothing left over)
+
+A common use: n % 2 == 0 means n is even.
+
+Remember: ^ is NOT "power" in Java. It does something
+else entirely.
+
+## PAGE 3 [ALL]: Division With Whole Numbers
+
+When BOTH numbers are ints, the answer is an int. The
+decimal part is dropped (not rounded).
+
+    System.out.println(7 / 2);      prints:  3
+    System.out.println(9 / 10);     prints:  0
+
+If at least one number is a double, you get decimals:
+
+    System.out.println(7.0 / 2);    prints:  3.5
+    System.out.println(7 / 2.0);    prints:  3.5
+
+To divide two int variables and keep the decimals, turn
+one of them into a double with a cast:
+
+    int total = 7;
+    int count = 2;
+    System.out.println((double) total / count);
+
+Output:
+    3.5
+
+## PAGE 4 [ALL]: Order of Operations
+
+Java follows the same order you learned in math:
+
+    1. parentheses  ( )
+    2. * / %        (left to right)
+    3. + -          (left to right)
+
+    System.out.println(2 + 3 * 4);      prints:  14
+    System.out.println((2 + 3) * 4);    prints:  20
+    System.out.println(10 - 4 - 3);     prints:  3
+
+In the last line, 10 - 4 is done first (left to right),
+giving 6, then 6 - 3 is 3.
+
+When you are unsure, add parentheses. They never hurt and
+they make your code easier to read.
+
+## PAGE 5 [ALL]: Assignment Operators
+
+You already know = stores a value into a variable.
+Shortcut versions change a variable using its own value:
+
+    Shortcut    Same as
+    ---------   ---------
+    x += 5      x = x + 5
+    x -= 5      x = x - 5
+    x *= 5      x = x * 5
+    x /= 5      x = x / 5
+    x %= 5      x = x % 5
+
+    int score = 10;
+    score += 5;
+    System.out.println(score);
+
+Output:
+    15
+
+Use them for things like adding points or taking damage:
+
+    hp -= 3;
+
+## PAGE 6 [ALL]: Increment and Decrement
+
+Adding or subtracting 1 is so common that Java has special
+operators for it:
+
+    score++;    adds 1         same as  score = score + 1;
+    score--;    subtracts 1    same as  score = score - 1;
+
+    int score = 5;
+    score++;
+    System.out.println(score);      prints:  6
+
+++ can go before or after the variable. On its own line
+there is no difference. Inside a bigger expression there is:
+
+    int a = 5;
+    int b = a++;    // b gets 5, THEN a becomes 6
+    int c = ++a;    // a becomes 7 FIRST, then c gets 7
+
+After these lines: a is 7, b is 5, and c is 7.
+
+## PAGE 7 [ALL]: Comparison Operators
+
+Comparison operators compare two values and give back a
+boolean: true or false.
+
+    Operator   Meaning                 Example    Result
+    --------   ---------------------   --------   ------
+    ==         equal to                5 == 5     true
+    !=         not equal to            5 != 3     true
+    >          greater than            5 > 8      false
+    <          less than               5 < 8      true
+    >=         greater or equal        5 >= 5     true
+    <=         less or equal           5 <= 4     false
+
+Careful: one = stores a value, two == compares values.
+
+    int x = 5;       // store 5 in x
+    x == 5           // ask: is x equal to 5?  true
+
+## PAGE 8 [ALL]: Logical Operators
+
+Logical operators combine true/false values.
+
+    &&   AND   true only when BOTH sides are true
+    ||   OR    true when AT LEAST ONE side is true
+    !    NOT   flips true to false, and false to true
+
+    true && false     ->  false
+    true || false     ->  true
+    !true             ->  false
+
+They are often used to combine comparisons:
+
+    int age = 15;
+    boolean isTeen = age >= 13 && age <= 19;
+    System.out.println(isTeen);       prints:  true
+
+Java checks the left side first. If && already has a false
+on the left, it skips the right side (short-circuit).
+
+## PAGE 9 [ALL]: Putting Operators Together
+
+A small program that uses every family:
+
+    int hp = 10;
+    int damage = 3;
+    hp -= damage;                       // 7
+    hp++;                               // 8
+    boolean alive = hp > 0 && hp != 3;  // true
+    System.out.println("HP: " + hp);
+    System.out.println("Alive: " + alive);
+
+Output:
+    HP: 8
+    Alive: true
+
+Read it step by step:
+    hp -= damage   ->  hp is 10 - 3 = 7
+    hp++           ->  hp is 8
+    hp > 0 ...     ->  8 > 0 is true, and 8 != 3 is true
+
+## PAGE 10 [ALL]: Common Mistakes
+
+Using = instead of == in a condition:
+
+    int x = 5;
+    if (x = 5) { ... }
+
+Java says "incompatible types: int cannot be converted to
+boolean". A condition must be true or false.
+
+Forgetting that int division drops decimals:
+
+    double half = 1 / 2;       // half is 0.0, not 0.5
+    double half = 1 / 2.0;     // half is 0.5
+
+Chaining comparisons the way math does:
+
+    5 < x < 10                 // error in Java
+    x > 5 && x < 10            // correct
+
+Mixing up && and ||. "Between 5 and 10" needs &&. Using ||
+there is true for every number.
+
+## PAGE 11 [ALL]: Recap
+
+  - Operands are the values; the operator is the symbol.
+  - + - * / % do math. % gives the remainder.
+  - int / int drops the decimal part.
+  - Multiplication and division come before + and -.
+  - += -= *= /= %= update a variable using itself.
+  - ++ adds 1 and -- subtracts 1.
+  - == != < > >= <= give true or false.
+  - && (and), || (or), and ! (not) combine true/false.
+  - One = stores. Two == compares.
+
+Ready to test yourself? Choose Play now.

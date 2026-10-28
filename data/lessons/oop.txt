@@ -1,0 +1,333 @@
+JavaJolt lesson text: OBJECT-ORIENTED PROGRAMMING
+The game ignores everything above the first "## PAGE" line.
+
+Page format:  ## PAGE <number> [ALL]: <title>
+[ALL] = shown to every player (no difficulty levels).
+Width:        built for a 60-character console, plain ASCII.
+
+## PAGE 1 [ALL]: What Is Object-Oriented Programming?
+
+So far, programs were a list of steps. OOP organizes a
+program around OBJECTS: things that have data and can do
+actions.
+
+A player in a game:
+
+    data:      name, hp, score
+    actions:   takeDamage(), addScore()
+
+OOP keeps the data and its actions together in one place.
+
+Four big ideas make OOP work. You will meet them one by
+one:
+
+    Encapsulation   protect data inside the object
+    Inheritance     reuse what a parent class has
+    Polymorphism    one action, many behaviors
+    Abstraction     show what it does, hide how
+
+## PAGE 2 [ALL]: Classes and Objects
+
+A CLASS is a blueprint. An OBJECT is a thing built from it.
+
+    class Player {
+        String name;
+        int hp;
+    }
+
+Build objects with new:
+
+    Player a = new Player();
+    a.name = "Ana";
+    a.hp = 10;
+    Player b = new Player();
+    b.name = "Ben";
+    b.hp = 7;
+
+    System.out.println(a.name + " " + a.hp);
+    System.out.println(b.name + " " + b.hp);
+
+Output:
+    Ana 10
+    Ben 7
+
+One class, many objects. Each object keeps its OWN values.
+
+## PAGE 3 [ALL]: Methods in a Class
+
+Methods give an object its actions.
+
+    class Player {
+        String name;
+        int hp;
+
+        void takeDamage(int amount) {
+            hp -= amount;
+        }
+
+        void show() {
+            System.out.println(name + " HP: " + hp);
+        }
+    }
+
+    Player a = new Player();
+    a.name = "Ana";  a.hp = 10;
+    a.takeDamage(3);
+    a.show();
+
+Output:
+    Ana HP: 7
+
+a.takeDamage(3) changes only a's hp.
+
+## PAGE 4 [ALL]: Constructors
+
+A constructor sets up a new object. It has the SAME NAME
+as the class and no return type.
+
+    class Player {
+        String name;
+        int hp;
+
+        Player(String name, int hp) {
+            this.name = name;
+            this.hp = hp;
+        }
+    }
+
+    Player a = new Player("Ana", 10);
+
+this.name is the field. name on its own is the parameter.
+The word this means "the object being built".
+
+Now every Player must be created with a name and hp, so
+none is left half-filled.
+
+## PAGE 5 [ALL]: Encapsulation
+
+Public fields let anyone break the rules:
+
+    a.hp = -500;      // nothing stops this
+
+ENCAPSULATION: make fields private, and give controlled
+access through methods.
+
+    class Player {
+        private int hp;
+
+        Player(int hp) { this.hp = hp; }
+
+        int getHp() { return hp; }
+
+        void setHp(int hp) {
+            if (hp >= 0) {
+                this.hp = hp;
+            }
+        }
+    }
+
+Outside code can only reach hp through getHp and setHp,
+and setHp refuses negative values.
+
+## PAGE 6 [ALL]: Inheritance
+
+INHERITANCE lets a class reuse another class. The child
+gets everything the parent has.
+
+    class Unit {
+        String name;
+        int hp;
+
+        Unit(String name, int hp) {
+            this.name = name;
+            this.hp = hp;
+        }
+    }
+
+    class Wizard extends Unit {
+        int mana;
+
+        Wizard(String name, int hp, int mana) {
+            super(name, hp);
+            this.mana = mana;
+        }
+    }
+
+Wizard has name, hp, and mana. super(...) calls the
+parent constructor first.
+
+## PAGE 7 [ALL]: Overriding Methods
+
+A child can replace a parent's method with its own version.
+This is called OVERRIDING. Mark it with @Override.
+
+    class Unit {
+        void attack() {
+            System.out.println("Unit attacks");
+        }
+    }
+
+    class Wizard extends Unit {
+        @Override
+        void attack() {
+            System.out.println("Wizard casts a spell");
+        }
+    }
+
+    new Wizard().attack();
+
+Output:
+    Wizard casts a spell
+
+@Override makes Java check that you really are replacing a
+method from the parent. A typo in the name becomes an error
+instead of a silent bug.
+
+## PAGE 8 [ALL]: Polymorphism
+
+POLYMORPHISM means "many forms". A variable of the parent
+type can hold any child object, and Java runs the right
+version of the method.
+
+    class Unit {
+        void attack() { System.out.println("Hit"); }
+    }
+    class Wizard extends Unit {
+        void attack() { System.out.println("Spell"); }
+    }
+    class Archer extends Unit {
+        void attack() { System.out.println("Arrow"); }
+    }
+
+    Unit[] team = {new Unit(), new Wizard(), new Archer()};
+    for (Unit u : team) {
+        u.attack();
+    }
+
+This prints Hit, Spell, Arrow (one per line). The loop
+never checks which unit it has. JavaJolt does the same:
+each question type has its own isCorrect().
+(@Override is left out above only to save space.)
+
+## PAGE 9 [ALL]: Abstraction
+
+ABSTRACTION hides the details and shows only what matters.
+An abstract class is too general to build on its own. It
+can declare methods without bodies.
+
+    abstract class Unit {
+        abstract int attackPower();
+    }
+
+    class Wizard extends Unit {
+        int attackPower() { return 8; }
+    }
+
+You cannot build an abstract class:
+
+    new Unit();      // error
+
+Java says "Unit is abstract; cannot be instantiated". Each
+child MUST fill in attackPower().
+
+JavaJolt's Question class is abstract: there is no such
+thing as just "a question", only multiple choice, and so
+on.
+
+## PAGE 10 [ALL]: Interfaces
+
+An interface is a list of methods a class promises to have.
+Unrelated classes can share the same promise.
+
+    interface Healable {
+        void heal(int amount);
+    }
+
+    class Wizard extends Unit implements Healable {
+        public void heal(int amount) {
+            System.out.println("Wizard heals " + amount);
+        }
+    }
+
+    class Potion implements Healable {
+        public void heal(int amount) {
+            System.out.println("Potion heals " + amount);
+        }
+    }
+
+A class can extend ONE parent, but implement MANY
+interfaces. Interface methods are public, so the methods
+that implement them must be public too.
+
+## PAGE 11 [ALL]: static Members
+
+A static member belongs to the CLASS, not to any object.
+There is exactly one copy, shared by everyone.
+
+    class Player {
+        static int count = 0;
+        String name;
+
+        Player(String name) {
+            this.name = name;
+            count++;
+        }
+    }
+
+    new Player("Ana");
+    new Player("Ben");
+    System.out.println(Player.count);
+
+Output:
+    2
+
+Use the class name to reach it: Player.count.
+
+You have already used static: main is static, so Java can
+start the program before any object exists.
+
+## PAGE 12 [ALL]: Common Mistakes
+
+Forgetting new:
+
+    Player a = null;
+    a.show();         // NullPointerException
+
+a points to no object, so there is nothing to call show
+on.
+
+Reaching into a private field:
+
+    a.hp = 5;         // error: hp has private access
+
+Comparing objects with ==. It asks "same object?", not
+"same contents?". Write an equals method for contents.
+
+Forgetting super(...) when the parent needs arguments: the
+child constructor will not compile.
+
+Making everything public. Start with private and open up
+only what other classes truly need.
+
+## PAGE 13 [ALL]: Recap
+
+    Pillar          In JavaJolt
+    -------------   ---------------------------------
+    Encapsulation   Player keeps its fields private
+    Inheritance     MultipleChoiceQuestion extends
+                    Question
+    Polymorphism    each question has its own
+                    isCorrect()
+    Abstraction     Question is an abstract class
+
+  - A class is a blueprint. An object is built from it.
+  - A constructor sets an object up.
+  - private fields with getters/setters protect data.
+  - extends reuses a parent. @Override replaces a method.
+  - A parent variable can hold any child object.
+  - abstract classes cannot be built. Interfaces are
+    promises that classes keep.
+  - static belongs to the class, not to an object.
+
+You have finished every topic. Choose Play now to test
+yourself.

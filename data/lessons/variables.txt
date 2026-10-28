@@ -1,11 +1,11 @@
 JavaJolt lesson text: VARIABLES
 The game ignores everything above the first "## PAGE" line.
 
-Page format:  ## PAGE <number> [<LEVEL>]: <title>
-Levels:       BEGINNER, INTERMEDIATE, ADVANCED, ALL
+Page format:  ## PAGE <number> [ALL]: <title>
+[ALL] = shown to every player (no difficulty levels).
 Width:        built for a 60-character console, plain ASCII.
 
-## PAGE 1 [BEGINNER]: What Is a Variable?
+## PAGE 1 [ALL]: What Is a Variable?
 
 Programs need to remember things: a player's name, their
 score, how much HP they have left.
@@ -23,7 +23,7 @@ Every variable has three parts:
     a NAME   (what you call the box)
     a VALUE  (what is inside the box right now)
 
-## PAGE 2 [BEGINNER]: Declaring a Variable
+## PAGE 2 [ALL]: Declaring a Variable
 
 Creating a variable is called declaring it.
 
@@ -43,7 +43,7 @@ Here are two more:
 Note: in Java, = does not mean "equals" like in math.
 It means "put this value into that box".
 
-## PAGE 3 [BEGINNER]: Declaring Without a Value
+## PAGE 3 [ALL]: Declaring Without a Value
 
 You can also create the box first and fill it later:
 
@@ -55,7 +55,7 @@ It is a note for people reading the code.
 
 Rule: give a variable a value BEFORE you use it.
 
-## PAGE 4 [BEGINNER]: Data Types
+## PAGE 4 [ALL]: Data Types
 
 The type tells Java what kind of value a variable holds.
 
@@ -81,7 +81,7 @@ Pick the type that matches the value:
     isAlive      -> boolean
     playerName   -> String
 
-## PAGE 5 [BEGINNER]: Naming Variables
+## PAGE 5 [ALL]: Naming Variables
 
 The compiler enforces these rules:
 
@@ -103,7 +103,7 @@ letter and capitalize each new word.
 Choose names that say what the value is. A name like
 playerScore is much clearer than x.
 
-## PAGE 6 [BEGINNER]: Printing Variables
+## PAGE 6 [ALL]: Printing Variables
 
 To show a variable's value on the screen, use println:
 
@@ -127,7 +127,7 @@ quotes prints the value inside the variable:
     System.out.println("score");    prints:  score
     System.out.println(score);      prints:  10
 
-## PAGE 7 [BEGINNER]: Common Beginner Mistakes
+## PAGE 7 [ALL]: Common Beginner Mistakes
 
 When your code has a mistake, the compiler tells you.
 Read the FIRST message and the line number it points to.
@@ -148,7 +148,7 @@ Using a variable before it has a value:
   Java says "variable lives might not have been
   initialized". Give lives a value first.
 
-## PAGE 8 [INTERMEDIATE]: Changing a Variable
+## PAGE 8 [ALL]: Changing a Variable
 
 A variable holds one value at a time. Assigning a new
 value replaces the old one.
@@ -171,7 +171,7 @@ Do not write the type again when you change a value.
     int x = 5;
     x = 8;         // correct
 
-## PAGE 9 [INTERMEDIATE]: Types Must Match
+## PAGE 9 [ALL]: Types Must Match
 
 A variable only accepts the kind of value it was
 declared to hold.
@@ -195,7 +195,7 @@ double without trouble:
 
     double price = 5;         // price holds 5.0
 
-## PAGE 10 [INTERMEDIATE]: Constants With final
+## PAGE 10 [ALL]: Constants With final
 
 Some values should never change, such as the highest HP a
 player can have. Add the word final to lock a variable:
@@ -217,7 +217,7 @@ underscores between words:
 Using constants instead of repeating a number makes code
 easier to read and easier to change in one place.
 
-## PAGE 11 [ADVANCED]: Strings Never Change
+## PAGE 11 [ALL]: Strings Never Change
 
 A String cannot be changed after it is created. This is
 called being immutable.
@@ -240,7 +240,7 @@ To keep the new String, store it in a variable:
 Output:
     JAVA
 
-## PAGE 12 [ADVANCED]: Comparing Strings
+## PAGE 12 [ALL]: Comparing Strings
 
 To check whether two Strings have the same text, use
 equals(), not ==.

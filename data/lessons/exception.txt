@@ -1,0 +1,248 @@
+JavaJolt lesson text: EXCEPTION HANDLING
+The game ignores everything above the first "## PAGE" line.
+
+Page format:  ## PAGE <number> [ALL]: <title>
+[ALL] = shown to every player (no difficulty levels).
+Width:        built for a 60-character console, plain ASCII.
+
+## PAGE 1 [ALL]: What Is an Exception?
+
+Some mistakes only show up while the program runs. Java
+then stops and reports an EXCEPTION.
+
+    int a = 10;
+    int b = 0;
+    System.out.println(a / b);
+
+Java stops with:
+
+    Exception in thread "main"
+        java.lang.ArithmeticException: / by zero
+
+Dividing a whole number by zero is impossible, so Java
+throws an ArithmeticException. If nothing handles it, the
+program ends right there.
+
+Exception handling lets your program react to a problem
+and keep going instead of crashing.
+
+## PAGE 2 [ALL]: Reading an Error Message
+
+An error report has three useful parts:
+
+    java.lang.ArithmeticException: / by zero
+        at Code.main(Code.java:5)
+
+  java.lang.ArithmeticException   the TYPE of problem
+  / by zero                       the MESSAGE: what went
+                                  wrong
+  at Code.main(Code.java:5)       WHERE: method main, in
+                                  Code.java, on line 5
+
+Always read the type and the message first, then go to the
+line it points to.
+
+In a longer program, several "at" lines appear. They show
+the chain of method calls that led to the problem. The
+first one is where it actually happened.
+
+## PAGE 3 [ALL]: try and catch
+
+Put risky code in a try block. If an exception happens,
+Java jumps to the catch block.
+
+    try {
+        int result = 10 / 0;
+        System.out.println(result);
+    } catch (ArithmeticException e) {
+        System.out.println("Cannot divide by zero");
+    }
+    System.out.println("Program continues");
+
+Output:
+    Cannot divide by zero
+    Program continues
+
+The line that prints result never ran. The moment the
+exception happened, Java left the try block. After the
+catch, the program carries on normally.
+
+## PAGE 4 [ALL]: The Exception Object
+
+The e in catch (ArithmeticException e) is an object that
+describes the problem.
+
+    try {
+        int result = 10 / 0;
+    } catch (ArithmeticException e) {
+        System.out.println(e.getMessage());
+    }
+
+Output:
+    / by zero
+
+e.getMessage() returns the message text. Use it to tell
+the player (or yourself) what went wrong.
+
+e.printStackTrace() prints the full report, including the
+"at" lines. It is handy while you are debugging.
+
+## PAGE 5 [ALL]: Catching Different Exceptions
+
+Different problems throw different exceptions. A catch for
+each lets you react in the right way.
+
+    try {
+        int n = Integer.parseInt("abc");
+    } catch (NumberFormatException e) {
+        System.out.println("Not a number");
+    } catch (ArithmeticException e) {
+        System.out.println("Math problem");
+    }
+
+Output:
+    Not a number
+
+Integer.parseInt("abc") cannot turn letters into a
+number, so it throws NumberFormatException.
+
+To handle two types the same way, join them with |:
+
+    } catch (NumberFormatException
+             | ArithmeticException e) {
+
+## PAGE 6 [ALL]: The finally Block
+
+Code in finally runs whether or not an exception happened.
+Use it for clean-up that must always happen.
+
+    try {
+        System.out.println("Trying");
+        int x = 10 / 0;
+    } catch (ArithmeticException e) {
+        System.out.println("Caught");
+    } finally {
+        System.out.println("Always runs");
+    }
+
+Output:
+    Trying
+    Caught
+    Always runs
+
+If nothing had gone wrong, you would see Trying and then
+Always runs. The finally block runs in both cases.
+
+## PAGE 7 [ALL]: Checked and Unchecked Exceptions
+
+UNCHECKED exceptions (like ArithmeticException and
+NumberFormatException) can happen anywhere. Java does not
+force you to handle them.
+
+CHECKED exceptions are problems Java knows can happen,
+such as a missing file. Java makes you deal with them, or
+your code will not compile:
+
+    new java.io.FileReader("notes.txt");
+
+Java says "unreported exception FileNotFoundException;
+must be caught or declared to be thrown".
+
+You have two choices:
+  1. catch it with try / catch
+  2. declare it with throws (next page)
+
+Rule of thumb: file and input problems are usually
+checked. Programming slips (like dividing by zero) are
+unchecked.
+
+## PAGE 8 [ALL]: throw and throws
+
+You can create an exception yourself with throw:
+
+    static void setAge(int age) {
+        if (age < 0) {
+            throw new IllegalArgumentException("Bad age");
+        }
+        System.out.println("Age set to " + age);
+    }
+
+    try {
+        setAge(-5);
+    } catch (IllegalArgumentException e) {
+        System.out.println(e.getMessage());
+    }
+
+Output:
+    Bad age
+
+A method that might throw a CHECKED exception declares it
+with throws, passing the job to whoever calls it:
+
+    static void load() throws java.io.IOException { ... }
+
+The caller must then catch it, or declare it too.
+
+## PAGE 9 [ALL]: Your Own Exceptions
+
+You can write your own exception by extending Exception.
+JavaJolt does this for bad menu input:
+
+    class InvalidInputException extends Exception {
+        InvalidInputException(String message) {
+            super(message);
+        }
+    }
+
+Throw it, and catch it where you can deal with it:
+
+    static int pick(String text)
+            throws InvalidInputException {
+        if (text.isEmpty()) {
+            throw new InvalidInputException("Type it");
+        }
+        return Integer.parseInt(text);
+    }
+
+A clear name makes the problem obvious. Because it extends
+Exception, it is a CHECKED exception.
+
+## PAGE 10 [ALL]: Common Mistakes
+
+An empty catch block hides problems:
+
+    catch (Exception e) { }     // nobody ever knows
+
+At least print a message.
+
+Catching in the wrong order. A general type placed first
+blocks the specific ones below it:
+
+    catch (Exception e) { ... }
+    catch (ArithmeticException e) { ... }   // error
+
+Java says "exception ArithmeticException has already been
+caught". Put specific catches first.
+
+Wrapping huge amounts of code in one try. Keep try blocks
+small so you know which line failed.
+
+Using exceptions for normal decisions. Check with an if
+first when you can (is the divisor 0?).
+
+## PAGE 11 [ALL]: Recap
+
+  - An exception is a problem that happens while the
+    program runs. Unhandled, it stops the program.
+  - Read the type, the message, and the line number.
+  - try holds risky code. catch handles the problem.
+  - e.getMessage() gives the message text.
+  - Use several catch blocks, specific ones first.
+  - finally always runs.
+  - Checked exceptions must be caught or declared with
+    throws. Unchecked ones are optional.
+  - throw makes an exception. Extend Exception for your
+    own.
+  - Never leave a catch block empty.
+
+Ready to test yourself? Choose Play now.

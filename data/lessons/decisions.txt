@@ -1,0 +1,285 @@
+JavaJolt lesson text: DECISIONS
+The game ignores everything above the first "## PAGE" line.
+
+Page format:  ## PAGE <number> [ALL]: <title>
+[ALL] = shown to every player (no difficulty levels).
+Width:        built for a 60-character console, plain ASCII.
+
+## PAGE 1 [ALL]: Why Programs Make Decisions
+
+Real programs do not run the same way every time. They
+look at a situation and choose what to do.
+
+    If the player has no HP left, show "Game over".
+    If the answer is correct, give XP.
+    Otherwise, take away HP.
+
+In Java, a decision depends on a CONDITION: an expression
+that is either true or false.
+
+    hp < 1
+    answer.equals("A")
+    score >= 70
+
+This topic shows how to make code run only when a
+condition is true.
+
+## PAGE 2 [ALL]: The if Statement
+
+    if (condition) {
+        // runs only when the condition is true
+    }
+
+    int hp = 0;
+    if (hp < 1) {
+        System.out.println("Game over");
+    }
+
+Output:
+    Game over
+
+Rules:
+  - The condition goes in parentheses.
+  - The code to run goes in curly braces { }.
+  - There is NO semicolon after the closing parenthesis.
+
+If the condition is false, Java skips the whole block and
+carries on after the closing brace.
+
+## PAGE 3 [ALL]: if and else
+
+Add else to run something when the condition is false.
+
+    int n = 4;
+    if (n > 5) {
+        System.out.println("big");
+    } else {
+        System.out.println("small");
+    }
+
+Output:
+    small
+
+Trace it: n > 5 is 4 > 5, which is false. Java skips the
+first block and runs the else block.
+
+Exactly ONE of the two blocks runs: never both, and never
+neither.
+
+## PAGE 4 [ALL]: else if Chains
+
+For more than two choices, chain conditions with else if.
+
+    int score = 85;
+    if (score >= 90) {
+        System.out.println("A");
+    } else if (score >= 80) {
+        System.out.println("B");
+    } else if (score >= 70) {
+        System.out.println("C");
+    } else {
+        System.out.println("F");
+    }
+
+Output:
+    B
+
+Java checks from the top and runs the FIRST block whose
+condition is true. The rest are skipped, even if they would
+also be true. 85 is also >= 70, but B has already run.
+
+Order matters: put the strictest condition first.
+
+## PAGE 5 [ALL]: Combining Conditions
+
+Use && (and), || (or), and ! (not) to build bigger
+conditions.
+
+    int age = 15;
+    if (age >= 13 && age <= 19) {
+        System.out.println("teenager");
+    }
+
+    String day = "Sat";
+    if (day.equals("Sat") || day.equals("Sun")) {
+        System.out.println("weekend");
+    }
+
+    boolean raining = false;
+    if (!raining) {
+        System.out.println("no umbrella");
+    }
+
+Output:
+    teenager
+    weekend
+    no umbrella
+
+## PAGE 6 [ALL]: Nested if
+
+An if can sit inside another if. The inner one is only
+checked when the outer one is true.
+
+    int hp = 5;
+    boolean hasPotion = true;
+
+    if (hp < 10) {
+        if (hasPotion) {
+            System.out.println("Drink the potion");
+        } else {
+            System.out.println("Find a potion");
+        }
+    }
+
+Output:
+    Drink the potion
+
+The same idea can often be written with &&:
+
+    if (hp < 10 && hasPotion) { ... }
+
+Nesting is useful when each case needs its own else. Too
+many levels are hard to read, so keep it shallow.
+
+## PAGE 7 [ALL]: The switch Statement
+
+When one variable is compared against many exact values,
+switch is cleaner than a long else if chain.
+
+    int choice = 2;
+    switch (choice) {
+        case 1:
+            System.out.println("Play");
+            break;
+        case 2:
+            System.out.println("Study");
+            break;
+        default:
+            System.out.println("Unknown");
+    }
+
+Output:
+    Study
+
+  case     one value to match
+  break    leave the switch. Without it, Java keeps
+           running into the next case!
+  default  runs when no case matches
+
+## PAGE 8 [ALL]: switch With Text and Arrows
+
+switch also works with String values:
+
+    String command = "start";
+    switch (command) {
+        case "start":
+            System.out.println("Starting");
+            break;
+        case "quit":
+            System.out.println("Bye");
+            break;
+    }
+
+Newer Java (14 and up) has a shorter arrow form. There is
+no break and no fall-through:
+
+    switch (command) {
+        case "start" -> System.out.println("Starting");
+        case "quit"  -> System.out.println("Bye");
+        default      -> System.out.println("Unknown");
+    }
+
+Both forms print:  Starting
+
+## PAGE 9 [ALL]: Comparing Strings
+
+To check whether two Strings have the same text, use
+equals(). Do not use ==.
+
+    String answer = "A";
+    if (answer.equals("A")) {
+        System.out.println("Correct");
+    }
+
+== asks whether two Strings are the very same object, not
+whether they have the same letters. It can give false even
+when the text matches.
+
+To ignore capital letters, use equalsIgnoreCase:
+
+    String input = "yes";
+    if (input.equalsIgnoreCase("YES")) {
+        System.out.println("Confirmed");
+    }
+
+Output of the two examples:
+    Correct
+    Confirmed
+
+## PAGE 10 [ALL]: A Shortcut: the Ternary Operator
+
+For a simple choice between two values, there is a
+one-line form:
+
+    condition ? valueIfTrue : valueIfFalse
+
+    int hp = 0;
+    String status = hp > 0 ? "alive" : "defeated";
+    System.out.println(status);
+
+Output:
+    defeated
+
+It does the same job as:
+
+    String status;
+    if (hp > 0) {
+        status = "alive";
+    } else {
+        status = "defeated";
+    }
+
+Use it for short, simple choices only. For anything
+longer, a normal if is easier to read.
+
+## PAGE 11 [ALL]: Common Mistakes
+
+A semicolon right after the condition:
+
+    int x = 3;
+    if (x > 5);
+    {
+        System.out.println("big");
+    }
+
+This prints "big" even though 3 is not > 5. The ; ends the
+if, so the block below always runs.
+
+Using = instead of == :
+    if (x = 5)    // error: int cannot be boolean
+
+Forgetting break in a switch:
+
+    case 1: System.out.println("A");
+    case 2: System.out.println("B");
+
+With choice 1, this prints A and then B. Java falls
+through into the next case until it meets a break.
+
+Skipping braces: only the FIRST line belongs to the if.
+Always use braces.
+
+## PAGE 12 [ALL]: Recap
+
+  - A condition is an expression that is true or false.
+  - if runs a block only when the condition is true.
+  - else runs when it is false. Only one block runs.
+  - else if chains give more choices. The first true one
+    wins, so put the strictest first.
+  - && || ! combine conditions.
+  - switch matches one value against many cases. Use break.
+  - Compare Strings with equals(), not ==.
+  - condition ? a : b is a one-line choice.
+  - No semicolon after the if condition.
+
+Ready to test yourself? Choose Play now.

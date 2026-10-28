@@ -1,0 +1,269 @@
+JavaJolt lesson text: LOOPS
+The game ignores everything above the first "## PAGE" line.
+
+Page format:  ## PAGE <number> [ALL]: <title>
+[ALL] = shown to every player (no difficulty levels).
+Width:        built for a 60-character console, plain ASCII.
+
+## PAGE 1 [ALL]: Why Loops?
+
+Sometimes you need to do the same thing many times.
+
+Without a loop, printing the numbers 1 to 5 looks like
+this:
+
+    System.out.println(1);
+    System.out.println(2);
+    System.out.println(3);
+    System.out.println(4);
+    System.out.println(5);
+
+Now imagine 1000 numbers. A loop repeats a block of code
+for you, so you write it once.
+
+Java has three main loops:
+
+    while       repeat while a condition is true
+    for         repeat a counted number of times
+    do-while    like while, but runs at least once
+
+## PAGE 2 [ALL]: The while Loop
+
+    while (condition) {
+        // repeats as long as the condition is true
+    }
+
+    int count = 1;
+    while (count <= 5) {
+        System.out.println(count);
+        count++;
+    }
+
+Output:
+    1
+    2
+    3
+    4
+    5
+
+A counting loop has three parts:
+    start       int count = 1;
+    condition   count <= 5
+    update      count++;
+
+Java checks the condition BEFORE each round. When it
+becomes false, the loop ends.
+
+## PAGE 3 [ALL]: The for Loop
+
+A for loop puts the three parts on one line:
+
+    for (start; condition; update) {
+        // repeats
+    }
+
+    for (int i = 1; i <= 5; i++) {
+        System.out.println(i);
+    }
+
+Output:
+    1
+    2
+    3
+    4
+    5
+
+Same job as the while loop on the last page, but the
+counter lives in one place. The variable i exists only
+inside the loop.
+
+Use for when you know how many times to repeat. Use while
+when you repeat until something happens.
+
+## PAGE 4 [ALL]: The do-while Loop
+
+    do {
+        // runs once, then repeats while condition is true
+    } while (condition);
+
+    int n = 10;
+    do {
+        System.out.println("n is " + n);
+        n++;
+    } while (n < 5);
+
+Output:
+    n is 10
+
+The condition is checked AFTER the block. So a do-while
+always runs at least once, even though 10 < 5 is false.
+
+A plain while loop with the same condition would run zero
+times.
+
+Notice the semicolon after the closing parenthesis. Only
+do-while needs one there.
+
+## PAGE 5 [ALL]: Counting Patterns
+
+Change the start, condition, and update to count in
+different ways.
+
+Count down:
+    for (int i = 3; i >= 1; i--) {
+        System.out.println(i);
+    }
+    prints 3, 2, 1 (one per line)
+
+Count by twos:
+    for (int i = 0; i <= 10; i += 2) {
+        System.out.println(i);
+    }
+    prints 0, 2, 4, 6, 8, 10 (one per line)
+
+Add up the numbers 1 to 10:
+    int sum = 0;
+    for (int i = 1; i <= 10; i++) {
+        sum += i;
+    }
+    System.out.println(sum);         prints:  55
+
+sum is created BEFORE the loop so it keeps its value from
+round to round.
+
+## PAGE 6 [ALL]: break and continue
+
+break leaves the loop immediately.
+continue skips the rest of this round and goes on to the
+next one.
+
+    for (int i = 1; i <= 6; i++) {
+        if (i == 3) {
+            continue;
+        }
+        if (i == 5) {
+            break;
+        }
+        System.out.println(i);
+    }
+
+Output:
+    1
+    2
+    4
+
+Trace it:
+    i is 3  ->  continue: skip the print
+    i is 5  ->  break: the loop ends
+So 3 and 5 are never printed, and 6 is never reached.
+
+## PAGE 7 [ALL]: Loops and Decisions Together
+
+Loops and ifs work well together. Print only the even
+numbers from 1 to 10:
+
+    for (int i = 1; i <= 10; i++) {
+        if (i % 2 == 0) {
+            System.out.println(i);
+        }
+    }
+
+Output: 2, 4, 6, 8, 10 (one per line)
+
+i % 2 == 0 means "i has no remainder when divided by 2".
+
+Count how many numbers from 1 to 20 divide evenly by 3:
+
+    int count = 0;
+    for (int i = 1; i <= 20; i++) {
+        if (i % 3 == 0) {
+            count++;
+        }
+    }
+    System.out.println(count);       prints:  6
+
+## PAGE 8 [ALL]: Nested Loops
+
+A loop inside a loop. The inner loop runs completely for
+every round of the outer loop.
+
+    for (int row = 1; row <= 3; row++) {
+        for (int col = 1; col <= row; col++) {
+            System.out.print("*");
+        }
+        System.out.println();
+    }
+
+Output:
+    *
+    **
+    ***
+
+  print()    stays on the same line
+  println()  moves to the next line
+
+Row 1 runs the inner loop once, row 2 twice, and row 3
+three times. Total stars: 1 + 2 + 3 = 6.
+
+## PAGE 9 [ALL]: Off-by-One and Endless Loops
+
+Two classic loop bugs.
+
+OFF BY ONE: < versus <=
+
+    for (int i = 1; i < 5; i++)     // 1 2 3 4
+    for (int i = 1; i <= 5; i++)    // 1 2 3 4 5
+
+Decide whether the last value should be included.
+
+ENDLESS LOOP: the condition never becomes false.
+
+    int count = 1;
+    while (count <= 5) {
+        System.out.println(count);
+        // forgot count++, so count stays 1 forever
+    }
+
+The program keeps printing until you stop it. In a
+terminal, press Ctrl+C.
+
+Before you run a loop, ask: what changes each round, and
+will that make the condition false?
+
+## PAGE 10 [ALL]: Common Mistakes
+
+A semicolon right after for (...):
+
+    for (int i = 0; i < 3; i++);
+    {
+        System.out.println("hi");
+    }
+
+This prints "hi" only ONCE. The ; is the (empty) loop
+body, so the block below is not part of the loop.
+
+Changing the wrong variable:
+
+    for (int i = 0; i < 3; j++)   // error: j does not exist
+
+Using a counter outside its loop:
+
+    for (int i = 0; i < 3; i++) { }
+    System.out.println(i);      // error: cannot find symbol
+
+i exists only inside the loop. Declare it before the loop
+if you need it afterwards.
+
+## PAGE 11 [ALL]: Recap
+
+  - A loop repeats a block of code.
+  - while: repeat while a condition is true. It checks
+    first, so it may run zero times.
+  - for: start, condition, and update on one line.
+  - do-while: checks last, so it runs at least once.
+  - break leaves a loop. continue skips to the next round.
+  - Loops and ifs work well together (try i % 2 == 0).
+  - A loop inside a loop gives rows and columns.
+  - Watch for off-by-one (< or <=) and endless loops.
+
+Ready to test yourself? Choose Play now.
