@@ -14,6 +14,11 @@ public class QuestionBank {
         // ADD ONE LINE HERE FOR EVERY NEW TOPIC FILE
         questions.addAll(VariablesQuestions.getQuestions());
         questions.addAll(OperatorsQuestions.getQuestions());
+        questions.addAll(DecisionsQuestions.getQuestions());
+        questions.addAll(LoopsQuestions.getQuestions());
+        questions.addAll(ArraysQuestions.getQuestions());
+        questions.addAll(ExceptionHandlingQuestions.getQuestions());
+        questions.addAll(OOPQuestions.getQuestions());
 
         checkForDuplicateIds();
     }

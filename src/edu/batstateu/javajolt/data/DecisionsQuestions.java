@@ -64,6 +64,47 @@ public class DecisionsQuestions {
                 List.of()
         ));
 
+        // INTERMEDIATE
+        questions.add(new MultipleChoiceQuestion(
+                306,
+                "Which structure is best for selecting one of several exact constant values?",
+                Topic.DECISIONS,
+                Difficulty.INTERMEDIATE,
+                "A switch statement clearly selects a branch based on a matching value.",
+                List.of("A. switch", "B. for", "C. try", "D. import"),
+                "A"
+        ));
+
+        questions.add(new MultipleChoiceQuestion(
+                307,
+                "What does an else-if branch do?",
+                Topic.DECISIONS,
+                Difficulty.INTERMEDIATE,
+                "else if checks another condition only when the earlier if condition was false.",
+                List.of("A. Repeats the first condition", "B. Checks another condition", "C. Ends the program", "D. Declares a variable"),
+                "B"
+        ));
+
+        // ADVANCED
+        questions.add(new MultipleChoiceQuestion(
+                308,
+                "What is printed?\n    int score = 85;\n    if (score >= 90) {\n        System.out.println(\"A\");\n    } else if (score >= 80) {\n        System.out.println(\"B\");\n    } else {\n        System.out.println(\"C\");\n    }",
+                Topic.DECISIONS,
+                Difficulty.ADVANCED,
+                "85 is not at least 90, but it is at least 80, so the else-if branch prints B.",
+                List.of("A. A", "B. B", "C. C", "D. Nothing"),
+                "B"
+        ));
+
+        questions.add(new IdentificationQuestion(
+                309,
+                "What keyword exits a switch case so execution does not fall through? (one word)",
+                Topic.DECISIONS,
+                Difficulty.ADVANCED,
+                "break exits the current switch case.",
+                List.of("break")
+        ));
+
         return questions;
     }
 }

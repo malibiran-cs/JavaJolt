@@ -44,6 +44,48 @@ public class OOPQuestions {
                 "B"
         ));
 
+        // INTERMEDIATE
+        questions.add(new MultipleChoiceQuestion(
+                704,
+                "Which access modifier allows a member to be used only inside its declaring class?",
+                Topic.OOP,
+                Difficulty.INTERMEDIATE,
+                "private restricts access to the class that declares the member.",
+                List.of("A. public", "B. protected", "C. private", "D. static"),
+                "C"
+        ));
+
+        questions.add(new MultipleChoiceQuestion(
+                705,
+                "What is method overloading?",
+                Topic.OOP,
+                Difficulty.INTERMEDIATE,
+                "Overloading defines methods with the same name but different parameter lists.",
+                List.of("A. Replacing a parent method", "B. Same method name with different parameters", "C. Hiding every field", "D. Creating multiple packages"),
+                "B"
+        ));
+
+        // ADVANCED
+        questions.add(new MultipleChoiceQuestion(
+                706,
+                "Which OOP principle hides internal data and requires access through methods?",
+                Topic.OOP,
+                Difficulty.ADVANCED,
+                "Encapsulation protects an object's state behind a controlled public interface.",
+                List.of("A. Encapsulation", "B. Iteration", "C. Compilation", "D. Recursion"),
+                "A"
+        ));
+
+        questions.add(new MultipleChoiceQuestion(
+                707,
+                "What annotation commonly marks a method that overrides a superclass method?",
+                Topic.OOP,
+                Difficulty.ADVANCED,
+                "@Override tells the compiler that the method is intended to replace an inherited method.",
+                List.of("A. @Inherited", "B. @Override", "C. @Super", "D. @Method"),
+                "B"
+        ));
+
         return questions;
     }
 }

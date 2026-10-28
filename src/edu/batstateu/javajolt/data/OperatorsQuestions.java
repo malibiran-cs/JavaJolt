@@ -87,6 +87,45 @@ public class OperatorsQuestions {
                 "B"
         ));
 
+        questions.add(new IdentificationQuestion(
+                208,
+                "What is the value of 5 * (2 + 3)? (type the number)",
+                Topic.OPERATORS,
+                Difficulty.INTERMEDIATE,
+                "Parentheses are evaluated first: 2 + 3 is 5, then 5 * 5 is 25.",
+                List.of("25")
+        ));
+
+        questions.add(new MultipleChoiceQuestion(
+                209,
+                "Which operator means logical OR in Java?",
+                Topic.OPERATORS,
+                Difficulty.INTERMEDIATE,
+                "The || operator is true when at least one of its conditions is true.",
+                List.of("A. &&", "B. ||", "C. !", "D. |="),
+                "B"
+        ));
+
+        // ADVANCED
+        questions.add(new MultipleChoiceQuestion(
+                210,
+                "What does 3 + 4 * 2 == 11 evaluate to?",
+                Topic.OPERATORS,
+                Difficulty.ADVANCED,
+                "Multiplication happens first, so the expression becomes 3 + 8 == 11, which is true.",
+                List.of("A. true", "B. false", "C. 11", "D. A compile error"),
+                "A"
+        ));
+
+        questions.add(new IdentificationQuestion(
+                211,
+                "What is the value of 17 % 5? (type the number)",
+                Topic.OPERATORS,
+                Difficulty.ADVANCED,
+                "17 divided by 5 leaves a remainder of 2.",
+                List.of("2")
+        ));
+
         return questions;
     }
 }
