@@ -19,7 +19,7 @@ public class LessonService {
     private final Path lessonFolder;
 
     public LessonService() {
-        this(Path.of("data", "lessons"));
+        this(findLessonFolder());
     }
 
     public LessonService(Path lessonFolder) {
@@ -28,7 +28,7 @@ public class LessonService {
 
     // Returns the pages to show, or an empty list if this topic has no textbook yet
     public List<LessonPage> loadPages(Topic topic, Difficulty difficulty) throws LessonFileException {
-        Path file = lessonFolder.resolve(topic.name().toLowerCase() + ".txt");
+        Path file = lessonFolder.resolve(fileNameFor(topic));
         if (!Files.exists(file)) {
             return List.of();
         }
@@ -43,6 +43,27 @@ public class LessonService {
         return parse(lines, file).stream()
                                  .filter(page -> isShownAt(page, difficulty))
                                  .toList();
+    }
+
+    private static Path findLessonFolder() {
+        Path currentDirectory = Path.of("data", "lessons");
+        if (Files.isDirectory(currentDirectory)) {
+            return currentDirectory;
+        }
+
+        Path nestedProjectDirectory = Path.of("JavaJolt", "data", "lessons");
+        if (Files.isDirectory(nestedProjectDirectory)) {
+            return nestedProjectDirectory;
+        }
+
+        return currentDirectory;
+    }
+
+    private String fileNameFor(Topic topic) {
+        return switch (topic) {
+            case EXCEPTION_HANDLING -> "exception.txt";
+            default -> topic.name().toLowerCase() + ".txt";
+        };
     }
 
     // A page is shown if it is for every level, or for this level or an easier one

@@ -19,9 +19,9 @@ public class LessonRunnerService {
     private static final int XP_PER_CORRECT = 5;
     private static final int LESSON_COMPLETE_XP = 50;
 
-    private QuestionService questionService;
-    private LessonService lessonService;
-    private GameUI ui;
+    private final QuestionService questionService;
+    private final LessonService lessonService;
+    private final GameUI ui;
 
     public LessonRunnerService(QuestionService questionService, LessonService lessonService, GameUI ui) {
         this.questionService = questionService;
