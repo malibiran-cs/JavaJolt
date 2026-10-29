@@ -58,6 +58,10 @@ public class CodeQuestionService {
             // Returns false because the program could not finish running normally.
             return false;
 
+        }  catch (IllegalStateException e) {
+            System.err.println("[JavaJolt] " + e.getMessage());
+            return false;
+
         } finally {
 
             // Deletes the temporary directory and its contents if the directory was created.

@@ -126,8 +126,7 @@ public class GameService {
             
             // Add topic to completed topics in current difficulty and check progress
             if(passed) {
-                player.getProgress().complete(topic, difficulty);
-                isLessonComplete = true;
+                isLessonComplete = player.getProgress().complete(topic, difficulty);
                 if(player.getProgress().isDifficultyComplete(difficulty)) {
                     ui.showMessage("Congratulations! You completed all topics for " +
                         difficulty.getLabel() + " difficulty!"

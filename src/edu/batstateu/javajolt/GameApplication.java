@@ -12,33 +12,25 @@ import java.util.NoSuchElementException;
 
 public class GameApplication { //Angelo
     public static void main(String[] args) {
-        QuestionBank questionBank = new QuestionBank();
+         try {
+            QuestionBank questionBank = new QuestionBank();
+            QuestionService questionService = new QuestionService(questionBank);
+            LessonService lessonService = new LessonService();
+            GameUI ui = new GameUI();
+            LessonRunnerService lessonRunnerService =
+                    new LessonRunnerService(questionService, lessonService, ui);
+            SaveService saveService = new SaveService();
+            GameService gameService =
+                    new GameService(questionService, lessonService, lessonRunnerService, saveService, ui);
 
-        QuestionService questionService =
-                new QuestionService(questionBank);
-        
-        LessonService lessonService = 
-                new LessonService();
-
-        GameUI ui = new GameUI();
-
-        LessonRunnerService lessonRunnerService =
-                new LessonRunnerService(questionService, lessonService, ui);
-
-        SaveService saveService =
-                new SaveService();
-
-        GameService gameService =
-                new GameService(questionService, lessonService, lessonRunnerService, saveService, ui);
-
-        try {
             gameService.run();
         } catch (NoSuchElementException e) {
-
-            System.out.println("\nInput closed. Thank you!");
+                System.out.println("\nInput closed. Thank you!");
         } catch (SaveFileException e) {
-
-            System.out.println("\n" + e.getMessage());
+                System.out.println("\n" + e.getMessage());
+        } catch (IllegalStateException e) {
+                System.out.println("\nThe question data could not be loaded: " + e.getMessage());
         }
     }
+    
 }
