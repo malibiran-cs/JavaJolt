@@ -14,7 +14,7 @@ public class GameSession {
     private int currentQuestionIndex;
     private int correctCount;
     private int mistakeCount;
-    private int xpEarned;
+    private int scoreEarned;
 
     // Constructor
     public GameSession(Player player, Topic topic, Difficulty difficulty, List<Question> questions) {
@@ -27,7 +27,7 @@ public class GameSession {
     // State Updaters
     public void recordCorrect(int points) {
         correctCount++;
-        xpEarned += points;
+        scoreEarned += points;
     }
 
     public void recordMistake() {
@@ -91,7 +91,7 @@ public class GameSession {
         return mistakeCount;
     }
 
-    public int getXpEarned() {
-        return xpEarned;
+    public int getScoreEarned() {
+        return scoreEarned;
     }
 }

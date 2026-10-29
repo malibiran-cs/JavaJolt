@@ -10,8 +10,8 @@ public class Player {
     private static final int STARTING_HP = 10;
     private String name;
     private int hp = STARTING_HP;
-    private int xp;
-    private int score; 
+    private int xp;      // persistent: written to the save file and restored on load
+    private int score;   // session only: never saved, resets to 0 each launch
     private PlayerProgressService progress = new PlayerProgressService();
 
     public Player(String name, int xp) {

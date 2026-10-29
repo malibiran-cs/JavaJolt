@@ -80,7 +80,7 @@ public class GameUI { //Angelo
         System.out.println(" Correct:    " + session.getCorrectCount() + " / " + session.getQuestions().size());
         System.out.println(" Mistakes:   " + session.getMistakeCount());
         System.out.println(" Accuracy:   " + session.getAccuracyPercent() + "%");
-        System.out.println(" Score:      " + session.getXpEarned());
+        System.out.println(" Score:      " + session.getScoreEarned());
         System.out.println(" Result:     " + (passed ? "PASSED" : "NOT PASSED - try this lesson again!"));
         if (!session.getPlayer().isAlive()) {
             System.out.println(" You ran out of HP before finishing.");

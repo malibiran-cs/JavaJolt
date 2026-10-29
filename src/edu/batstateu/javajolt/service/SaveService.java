@@ -69,11 +69,11 @@ public class SaveService {
 
         try {
             String name = require(props, KEY_NAME);
-            int score = Integer.parseInt(require(props, KEY_XP));
+            int xp = Integer.parseInt(require(props, KEY_XP));
             Difficulty difficulty = Difficulty.valueOf(require(props, KEY_DIFFICULTY));
             // NOTE: default to "" so old saves without this key still load as empty progress.
             Map<Topic, Set<Difficulty>> completed = decode(props.getProperty(KEY_COMPLETED, ""));
-            return new SaveData(name, score, difficulty, completed);
+            return new SaveData(name, xp, difficulty, completed);
         } catch (IllegalArgumentException e) {
             throw new SaveFileException("Save file is corrupted: " + saveFile, e);
         }
