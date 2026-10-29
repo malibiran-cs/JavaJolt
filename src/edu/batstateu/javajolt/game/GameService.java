@@ -25,7 +25,7 @@ public class GameService {
 
     public GameService(QuestionService questionService, LessonService lessonService, 
                 LessonRunnerService lessonRunnerService, SaveService saveService, GameUI ui) {
-        this.questionService = questionService;
+        this.questionService = questionService; 
         this.lessonService = lessonService;
         this.lessonRunnerService = lessonRunnerService;
         this.saveService = saveService;
