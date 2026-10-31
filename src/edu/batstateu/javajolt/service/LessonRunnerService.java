@@ -51,22 +51,39 @@ public class LessonRunnerService {
             Question question = questions.get(i);
             session.setCurrentQuestionIndex(i + 1);
             String answer = ui.askQuestion(question, i + 1, questions.size(), player);
-            if (questionService.isCorrect(question, answer)) {
-                player.addScore(POINTS_PER_CORRECT);
-                player.addXp(xpPerCorrect(session.getDifficulty()));
-                session.recordCorrect(POINTS_PER_CORRECT);
+            if (submitAnswer(session, question, answer)) {
                 ui.showCorrect(question);
             } else {
-                player.takeDamage(DAMAGE_PER_MISTAKE);
-                session.recordMistake();
                 ui.showWrong(question, player);
             }
         }
     }
 
+    // Records one answer using the same rules for console and Swing callers.
+    public boolean submitAnswer(GameSession session, Question question, String answer) {
+        Player player = session.getPlayer();
+        if (questionService.isCorrect(question, answer)) {
+            player.addScore(POINTS_PER_CORRECT);
+            player.addXp(xpPerCorrect(session.getDifficulty()));
+            session.recordCorrect(POINTS_PER_CORRECT);
+            return true;
+        }
+        player.takeDamage(DAMAGE_PER_MISTAKE);
+        session.recordMistake();
+        return false;
+    }
+
     public boolean hasPassed(GameSession session) {
         return session.getPlayer().isAlive()
                 && session.getAccuracyPercent() >= PASS_PERCENT;
+    }
+
+    // Applies the progress reward once when a lesson is passed.
+    public void recordLessonCompletion(GameSession session) {
+        if (hasPassed(session)
+                && session.getPlayer().getProgress().complete(session.getTopic(), session.getDifficulty())) {
+            session.getPlayer().addXp(lessonCompleteBonus(session.getDifficulty()));
+        }
     }
 
     // XP awarded per correct answer. Fixed value for now; can scale by difficulty later.
