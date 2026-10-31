@@ -74,7 +74,7 @@ public class GameService {
             MainWindow window = new MainWindow(player);
             window.setVisible(true);
         });
-        return;
+        
 
         /*
             Ideally, after player inputs their name, that would serve as their identifier on which data to LOAD,
