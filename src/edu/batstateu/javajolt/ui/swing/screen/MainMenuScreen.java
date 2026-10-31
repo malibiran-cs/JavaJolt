@@ -15,6 +15,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class MainMenuScreen extends Screen {
@@ -78,23 +79,81 @@ public class MainMenuScreen extends Screen {
         return row;
     }
 
-    private JPanel createMenuButtons() {
-        JPanel grid = new JPanel(new GridLayout(2, 2, Theme.GAP_M, Theme.GAP_M));
-        grid.setOpaque(false);
-        grid.add(new RoundedButton("Lessons", ButtonStyle.PRIMARY));
-        grid.add(new RoundedButton("Progress", ButtonStyle.SECONDARY));
-        grid.add(new RoundedButton("Save", ButtonStyle.SECONDARY));
-        grid.add(new RoundedButton("Exit", ButtonStyle.DANGER));
+private JPanel createMenuButtons() {
+    JPanel grid = new JPanel(new GridLayout(2, 2, Theme.GAP_M, Theme.GAP_M));
+    grid.setOpaque(false);
 
-        GridBagConstraints stretch = new GridBagConstraints();
-        stretch.weightx = 1;
-        stretch.fill = GridBagConstraints.HORIZONTAL;
+    RoundedButton lessonsButton =
+            new RoundedButton("Lessons", ButtonStyle.PRIMARY);
 
-        JPanel holder = new JPanel(new GridBagLayout());
-        holder.setOpaque(false);
-        holder.add(grid, stretch);
-        return holder;
-    }
+    RoundedButton progressButton =
+            new RoundedButton("Progress", ButtonStyle.SECONDARY);
+
+    RoundedButton saveButton =
+            new RoundedButton("Save", ButtonStyle.SECONDARY);
+
+    RoundedButton exitButton =
+            new RoundedButton("Exit", ButtonStyle.DANGER);
+
+    // Lessons
+    lessonsButton.addActionListener(e ->
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Lesson selection will be available soon!",
+                    "Lessons",
+                    JOptionPane.INFORMATION_MESSAGE
+            )
+    );
+
+    // Progress
+    progressButton.addActionListener(e ->
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Your player statistics will appear here!",
+                    "Progress",
+                    JOptionPane.INFORMATION_MESSAGE
+            )
+    );
+
+    // Save
+    saveButton.addActionListener(e ->
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Save functionality will be implemented soon!",
+                    "Save",
+                    JOptionPane.INFORMATION_MESSAGE
+            )
+    );
+
+    // Exit
+    exitButton.addActionListener(e -> {
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to exit JavaJolt?",
+                "Exit JavaJolt",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (choice == JOptionPane.YES_OPTION) {
+            System.exit(0);
+        }
+    });
+
+    grid.add(lessonsButton);
+    grid.add(progressButton);
+    grid.add(saveButton);
+    grid.add(exitButton);
+
+    GridBagConstraints stretch = new GridBagConstraints();
+    stretch.weightx = 1;
+    stretch.fill = GridBagConstraints.HORIZONTAL;
+
+    JPanel holder = new JPanel(new GridBagLayout());
+    holder.setOpaque(false);
+    holder.add(grid, stretch);
+
+    return holder;
+}
 
     private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
