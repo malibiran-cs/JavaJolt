@@ -24,13 +24,13 @@ public class MainMenuScreen extends Screen {
     private final JLabel expLabel = createLabel("EXP: --");
     private final JLabel levelLabel = createLabel("LEVEL: --");
 
-    public MainMenuScreen(Player player) {
+    public MainMenuScreen(Player player, Runnable onLessonsClicked) {
         expLabel.setText("EXP: " + player.getXp());
         levelLabel.setText("LEVEL: " +
                 LevelService.calculateLevel(player.getXp()));
 
         add(createTop(), BorderLayout.NORTH);
-        add(createBody(), BorderLayout.CENTER);
+        add(createBody(onLessonsClicked), BorderLayout.CENTER);
     }
 
     private JPanel createTop() {
@@ -57,11 +57,11 @@ public class MainMenuScreen extends Screen {
         return header;
     }
 
-    private JPanel createBody() {
+    private JPanel createBody(Runnable onLessonsClicked) {
         JPanel body = new JPanel(new GridLayout(1, 2, Theme.GAP_L, 0));
         body.setOpaque(false);
         body.add(createBadgesPanel());
-        body.add(createMenuButtons());
+        body.add(createMenuButtons(onLessonsClicked));
         return body;
     }
 
@@ -85,7 +85,7 @@ public class MainMenuScreen extends Screen {
         return row;
     }
 
-private JPanel createMenuButtons() {
+private JPanel createMenuButtons(Runnable onLessonsClicked) {
     JPanel grid = new JPanel(new GridLayout(2, 2, Theme.GAP_M, Theme.GAP_M));
     grid.setOpaque(false);
 
@@ -102,14 +102,13 @@ private JPanel createMenuButtons() {
             new RoundedButton("Exit", ButtonStyle.DANGER);
 
     // Lessons
-    lessonsButton.addActionListener(e ->
+    lessonsButton.addActionListener(e -> onLessonsClicked.run());
             JOptionPane.showMessageDialog(
                     this,
                     "Lesson selection will be available soon!",
                     "Lessons",
                     JOptionPane.INFORMATION_MESSAGE
-            )
-    );
+            );
 
     // Progress
     progressButton.addActionListener(e ->
