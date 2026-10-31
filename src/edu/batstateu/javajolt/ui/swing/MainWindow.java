@@ -16,8 +16,15 @@ public class MainWindow extends JFrame {
     public MainWindow(Player player) {
         super("JavaJolt");
 
-        container.add(new WelcomeScreen(name -> showScreen(ScreenId.MAIN_MENU)), ScreenId.WELCOME.name());
-        container.add(new MainMenuScreen(), ScreenId.MAIN_MENU.name());
+        container.add(
+            new WelcomeScreen(name -> {
+                player.setName(name);
+                showScreen(ScreenId.MAIN_MENU);
+            }),
+            ScreenId.WELCOME.name()
+        );
+
+        container.add(new MainMenuScreen(player), ScreenId.MAIN_MENU.name());
 
         setContentPane(container);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
