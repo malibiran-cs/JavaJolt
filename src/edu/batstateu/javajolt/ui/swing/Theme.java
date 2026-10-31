@@ -34,6 +34,7 @@ public final class Theme {
     public static final Font FONT_HEADING = new Font(Font.SANS_SERIF, Font.BOLD, 20);
     public static final Font FONT_BODY = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
     public static final Font FONT_BUTTON = new Font(Font.SANS_SERIF, Font.BOLD, 18);
+    public static final Font FONT_CODE = new Font(Font.MONOSPACED, Font.PLAIN, 14);
 
     // Corner roundness is part of the kit images; NinePatch keeps the corners
     // fixed while the middle of each component stretches.
@@ -43,4 +44,14 @@ public final class Theme {
     public static final int GAP_M = 16;
     public static final int GAP_L = 24;
     public static final int GAP_XL = 32;
+
+    // Question screen sizing
+    public static final int CHARACTER_SIZE = 110;
+    public static final int QUESTION_PROMPT_WIDTH = 520;
+    public static final int QUESTION_PROMPT_HEIGHT = 170;
+    public static final int ANSWER_FIELD_WIDTH = 360;
+    public static final int ANSWER_FIELD_HEIGHT = 64;
+    public static final int CHOICE_TEXT_WIDTH = 260;
+    public static final int CODE_EDITOR_ROWS = 10;
+    public static final int CODE_EDITOR_COLUMNS = 70;
 }
