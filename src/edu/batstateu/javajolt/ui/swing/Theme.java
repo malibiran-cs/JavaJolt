@@ -1,0 +1,46 @@
+package edu.batstateu.javajolt.ui.swing;
+
+import java.awt.Color;
+import java.awt.Font;
+
+public final class Theme {
+    private Theme() {
+    }
+
+    // Colors (from the Softline Flat Night kit)
+    public static final Color BACKGROUND = new Color(0x141518);
+    public static final Color PANEL = new Color(0x202227);
+    public static final Color PANEL_BORDER = new Color(0x2E3138);
+    public static final Color INSET = new Color(0x2A2D33);
+    public static final Color INSET_BORDER = new Color(0x373B43);
+
+    public static final Color ACCENT = new Color(0xFF7A45);
+    public static final Color ACCENT_HOVER = new Color(0xFF8758);
+    public static final Color ACCENT_PRESSED = new Color(0xE06B3D);
+
+    public static final Color SECONDARY_HOVER = new Color(0x3F4247);
+    public static final Color SECONDARY_PRESSED = new Color(0x25282D);
+
+    public static final Color DANGER = new Color(0xE5566D);
+    public static final Color DANGER_HOVER = new Color(0xE8677C);
+    public static final Color DANGER_PRESSED = new Color(0xCA4C60);
+
+    public static final Color TEXT = new Color(0xEEF0F4);
+    public static final Color TEXT_MUTED = new Color(0x8B919E);
+    public static final Color TEXT_ON_ACCENT = new Color(0x17181C);
+
+    // Fonts
+    public static final Font FONT_TITLE = new Font(Font.SANS_SERIF, Font.BOLD, 40);
+    public static final Font FONT_HEADING = new Font(Font.SANS_SERIF, Font.BOLD, 20);
+    public static final Font FONT_BODY = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
+    public static final Font FONT_BUTTON = new Font(Font.SANS_SERIF, Font.BOLD, 18);
+
+    // Corner roundness is part of the kit images; NinePatch keeps the corners
+    // fixed while the middle of each component stretches.
+
+    // Spacing
+    public static final int GAP_S = 8;
+    public static final int GAP_M = 16;
+    public static final int GAP_L = 24;
+    public static final int GAP_XL = 32;
+}
