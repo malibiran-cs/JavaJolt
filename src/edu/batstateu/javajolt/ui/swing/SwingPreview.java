@@ -8,7 +8,7 @@ public class SwingPreview {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             MainWindow window = new MainWindow(new Player("Preview", 0));
-            window.showScreen(ScreenId.WELCOME); // change to ScreenId.MAIN_MENU to preview the other screen
+            window.showScreen("WELCOME"); // change to "MAIN_MENU" to preview the other screen
             window.setVisible(true);
         });
     }

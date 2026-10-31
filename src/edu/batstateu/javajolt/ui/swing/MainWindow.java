@@ -18,10 +18,11 @@ public class MainWindow extends JFrame {
 
         container.add(new WelcomeScreen(name -> {
             player.setName(name);
-            showScreen(ScreenId.MAIN_MENU);
-        }), ScreenId.WELCOME.name());
+            showScreen("MAIN_MENU");
+        }), "WELCOME");
 
-        container.add(new MainMenuScreen(player), ScreenId.MAIN_MENU.name());
+        container.add(new MainMenuScreen(player, () -> {
+        }), "MAIN_MENU");
 
         setContentPane(container);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -30,7 +31,7 @@ public class MainWindow extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    public void showScreen(ScreenId id) {
-        cards.show(container, id.name());
+    public void showScreen(String id) {
+        cards.show(container, id);
     }
 }
