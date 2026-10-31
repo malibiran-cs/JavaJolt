@@ -3,6 +3,7 @@ package edu.batstateu.javajolt;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.InputMode;
 import edu.batstateu.javajolt.enums.Topic;
+import java.util.List;
 
 public abstract class Question {
     private int id;
@@ -29,6 +30,27 @@ public abstract class Question {
     // INPUT MODE: most questions take one line; a question type can override this (CodeQuestion does)
     public InputMode getInputMode() {
         return InputMode.SINGLE_LINE;
+    }
+
+    // Optional answer-editor details used by the Swing question screen.
+    public List<String> getChoices() {
+        return List.of();
+    }
+
+    public String getTemplate() {
+        return "";
+    }
+
+    public String getExpectedOutput() {
+        return "";
+    }
+
+    public List<String> getRequiredConcepts() {
+        return List.of();
+    }
+
+    public List<String> getRequiredImports() {
+        return List.of();
     }
 
     // GETTERS AND SETTERS
