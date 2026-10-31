@@ -103,12 +103,6 @@ private JPanel createMenuButtons(Runnable onLessonsClicked) {
 
     // Lessons
     lessonsButton.addActionListener(e -> onLessonsClicked.run());
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Lesson selection will be available soon!",
-                    "Lessons",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
 
     // Progress
     progressButton.addActionListener(e ->
