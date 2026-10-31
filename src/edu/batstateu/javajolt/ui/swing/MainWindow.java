@@ -16,7 +16,7 @@ public class MainWindow extends JFrame {
     public MainWindow(Player player) {
         super("JavaJolt");
 
-        container.add(new WelcomeScreen(), ScreenId.WELCOME.name());
+        container.add(new WelcomeScreen(name -> showScreen(ScreenId.MAIN_MENU)), ScreenId.WELCOME.name());
         container.add(new MainMenuScreen(), ScreenId.MAIN_MENU.name());
 
         setContentPane(container);
