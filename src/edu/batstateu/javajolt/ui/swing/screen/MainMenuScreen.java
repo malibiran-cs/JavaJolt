@@ -1,6 +1,7 @@
 package edu.batstateu.javajolt.ui.swing.screen;
 
 import edu.batstateu.javajolt.entity.Player;
+import edu.batstateu.javajolt.service.LevelService;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.component.BadgeSlot;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
@@ -24,12 +25,13 @@ public class MainMenuScreen extends Screen {
     private final JLabel levelLabel = createLabel("LEVEL: --");
 
     public MainMenuScreen(Player player) {
+        expLabel.setText("EXP: " + player.getXp());
+        levelLabel.setText("LEVEL: " +
+                LevelService.calculateLevel(player.getXp()));
+
         add(createTop(), BorderLayout.NORTH);
         add(createBody(), BorderLayout.CENTER);
-
-        expLabel.setText("EXP: " + player.getXp());
-        levelLabel.setText("LEVEL: 1");
-}
+    }
 
     private JPanel createTop() {
         JPanel top = new JPanel(new BorderLayout(0, Theme.GAP_L));
