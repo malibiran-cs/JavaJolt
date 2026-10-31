@@ -1,6 +1,7 @@
 package edu.batstateu.javajolt;
 
 import edu.batstateu.javajolt.data.QuestionBank;
+import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.exception.SaveFileException;
 import edu.batstateu.javajolt.game.GameService;
 import edu.batstateu.javajolt.service.LessonRunnerService;
@@ -8,7 +9,9 @@ import edu.batstateu.javajolt.service.LessonService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.service.SaveService;
 import edu.batstateu.javajolt.ui.GameUI;
+import edu.batstateu.javajolt.ui.swing.MainWindow;
 import java.util.NoSuchElementException;
+import javax.swing.SwingUtilities;
 
 public class GameApplication { //Angelo
     public static void main(String[] args) {
@@ -21,7 +24,8 @@ public class GameApplication { //Angelo
                     new LessonRunnerService(questionService, lessonService, ui);
             SaveService saveService = new SaveService();
             GameService gameService =
-                    new GameService(questionService, lessonService, lessonRunnerService, saveService, ui);
+                    new GameService(questionService, lessonService, lessonRunnerService, saveService, ui,
+                            GameApplication::openMainWindow);
 
             gameService.run();
         } catch (NoSuchElementException e) {
@@ -31,6 +35,14 @@ public class GameApplication { //Angelo
         } catch (IllegalStateException e) {
                 System.out.println("\nThe question data could not be loaded: " + e.getMessage());
         }
+    }
+
+    // Starts the Swing window on the event dispatch thread once the player is ready.
+    private static void openMainWindow(Player player) {
+        SwingUtilities.invokeLater(() -> {
+            MainWindow window = new MainWindow(player);
+            window.setVisible(true);
+        });
     }
     
 }

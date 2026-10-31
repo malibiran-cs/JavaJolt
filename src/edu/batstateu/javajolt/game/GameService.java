@@ -14,20 +14,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class GameService {
     // NOTE: Add a LessonRunnerService, it may or may not change the other current attributes/dependencies
     private final QuestionService questionService;
+    private final LessonService lessonService;
     private final LessonRunnerService lessonRunnerService;
     private final SaveService saveService;
     private final GameUI ui;
+    private final Consumer<Player> onPlayerReady;
 
     public GameService(QuestionService questionService, LessonService lessonService, 
-                LessonRunnerService lessonRunnerService, SaveService saveService, GameUI ui) {
-        this.questionService = questionService; 
+                LessonRunnerService lessonRunnerService, SaveService saveService, GameUI ui,
+                Consumer<Player> onPlayerReady) {
+        this.questionService = questionService;
+        this.lessonService = lessonService;
         this.lessonRunnerService = lessonRunnerService;
         this.saveService = saveService;
         this.ui = ui;
+        this.onPlayerReady = onPlayerReady;
     }
 
     /*
@@ -61,6 +67,9 @@ public class GameService {
             player = new Player(ui.askName(), 0);
             difficulty = Difficulty.BEGINNER;
         }
+
+        // Hand the loaded or newly created player to whoever presents the game.
+        onPlayerReady.accept(player);
 
         /*
             Ideally, after player inputs their name, that would serve as their identifier on which data to LOAD,
