@@ -17,6 +17,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import edu.batstateu.javajolt.ui.swing.MainWindow; // Imports the MainWindow class, which is responsible for displaying the Swing GUI.
+import javax.swing.SwingUtilities; // Imports SwingUtilities to safely open the GUI window.
 
 public class GameService {
     // NOTE: Add a LessonRunnerService, it may or may not change the other current attributes/dependencies
@@ -66,6 +68,13 @@ public class GameService {
             player = new Player(ui.askName(), 0);
             difficulty = Difficulty.BEGINNER;
         }
+
+        // Opens the MainWindow window after the player enters their name.
+        SwingUtilities.invokeLater(() -> {
+            MainWindow window = new MainWindow(player);
+            window.setVisible(true);
+        });
+        return;
 
         /*
             Ideally, after player inputs their name, that would serve as their identifier on which data to LOAD,

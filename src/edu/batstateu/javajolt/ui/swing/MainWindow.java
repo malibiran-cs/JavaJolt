@@ -6,12 +6,14 @@ import java.awt.CardLayout;
 import java.awt.Dimension;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import edu.batstateu.javajolt.entity.Player; // Imports the Player class to access the player's information.
 
 public class MainWindow extends JFrame {
     private final CardLayout cards = new CardLayout();
     private final JPanel container = new JPanel(cards);
 
-    public MainWindow() {
+  // Receives the Player object created or loaded by GameService so the GUI can access the player's information.
+    public MainWindow(Player player)  {
         super("JavaJolt");
 
         container.add(new WelcomeScreen(), ScreenId.WELCOME.name());
