@@ -26,7 +26,7 @@ public class WelcomeScreen extends Screen {
         greeting.setFont(Theme.FONT_TITLE);
         greeting.setForeground(Theme.TEXT_ON_ACCENT);
 
-        RoundedPanel plate = new RoundedPanel(new BorderLayout(), "panels/title_plate", 14);
+        RoundedPanel plate = new RoundedPanel(new BorderLayout(), "panels/panel", 14);
         plate.setBorder(BorderFactory.createEmptyBorder(Theme.GAP_M, Theme.GAP_XL, Theme.GAP_M, Theme.GAP_XL));
         plate.add(greeting);
 
