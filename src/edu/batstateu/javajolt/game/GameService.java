@@ -18,7 +18,6 @@ import java.util.Set;
 public class GameService {
     // NOTE: Add a LessonRunnerService, it may or may not change the other current attributes/dependencies
     private final QuestionService questionService;
-    private final LessonService lessonService;
     private final LessonRunnerService lessonRunnerService;
     private final SaveService saveService;
     private final GameUI ui;
@@ -26,7 +25,6 @@ public class GameService {
     public GameService(QuestionService questionService, LessonService lessonService, 
                 LessonRunnerService lessonRunnerService, SaveService saveService, GameUI ui) {
         this.questionService = questionService; 
-        this.lessonService = lessonService;
         this.lessonRunnerService = lessonRunnerService;
         this.saveService = saveService;
         this.ui = ui;
