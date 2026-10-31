@@ -25,7 +25,8 @@ public class GameApplication { //Angelo
             SaveService saveService = new SaveService();
             GameService gameService =
                     new GameService(questionService, lessonService, lessonRunnerService, saveService, ui,
-                            GameApplication::openMainWindow);
+                            (player, difficulty) -> openMainWindow(player, questionService,
+                                    lessonRunnerService, difficulty));
 
             gameService.run();
         } catch (NoSuchElementException e) {
@@ -38,9 +39,11 @@ public class GameApplication { //Angelo
     }
 
     // Starts the Swing window on the event dispatch thread once the player is ready.
-    private static void openMainWindow(Player player) {
+    private static void openMainWindow(Player player, QuestionService questionService,
+            LessonRunnerService lessonRunnerService, edu.batstateu.javajolt.enums.Difficulty difficulty) {
         SwingUtilities.invokeLater(() -> {
-            MainWindow window = new MainWindow(player);
+            MainWindow window = new MainWindow(player, questionService,
+                    lessonRunnerService, difficulty);
             window.setVisible(true);
         });
     }

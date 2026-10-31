@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public class GameService {
     // NOTE: Add a LessonRunnerService, it may or may not change the other current attributes/dependencies
@@ -23,11 +23,11 @@ public class GameService {
     private final LessonRunnerService lessonRunnerService;
     private final SaveService saveService;
     private final GameUI ui;
-    private final Consumer<Player> onPlayerReady;
+    private final BiConsumer<Player, Difficulty> onPlayerReady;
 
     public GameService(QuestionService questionService, LessonService lessonService, 
                 LessonRunnerService lessonRunnerService, SaveService saveService, GameUI ui,
-                Consumer<Player> onPlayerReady) {
+                BiConsumer<Player, Difficulty> onPlayerReady) {
         this.questionService = questionService;
         this.lessonService = lessonService;
         this.lessonRunnerService = lessonRunnerService;
@@ -68,9 +68,6 @@ public class GameService {
             difficulty = Difficulty.BEGINNER;
         }
 
-        // Hand the loaded or newly created player to whoever presents the game.
-        onPlayerReady.accept(player);
-
         /*
             Ideally, after player inputs their name, that would serve as their identifier on which data to LOAD,
             This presents another problem which is that a duplicate name checker might be required as player enters a name
@@ -83,6 +80,9 @@ public class GameService {
 
         // Difficulty checker
         difficulty = checkDifficulty(player, difficulty);
+
+        // Hand the loaded player and active difficulty to the Swing front end.
+        onPlayerReady.accept(player, difficulty);
 
         Topic selectedTopic = null;
 
