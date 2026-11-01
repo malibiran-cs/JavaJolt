@@ -171,14 +171,21 @@ public class QuestionScreen extends Screen {
     }
 
     private JPanel createChoiceEditor(List<String> choices) {
-        JPanel grid = new JPanel(new GridLayout(2, 2, Theme.GAP_L, Theme.GAP_L));
+        JPanel grid = new JPanel(new GridLayout(2, 2, 450, 100));
+        grid.setPreferredSize(new Dimension(800, 250));
         grid.setOpaque(false);
+
+        JPanel holder = new JPanel(new java.awt.GridBagLayout());
+        holder.setOpaque(false);
+        holder.add(grid);
+        
+        //grid.setOpaque(false);
         choiceGroup = new ButtonGroup();
         java.util.ArrayList<JRadioButton> buttons = new java.util.ArrayList<>();
         for (String choice : choices) {
             JRadioButton button = new JRadioButton("<html><div style='width:" + Theme.CHOICE_TEXT_WIDTH
                     + "px'>" + escapeHtml(choice) + "</div></html>");
-            button.setFont(Theme.FONT_BODY);
+            button.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 30));
             button.setForeground(Theme.TEXT);
             button.setOpaque(false);
             button.setFocusPainted(false);
@@ -209,7 +216,8 @@ public class QuestionScreen extends Screen {
         }
         choiceButtons = List.copyOf(buttons);
         choiceValues = List.copyOf(choices);
-        return grid;
+        //return grid;
+        return holder;
     }
 
     private JPanel createCodeEditor(Question question) {
