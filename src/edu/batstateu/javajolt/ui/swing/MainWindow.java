@@ -2,19 +2,24 @@
 package edu.batstateu.javajolt.ui.swing;
 
 import edu.batstateu.javajolt.entity.Player;
+import edu.batstateu.javajolt.entity.LessonPage;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
+import edu.batstateu.javajolt.exception.LessonFileException;
 import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.service.LessonRunnerService;
+import edu.batstateu.javajolt.service.LessonService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.ui.swing.screen.MainMenuScreen;
 import edu.batstateu.javajolt.ui.swing.screen.QuestionScreen;
+import edu.batstateu.javajolt.ui.swing.screen.TextbookScreen;
 import edu.batstateu.javajolt.ui.swing.screen.TopicSelectionScreen;
 import edu.batstateu.javajolt.ui.swing.screen.WelcomeScreen;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.util.List;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingWorker;
 
@@ -26,6 +31,8 @@ public class MainWindow extends JFrame {
     private final QuestionService questionService;
     private final LessonRunnerService lessonRunnerService;
     private final Difficulty difficulty;
+    private final LessonService lessonService = new LessonService();
+    private TextbookScreen textbookScreen;
     private GameSession session;
     private final QuestionScreen questionScreen;
     private TopicSelectionScreen topicScreen;
@@ -65,13 +72,57 @@ public class MainWindow extends JFrame {
                 player.getAvailableTopics(difficulty);
 
         if (topicScreen != null) container.remove(topicScreen);
-        topicScreen = new TopicSelectionScreen(availableTopics, topic -> {
-                    startLesson(topic);
-                });
+            topicScreen = new TopicSelectionScreen(availableTopics, topic -> {
+                showTextbook(topic);
+            });
 
         container.add(topicScreen, ScreenId.TOPIC_SELECTION.name());
         showScreen(ScreenId.TOPIC_SELECTION);
     }
+
+
+    private void showTextbook(Topic topic) {
+
+        List<LessonPage> pages;
+
+        try {
+            pages = lessonService.loadPages(topic, difficulty);
+
+        } catch (LessonFileException e) {
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    e.getMessage(),
+                    "Textbook Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+
+            return;
+        }
+
+        // Remove the previously opened textbook screen
+        if (textbookScreen != null) {
+            container.remove(textbookScreen);
+        }
+
+        // Create a fresh textbook screen for this topic
+        textbookScreen = new TextbookScreen(
+                topic,
+                pages,
+                () -> startLesson(topic),
+                () -> showScreen(ScreenId.TOPIC_SELECTION)
+        );
+
+        // Register the new screen
+        container.add(
+                textbookScreen,
+                ScreenId.TEXTBOOK.name()
+        );
+
+        // Display the textbook
+        showScreen(ScreenId.TEXTBOOK);
+    }
+
 
     private void startLesson(Topic topic) {
         player.setHp(Player.getStartingHp());
@@ -98,9 +149,9 @@ public class MainWindow extends JFrame {
                     questionScreen.showAnswerResult(get(), current.getExplanation(), player);
                 } catch (Exception e) {
                     questionScreen.setCheckingAnswer(false);
-                    javax.swing.JOptionPane.showMessageDialog(MainWindow.this,
+                    JOptionPane.showMessageDialog(MainWindow.this,
                             "The answer could not be checked.", "Question Error",
-                            javax.swing.JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
