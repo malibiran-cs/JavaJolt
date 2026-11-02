@@ -24,7 +24,7 @@ public class GameApplication { //Angelo
                     new LessonRunnerService(questionService, lessonService, ui);
             SaveService saveService = new SaveService();
             GameService gameService =
-                    new GameService(questionService, lessonService, lessonRunnerService, saveService, ui,
+                    new GameService(questionService, lessonRunnerService, saveService, ui,
                             (player, difficulty) -> openMainWindow(player, questionService,
                                     lessonRunnerService, difficulty));
 
