@@ -10,6 +10,7 @@ import edu.batstateu.javajolt.ui.swing.component.RoundedButton;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,7 +18,9 @@ import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
@@ -44,12 +47,8 @@ public class TextbookScreen extends Screen {
 
     private final JLabel title = new JLabel();
     private final JLabel pageCounter = new JLabel();
-    private final JTextPane content = new JTextPane() {
-        @Override
-        public boolean getScrollableTracksViewportWidth() {
-            return false;
-        }
-    };
+    private final JTextPane content = new JTextPane();
+    private final JTextArea quickReference = new JTextArea();
 
     private final RoundedButton previousButton =
             new RoundedButton("Previous", ButtonStyle.SECONDARY);
@@ -102,15 +101,70 @@ public class TextbookScreen extends Screen {
                 )
         );
 
+
+        // LEFT: TEXTBOOK CONTENT
         JScrollPane scrollPane = new JScrollPane(content);
 
         scrollPane.setBorder(
-                BorderFactory.createLineBorder(
-                        Theme.INSET_BORDER
-                )
+        BorderFactory.createLineBorder(Theme.INSET_BORDER)
         );
 
-        add(scrollPane, BorderLayout.CENTER);
+        scrollPane.getViewport().setBackground(Theme.INSET);
+
+
+        // RIGHT: QUICK REFERENCE PANEL
+        quickReference.setEditable(false);
+        quickReference.setFont(
+        new Font(Font.SANS_SERIF, Font.PLAIN, 16)
+        );
+
+        quickReference.setBackground(Theme.PANEL);
+        quickReference.setForeground(Theme.TEXT);
+        quickReference.setLineWrap(true);
+        quickReference.setWrapStyleWord(true);
+
+        quickReference.setBorder(
+        BorderFactory.createEmptyBorder(
+                Theme.GAP_M,
+                Theme.GAP_M,
+                Theme.GAP_M,
+                Theme.GAP_M
+        )
+        );
+
+        quickReference.setText(
+        """
+        QUICK REFERENCE
+
+        Important lesson concepts will appear here.
+        """
+        );
+
+        JScrollPane referenceScroll =
+        new JScrollPane(quickReference);
+
+        referenceScroll.setBorder(
+        BorderFactory.createLineBorder(Theme.PANEL_BORDER)
+        );
+
+        referenceScroll.getViewport().setBackground(Theme.PANEL);
+
+
+        // TWO-COLUMN LAYOUT
+        JSplitPane splitPane = new JSplitPane(
+        JSplitPane.HORIZONTAL_SPLIT,
+        scrollPane,
+        referenceScroll
+        );
+
+        splitPane.setResizeWeight(0.65);
+        splitPane.setDividerLocation(0.65);
+        splitPane.setDividerSize(8);
+        splitPane.setContinuousLayout(true);
+        splitPane.setBorder(null);
+
+        add(splitPane, BorderLayout.CENTER);
+
 
         // PAGE NAVIGATION
         JPanel footer =
