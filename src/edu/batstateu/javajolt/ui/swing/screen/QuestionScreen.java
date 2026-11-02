@@ -42,8 +42,6 @@ public class QuestionScreen extends Screen {
     private final RoundedButton submitButton = new RoundedButton("Submit answer", ButtonStyle.PRIMARY);
     private final RoundedButton nextButton = new RoundedButton("Next question", ButtonStyle.PRIMARY);
     private final RoundedButton topicsButton = new RoundedButton("Choose another topic", ButtonStyle.SECONDARY);
-    private final Consumer<String> onSubmit;
-    private final Runnable onNext;
     private final Runnable onTopics;
     private RoundedTextField textField;
     private JTextArea codeArea;
@@ -52,8 +50,6 @@ public class QuestionScreen extends Screen {
     private List<String> choiceValues = List.of();
 
     public QuestionScreen(Consumer<String> onSubmit, Runnable onNext, Runnable onTopics) {
-        this.onSubmit = onSubmit;
-        this.onNext = onNext;
         this.onTopics = onTopics;
         add(createBattleArea(), BorderLayout.NORTH);
         answerPanel.setBorder(BorderFactory.createEmptyBorder(Theme.GAP_L, Theme.GAP_L, Theme.GAP_L, Theme.GAP_L));
@@ -63,7 +59,7 @@ public class QuestionScreen extends Screen {
         add(answerPanel, BorderLayout.CENTER);
         submitButton.addActionListener(event -> onSubmit.accept(readAnswer()));
         nextButton.addActionListener(event -> onNext.run());
-        topicsButton.addActionListener(event -> onTopics.run());
+        topicsButton.addActionListener(event -> this.onTopics.run());
         feedbackLabel.setForeground(Theme.TEXT);
         feedbackLabel.setFont(Theme.FONT_BODY);
     }

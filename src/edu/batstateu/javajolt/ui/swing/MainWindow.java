@@ -18,6 +18,7 @@ import edu.batstateu.javajolt.ui.swing.screen.WelcomeScreen;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -147,7 +148,13 @@ public class MainWindow extends JFrame {
             protected void done() {
                 try {
                     questionScreen.showAnswerResult(get(), current.getExplanation(), player);
-                } catch (Exception e) {
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    questionScreen.setCheckingAnswer(false);
+                    JOptionPane.showMessageDialog(MainWindow.this,
+                            "The answer could not be checked.", "Question Error",
+                            JOptionPane.ERROR_MESSAGE);
+                } catch (ExecutionException e) {
                     questionScreen.setCheckingAnswer(false);
                     JOptionPane.showMessageDialog(MainWindow.this,
                             "The answer could not be checked.", "Question Error",
