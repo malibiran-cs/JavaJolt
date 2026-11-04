@@ -1,51 +1,106 @@
+
 package edu.batstateu.javajolt;
 
 import edu.batstateu.javajolt.data.QuestionBank;
 import edu.batstateu.javajolt.entity.Player;
+import edu.batstateu.javajolt.entity.SaveData;
+import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.exception.SaveFileException;
 import edu.batstateu.javajolt.game.GameService;
+import edu.batstateu.javajolt.service.DifficultyProgressionService;
 import edu.batstateu.javajolt.service.LessonRunnerService;
 import edu.batstateu.javajolt.service.LessonService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.service.SaveService;
 import edu.batstateu.javajolt.ui.GameUI;
 import edu.batstateu.javajolt.ui.swing.MainWindow;
+import edu.batstateu.javajolt.ui.swing.ScreenId;
+
 import java.util.NoSuchElementException;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-public class GameApplication { //Angelo
+public class GameApplication {
+
     public static void main(String[] args) {
-         try {
-            QuestionBank questionBank = new QuestionBank();
-            QuestionService questionService = new QuestionService(questionBank);
-            LessonService lessonService = new LessonService();
-            GameUI ui = new GameUI();
-            LessonRunnerService lessonRunnerService =
-                    new LessonRunnerService(questionService, lessonService, ui);
-            SaveService saveService = new SaveService();
-            GameService gameService =
-                    new GameService(questionService, lessonRunnerService, saveService, ui,
-                            (player, difficulty) -> openMainWindow(player, questionService,
-                                    lessonRunnerService, difficulty));
+        QuestionService questions =
+                new QuestionService(new QuestionBank());
 
-            gameService.run();
-        } catch (NoSuchElementException e) {
-                System.out.println("\nInput closed. Thank you!");
-        } catch (SaveFileException e) {
-                System.out.println("\n" + e.getMessage());
-        } catch (IllegalStateException e) {
-                System.out.println("\nThe question data could not be loaded: " + e.getMessage());
+        LessonService lessons = new LessonService();
+        SaveService saves = new SaveService();
+        GameUI consoleUI = new GameUI();
+
+        LessonRunnerService runner =
+                new LessonRunnerService(questions, lessons, consoleUI);
+
+        // Console mode remains available for development.
+        if (args.length > 0
+                && "--console".equalsIgnoreCase(args[0])) {
+            try {
+                new GameService(
+                        questions,
+                        runner,
+                        saves,
+                        consoleUI,
+                        (player, difficulty) -> {}
+                ).run();
+            } catch (NoSuchElementException | SaveFileException e) {
+                System.err.println(e.getMessage());
+            }
+            return;
         }
-    }
 
-    // Starts the Swing window on the event dispatch thread once the player is ready.
-    private static void openMainWindow(Player player, QuestionService questionService,
-            LessonRunnerService lessonRunnerService, edu.batstateu.javajolt.enums.Difficulty difficulty) {
+        // Prepare the player for the GUI.
+        Player player = new Player("Player", 0);
+        boolean loaded = false;
+        String loadWarning = null;
+
+        if (saves.hasSave()) {
+            try {
+                SaveData data = saves.load();
+
+                player = new Player(data.name(), data.xp());
+                player.restoreProgress(data.completedTopics());
+                loaded = true;
+
+            } catch (SaveFileException e) {
+                loadWarning =
+                        "Could not load saved progress. Starting a new game.";
+            }
+        }
+
+        Difficulty difficulty =
+                DifficultyProgressionService.currentDifficulty(player);
+
+        final Player readyPlayer = player;
+        final boolean hasLoadedSave = loaded;
+        final String warning = loadWarning;
+
         SwingUtilities.invokeLater(() -> {
-            MainWindow window = new MainWindow(player, questionService,
-                    lessonRunnerService, difficulty);
+            MainWindow window = new MainWindow(
+                    readyPlayer,
+                    questions,
+                    runner,
+                    difficulty,
+                    saves
+            );
+
+            window.showScreen(
+                    hasLoadedSave
+                            ? ScreenId.MAIN_MENU
+                            : ScreenId.WELCOME
+            );
+
             window.setVisible(true);
+
+            if (warning != null) {
+                JOptionPane.showMessageDialog(
+                        window,
+                        warning,
+                        "Save Warning",
+                        JOptionPane.WARNING_MESSAGE
+                );
+            }
         });
     }
-    
 }

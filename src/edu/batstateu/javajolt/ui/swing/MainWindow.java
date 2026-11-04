@@ -6,10 +6,14 @@ import edu.batstateu.javajolt.entity.LessonPage;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.exception.LessonFileException;
+import edu.batstateu.javajolt.exception.SaveFileException;
 import edu.batstateu.javajolt.game.GameSession;
+import edu.batstateu.javajolt.service.DifficultyProgressionService;
 import edu.batstateu.javajolt.service.LessonRunnerService;
 import edu.batstateu.javajolt.service.LessonService;
 import edu.batstateu.javajolt.service.QuestionService;
+import edu.batstateu.javajolt.service.LevelService;
+import edu.batstateu.javajolt.service.SaveService;
 import edu.batstateu.javajolt.ui.swing.screen.MainMenuScreen;
 import edu.batstateu.javajolt.ui.swing.screen.QuestionScreen;
 import edu.batstateu.javajolt.ui.swing.screen.TextbookScreen;
@@ -17,6 +21,8 @@ import edu.batstateu.javajolt.ui.swing.screen.TopicSelectionScreen;
 import edu.batstateu.javajolt.ui.swing.screen.WelcomeScreen;
 import java.awt.CardLayout;
 import java.awt.Dimension;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.swing.JFrame;
@@ -31,7 +37,10 @@ public class MainWindow extends JFrame {
     private final Player player;
     private final QuestionService questionService;
     private final LessonRunnerService lessonRunnerService;
-    private final Difficulty difficulty;
+    private Difficulty difficulty;
+    private final SaveService saveService;
+    private final MainMenuScreen mainMenuScreen;
+    private boolean lessonResultRecorded;
     private final LessonService lessonService = new LessonService();
     private TextbookScreen textbookScreen;
     private GameSession session;
@@ -39,22 +48,53 @@ public class MainWindow extends JFrame {
     private TopicSelectionScreen topicScreen;
     private int questionIndex;
 
-    public MainWindow(Player player, QuestionService questionService,
-            LessonRunnerService lessonRunnerService, Difficulty difficulty) {
+    public MainWindow(
+            Player player,
+            QuestionService questionService,
+            LessonRunnerService lessonRunnerService,
+            Difficulty difficulty) {
+
+        this(
+                player,
+                questionService,
+                lessonRunnerService,
+                difficulty,
+                new SaveService()
+        );
+    }
+
+    public MainWindow(
+            Player player,
+            QuestionService questionService,
+            LessonRunnerService lessonRunnerService,
+            Difficulty difficulty,
+            SaveService saveService) {
         super("JavaJolt");
         this.player = player;
         this.questionService = questionService;
         this.lessonRunnerService = lessonRunnerService;
         this.difficulty = difficulty;
+        this.saveService = saveService;
 
         container.add(new WelcomeScreen(name -> {
             player.setName(name);
             showScreen(ScreenId.MAIN_MENU);
         }), ScreenId.WELCOME.name());
 
+    mainMenuScreen = new MainMenuScreen(
+            player,
+            this::showTopicSelection,
+            this::saveWithFeedback,
+            this::showProgress,
+            this::confirmExit
+    );
+
+    container.add(
+            mainMenuScreen,
+            ScreenId.MAIN_MENU.name()
+    );
         container.add(
-                new MainMenuScreen(player,
-                        () -> showTopicSelection()),
+                mainMenuScreen,
                 ScreenId.MAIN_MENU.name()
         );
         questionScreen = new QuestionScreen(this::submitAnswer, this::showNextQuestion,
@@ -62,7 +102,17 @@ public class MainWindow extends JFrame {
         container.add(questionScreen, ScreenId.QUESTION.name());
 
         setContentPane(container);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                confirmExit();
+            }
+        });
+
+
         setMinimumSize(new Dimension(800, 520));
         setSize(960, 600);
         setLocationRelativeTo(null);
@@ -130,9 +180,91 @@ public class MainWindow extends JFrame {
         session = new GameSession(player, topic, difficulty,
                 questionService.selectQuestions(topic, difficulty));
         questionIndex = -1;
+        lessonResultRecorded = false;
         showNextQuestion();
         showScreen(ScreenId.QUESTION);
     }
+
+    
+private boolean saveProgress() {
+    try {
+        saveService.save(player, difficulty);
+        return true;
+
+    } catch (SaveFileException e) {
+        JOptionPane.showMessageDialog(
+                this,
+                e.getMessage(),
+                "Save Error",
+                JOptionPane.ERROR_MESSAGE
+        );
+        return false;
+    }
+}
+
+private void saveWithFeedback() {
+    if (saveProgress()) {
+        JOptionPane.showMessageDialog(
+                this,
+                "Progress saved successfully.",
+                "Saved",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+}
+
+private void showProgress() {
+    StringBuilder message = new StringBuilder()
+            .append("Player: ").append(player.getName())
+            .append("\nXP: ").append(player.getXp())
+            .append("\nLevel: ")
+            .append(LevelService.calculateLevel(player.getXp()))
+            .append("\nCurrent difficulty: ")
+            .append(difficulty.getLabel())
+            .append("\n\nCompleted topics:\n");
+
+    for (Difficulty level : Difficulty.values()) {
+        int count = 0;
+
+        for (Topic topic : Topic.values()) {
+            if (player.isComplete(topic, level)) {
+                count++;
+            }
+        }
+
+        message.append(level.getLabel())
+                .append(": ")
+                .append(count)
+                .append(" / ")
+                .append(Topic.values().length)
+                .append('\n');
+    }
+
+    JOptionPane.showMessageDialog(
+            this,
+            message.toString(),
+            "Player Progress",
+            JOptionPane.INFORMATION_MESSAGE
+    );
+}
+
+private void confirmExit() {
+    int choice = JOptionPane.showConfirmDialog(
+            this,
+            "Save progress and exit JavaJolt?",
+            "Exit",
+            JOptionPane.YES_NO_OPTION
+    );
+
+    if (choice != JOptionPane.YES_OPTION) {
+        return;
+    }
+
+    if (saveProgress()) {
+        dispose();
+    }
+}
+
 
     private void submitAnswer(String answer) {
         if (session == null || questionIndex >= session.getQuestions().size()) return;
@@ -167,9 +299,45 @@ public class MainWindow extends JFrame {
     private void showNextQuestion() {
         if (session == null) return;
         questionIndex++;
-        if (questionIndex >= session.getQuestions().size() || !player.isAlive()) {
+        if (questionIndex >= session.getQuestions().size()
+                || !player.isAlive()) {
+
+            if (lessonResultRecorded) {
+                return;
+            }
+
+            lessonResultRecorded = true;
+
+            boolean passed = lessonRunnerService.hasPassed(session);
+            Difficulty oldDifficulty = difficulty;
+
             lessonRunnerService.recordLessonCompletion(session);
-            questionScreen.showLessonResult(session, lessonRunnerService.hasPassed(session));
+
+            difficulty =
+                    DifficultyProgressionService.currentDifficulty(player);
+
+            mainMenuScreen.refresh(player);
+
+            questionScreen.showLessonResult(session, passed);
+
+            if (!saveProgress()) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Your lesson results could not be saved.",
+                        "Save Warning",
+                        JOptionPane.WARNING_MESSAGE
+                );
+            }
+
+            if (passed && difficulty != oldDifficulty) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        difficulty.getLabel() + " difficulty unlocked!",
+                        "New Difficulty",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            }
+
             return;
         }
         session.setCurrentQuestionIndex(questionIndex + 1);
@@ -178,6 +346,10 @@ public class MainWindow extends JFrame {
     }
 
     public void showScreen(ScreenId id) {
+        if (id == ScreenId.MAIN_MENU) {
+            mainMenuScreen.refresh(player);
+        }
+
         cards.show(container, id.name());
     }
 }

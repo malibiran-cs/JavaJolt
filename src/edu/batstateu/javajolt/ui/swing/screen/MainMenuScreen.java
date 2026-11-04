@@ -17,20 +17,35 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class MainMenuScreen extends Screen {
     private final JLabel expLabel = createLabel("EXP: --");
     private final JLabel levelLabel = createLabel("LEVEL: --");
 
-    public MainMenuScreen(Player player, Runnable onLessonsClicked) {
-        expLabel.setText("EXP: " + player.getXp());
-        levelLabel.setText("LEVEL: " +
-                LevelService.calculateLevel(player.getXp()));
+    public MainMenuScreen(
+            Player player,
+            Runnable onLessonsClicked,
+            Runnable onSave,
+            Runnable onProgress,
+            Runnable onExit) {
+
+        refresh(player);
 
         add(createTop(), BorderLayout.NORTH);
-        add(createBody(onLessonsClicked), BorderLayout.CENTER);
+        add(createBody(
+                onLessonsClicked,
+                onSave,
+                onProgress,
+                onExit
+        ), BorderLayout.CENTER);
+    }
+
+    public void refresh(Player player) {
+        expLabel.setText("EXP: " + player.getXp());
+        levelLabel.setText(
+                "LEVEL: " + LevelService.calculateLevel(player.getXp())
+        );
     }
 
     private JPanel createTop() {
@@ -57,11 +72,20 @@ public class MainMenuScreen extends Screen {
         return header;
     }
 
-    private JPanel createBody(Runnable onLessonsClicked) {
+    private JPanel createBody(
+            Runnable onLessonsClicked,
+            Runnable onSave,
+            Runnable onProgress,
+            Runnable onExit) {
         JPanel body = new JPanel(new GridLayout(1, 2, Theme.GAP_L, 0));
         body.setOpaque(false);
         body.add(createBadgesPanel());
-        body.add(createMenuButtons(onLessonsClicked));
+        body.add(createMenuButtons(
+                onLessonsClicked,
+                onSave,
+                onProgress,
+                onExit
+        ));
         return body;
     }
 
@@ -85,7 +109,11 @@ public class MainMenuScreen extends Screen {
         return row;
     }
 
-private JPanel createMenuButtons(Runnable onLessonsClicked) {
+private JPanel createMenuButtons(
+        Runnable onLessonsClicked,
+        Runnable onSave,
+        Runnable onProgress,
+        Runnable onExit) {
     JPanel grid = new JPanel(new GridLayout(2, 2, Theme.GAP_M, Theme.GAP_M));
     grid.setOpaque(false);
 
@@ -103,40 +131,14 @@ private JPanel createMenuButtons(Runnable onLessonsClicked) {
 
     // Lessons
     lessonsButton.addActionListener(e -> onLessonsClicked.run());
+    progressButton.addActionListener(e -> onProgress.run());
+    saveButton.addActionListener(e -> onSave.run());
+    exitButton.addActionListener(e -> onExit.run());
+    lessonsButton.addActionListener(e -> onLessonsClicked.run());
 
-    // Progress
-    progressButton.addActionListener(e ->
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Your player statistics will appear here!",
-                    "Progress",
-                    JOptionPane.INFORMATION_MESSAGE
-            )
-    );
-
-    // Save
-    saveButton.addActionListener(e ->
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Save functionality will be implemented soon!",
-                    "Save",
-                    JOptionPane.INFORMATION_MESSAGE
-            )
-    );
-
-    // Exit
-    exitButton.addActionListener(e -> {
-        int choice = JOptionPane.showConfirmDialog(
-                this,
-                "Are you sure you want to exit JavaJolt?",
-                "Exit JavaJolt",
-                JOptionPane.YES_NO_OPTION
-        );
-
-        if (choice == JOptionPane.YES_OPTION) {
-            System.exit(0);
-        }
-    });
+    progressButton.addActionListener(e -> onProgress.run());
+    saveButton.addActionListener(e -> onSave.run());
+    exitButton.addActionListener(e -> onExit.run());
 
     grid.add(lessonsButton);
     grid.add(progressButton);

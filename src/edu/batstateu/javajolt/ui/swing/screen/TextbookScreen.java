@@ -279,8 +279,14 @@ public class TextbookScreen extends Screen {
 
         SimpleAttributeSet normal = new SimpleAttributeSet();
         StyleConstants.setForeground(normal, Theme.TEXT);
-        StyleConstants.setFontFamily(normal, Theme.FONT_CODE.getFamily());
-        StyleConstants.setFontSize(normal, Theme.FONT_CODE.getSize());
+        StyleConstants.setFontFamily(normal, Font.SANS_SERIF);
+        StyleConstants.setFontSize(normal, 16);
+
+        SimpleAttributeSet codeStyle = new SimpleAttributeSet();
+        StyleConstants.setFontFamily(codeStyle, Font.MONOSPACED);
+        StyleConstants.setFontSize(codeStyle, 15);
+        StyleConstants.setForeground(codeStyle, Theme.TEXT);
+        StyleConstants.setBackground(codeStyle, Theme.PANEL);
 
         SimpleAttributeSet keyword = new SimpleAttributeSet();
         StyleConstants.setForeground(keyword, new Color(0xF59E8B));
@@ -313,6 +319,12 @@ public class TextbookScreen extends Screen {
                             || trimmed.startsWith("//"));
 
                 if (codeLine) {
+                document.setCharacterAttributes(
+                        offset,
+                        line.length(),
+                        codeStyle,
+                        false
+                );
                     Matcher matcher = KEYWORD_PATTERN.matcher(line);
 
                     while (matcher.find()) {
