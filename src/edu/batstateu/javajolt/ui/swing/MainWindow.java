@@ -123,9 +123,11 @@ public class MainWindow extends JFrame {
                 player.getAvailableTopics(difficulty);
 
         if (topicScreen != null) container.remove(topicScreen);
-            topicScreen = new TopicSelectionScreen(availableTopics, topic -> {
-                showTextbook(topic);
-            });
+            topicScreen = new TopicSelectionScreen(
+                availableTopics,
+                this::showTextbook,
+                () -> showScreen(ScreenId.MAIN_MENU)
+            );
 
         container.add(topicScreen, ScreenId.TOPIC_SELECTION.name());
         showScreen(ScreenId.TOPIC_SELECTION);
