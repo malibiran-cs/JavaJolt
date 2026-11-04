@@ -11,6 +11,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,6 +45,7 @@ public class TextbookScreen extends Screen {
             Pattern.compile("\"(?:\\\\.|[^\"\\\\])*\"");
 
     private final List<LessonPage> pages;
+    private final Topic topic;
 
     private final JLabel title = new JLabel();
     private final JLabel pageCounter = new JLabel();
@@ -65,6 +67,7 @@ public class TextbookScreen extends Screen {
             Runnable onBack) {
 
         this.pages = List.copyOf(pages);
+        this.topic = topic;
 
         // HEADER
         JLabel topicLabel =
@@ -236,6 +239,10 @@ public class TextbookScreen extends Screen {
                     "No study material is available for this topic yet."
             );
 
+                quickReference.setText(
+                "QUICK REFERENCE\n\nNo lesson material available."
+                );
+
             previousButton.setEnabled(false);
             nextButton.setEnabled(false);
             return;
@@ -255,11 +262,10 @@ public class TextbookScreen extends Screen {
         );
 
         displayFormattedContent(
-                String.join(
-                        System.lineSeparator(),
-                        page.body()
-                )
+                String.join("\n", page.body())
         );
+
+        updateQuickReference(page);
 
         previousButton.setEnabled(pageIndex > 0);
 
@@ -364,6 +370,59 @@ public class TextbookScreen extends Screen {
             );
         }
     }
+
+
+private void updateQuickReference(LessonPage page) {
+    List<String> paragraphs = new ArrayList<>();
+    StringBuilder paragraph = new StringBuilder();
+    String example = null;
+
+    for (String line : page.body()) {
+        String trimmed = line.trim();
+
+        if (trimmed.isEmpty() || line.startsWith("    ")) {
+            if (!paragraph.isEmpty()) {
+                paragraphs.add(paragraph.toString());
+                paragraph.setLength(0);
+            }
+
+            if (example == null && line.startsWith("    ")
+                    && (trimmed.contains(";") || trimmed.startsWith("//"))) {
+                example = trimmed;
+            }
+        } else {
+            if (!paragraph.isEmpty()) paragraph.append(' ');
+            paragraph.append(trimmed);
+        }
+    }
+
+    if (!paragraph.isEmpty()) {
+        paragraphs.add(paragraph.toString());
+    }
+
+    StringBuilder notes = new StringBuilder()
+            .append("QUICK REFERENCE\n\n")
+            .append("TOPIC: ").append(topic.getLabel()).append('\n')
+            .append("PAGE ").append(pageIndex + 1)
+            .append(" OF ").append(pages.size())
+            .append("\n\n").append(page.title())
+            .append("\n\nKEY IDEAS\n");
+
+    for (int i = 0; i < Math.min(2, paragraphs.size()); i++) {
+        notes.append("• ").append(paragraphs.get(i)).append("\n\n");
+    }
+
+    if (paragraphs.isEmpty()) {
+        notes.append("Review the example on this page.\n\n");
+    }
+
+    if (example != null) {
+        notes.append("JAVA EXAMPLE\n").append(example);
+    }
+
+    quickReference.setText(notes.toString());
+    quickReference.setCaretPosition(0);
+}
 
     private int countQuotes(String text) {
         int count = 0;
