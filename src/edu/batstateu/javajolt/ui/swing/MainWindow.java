@@ -113,8 +113,8 @@ public class MainWindow extends JFrame {
         });
 
 
-        setMinimumSize(new Dimension(800, 520));
-        setSize(960, 600);
+        setMinimumSize(new Dimension(900, 620));
+        setSize(1100, 720);
         setLocationRelativeTo(null);
     }
 

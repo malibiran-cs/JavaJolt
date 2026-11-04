@@ -10,7 +10,6 @@ import edu.batstateu.javajolt.ui.swing.component.RoundedTextField;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.Font;
 import java.awt.Dimension;
 import java.awt.Component;
 import java.util.function.Consumer;
@@ -28,7 +27,7 @@ public class WelcomeScreen extends Screen {
     private final RoundedTextField nameField = new RoundedTextField();
 
     {
-        nameField.setFont(new Font("Arial", Font.PLAIN, 40)); // Sets the name input field's font to Arial, plain style, with a 40-point size.
+        nameField.setFont(Theme.FONT_HEADING);
     }
 
     private final Consumer<String> onContinue;
@@ -43,7 +42,7 @@ public class WelcomeScreen extends Screen {
     private JPanel createGreeting() {
         JLabel greeting = new JLabel("GREETINGS", SwingConstants.CENTER);
         greeting.setFont(Theme.FONT_TITLE);
-        greeting.setForeground(Theme.TEXT_ON_ACCENT);
+        greeting.setForeground(Theme.TEXT);
 
         // Creates a rounded panel to hold the greeting label.
         // BorderLayout allows components to be arranged inside the panel.
@@ -181,9 +180,11 @@ public class WelcomeScreen extends Screen {
         // Places the content panel at the top of the input panel.
         input.add(content, BorderLayout.NORTH);
 
-        // Adds 300px of empty space above the content,
-        // pushing the Name section and button downward.
-        content.setBorder(BorderFactory.createEmptyBorder(300, 0, 0, 0));
+        content.setBorder(
+                BorderFactory.createEmptyBorder(
+                        Theme.GAP_L, 0, 0, 0
+                )
+        );
         return input;
     }
 }

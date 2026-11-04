@@ -167,8 +167,13 @@ public class QuestionScreen extends Screen {
     }
 
     private JPanel createChoiceEditor(List<String> choices) {
-        JPanel grid = new JPanel(new GridLayout(2, 2, 450, 100));
-        grid.setPreferredSize(new Dimension(800, 250));
+    JPanel grid = new JPanel(
+        new GridLayout(
+            0, 2,
+            Theme.GAP_M,
+            Theme.GAP_M
+        )
+    );
         grid.setOpaque(false);
 
         JPanel holder = new JPanel(new java.awt.GridBagLayout());
@@ -181,7 +186,7 @@ public class QuestionScreen extends Screen {
         for (String choice : choices) {
             JRadioButton button = new JRadioButton("<html><div style='width:" + Theme.CHOICE_TEXT_WIDTH
                     + "px'>" + escapeHtml(choice) + "</div></html>");
-            button.setFont(new java.awt.Font("Arial", java.awt.Font.PLAIN, 30));
+            button.setFont(Theme.FONT_BODY);
             button.setForeground(Theme.TEXT);
             button.setOpaque(false);
             button.setFocusPainted(false);

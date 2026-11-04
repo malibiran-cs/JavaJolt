@@ -30,11 +30,20 @@ public final class Theme {
     public static final Color TEXT_ON_ACCENT = new Color(0x17181C);
 
     // Fonts
-    public static final Font FONT_TITLE = new Font(Font.SANS_SERIF, Font.BOLD, 40);
-    public static final Font FONT_HEADING = new Font(Font.SANS_SERIF, Font.BOLD, 20);
-    public static final Font FONT_BODY = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
-    public static final Font FONT_BUTTON = new Font(Font.SANS_SERIF, Font.BOLD, 18);
-    public static final Font FONT_CODE = new Font(Font.MONOSPACED, Font.PLAIN, 14);
+    public static final Font FONT_TITLE =
+            new Font(Font.SANS_SERIF, Font.BOLD, 32);
+
+    public static final Font FONT_HEADING =
+            new Font(Font.SANS_SERIF, Font.BOLD, 22);
+
+    public static final Font FONT_BODY =
+            new Font(Font.SANS_SERIF, Font.PLAIN, 16);
+
+    public static final Font FONT_BUTTON =
+            new Font(Font.SANS_SERIF, Font.BOLD, 16);
+
+    public static final Font FONT_CODE =
+            new Font(Font.MONOSPACED, Font.PLAIN, 14);
 
     // Corner roundness is part of the kit images; NinePatch keeps the corners
     // fixed while the middle of each component stretches.

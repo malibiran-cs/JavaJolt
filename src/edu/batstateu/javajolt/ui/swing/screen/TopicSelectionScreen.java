@@ -2,6 +2,7 @@
 package edu.batstateu.javajolt.ui.swing.screen;
 
 import edu.batstateu.javajolt.enums.Topic;
+import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
 import edu.batstateu.javajolt.ui.swing.component.RoundedButton;
 
@@ -14,10 +15,6 @@ public class TopicSelectionScreen extends Screen {
 
         private static final int GAP_L = 24;
         private static final int GAP_M = 12;
-        private static final Font FONT_HEADING = new Font(
-                        Font.SANS_SERIF, Font.BOLD, 24
-        );
-        private static final Color TEXT_COLOR = Color.BLACK;
 
     public TopicSelectionScreen(
             List<Topic> availableTopics,
@@ -26,8 +23,8 @@ public class TopicSelectionScreen extends Screen {
         setLayout(new BorderLayout(0, GAP_L));
 
         JLabel title = new JLabel("CHOOSE A TOPIC");
-        title.setFont(FONT_HEADING);
-        title.setForeground(TEXT_COLOR);
+        title.setFont(Theme.FONT_HEADING);
+        title.setForeground(Theme.TEXT);
 
         add(title, BorderLayout.NORTH);
 
