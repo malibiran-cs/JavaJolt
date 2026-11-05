@@ -166,60 +166,132 @@ public class QuestionScreen extends Screen {
         return holder;
     }
 
+
     private JPanel createChoiceEditor(List<String> choices) {
-    JPanel grid = new JPanel(
-        new GridLayout(
-            0, 2,
-            Theme.GAP_M,
-            Theme.GAP_M
-        )
-    );
+
+        // Two-column grid for multiple-choice cards
+        JPanel grid = new JPanel(
+                new GridLayout(
+                        0, 2,
+                        Theme.GAP_M,
+                        Theme.GAP_M
+                )
+        );
+
         grid.setOpaque(false);
 
-        JPanel holder = new JPanel(new java.awt.GridBagLayout());
-        holder.setOpaque(false);
-        holder.add(grid);
-        
-        //grid.setOpaque(false);
+        int rows = (choices.size() + 1) / 2;
+
+        grid.setPreferredSize(
+                new Dimension(
+                        800,
+                        rows * 82
+                        + Math.max(0, rows - 1) * Theme.GAP_M
+                )
+        );
+
         choiceGroup = new ButtonGroup();
-        java.util.ArrayList<JRadioButton> buttons = new java.util.ArrayList<>();
+
+        java.util.ArrayList<JRadioButton> buttons =
+                new java.util.ArrayList<>();
+
         for (String choice : choices) {
-            JRadioButton button = new JRadioButton("<html><div style='width:" + Theme.CHOICE_TEXT_WIDTH
-                    + "px'>" + escapeHtml(choice) + "</div></html>");
+
+            JRadioButton button = new JRadioButton(
+                    "<html><div style='width:300px'>"
+                            + escapeHtml(choice)
+                            + "</div></html>"
+            );
+
+            // Text and appearance
             button.setFont(Theme.FONT_BODY);
             button.setForeground(Theme.TEXT);
-            button.setOpaque(false);
+
+            button.setOpaque(true);
             button.setFocusPainted(false);
-            button.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(Theme.INSET_BORDER),
-                    BorderFactory.createEmptyBorder(Theme.GAP_M, Theme.GAP_M, Theme.GAP_M, Theme.GAP_M)));
-            button.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
+            button.setBorderPainted(true);
+
+            button.setHorizontalAlignment(
+                    SwingConstants.LEFT
+            );
+
+            button.setCursor(
+                    java.awt.Cursor.getPredefinedCursor(
+                            java.awt.Cursor.HAND_CURSOR
+                    )
+            );
+
+            // Keep existing single-answer selection
+            choiceGroup.add(button);
+            buttons.add(button);
+            grid.add(button);
+
+            // Update all card styles when selected
+            button.addActionListener(
+                    event -> updateChoiceBorders(buttons)
+            );
+
+            // Hover appearance
             button.addMouseListener(new MouseAdapter() {
+
                 @Override
                 public void mouseEntered(MouseEvent event) {
-                    button.setBorder(BorderFactory.createCompoundBorder(
-                            BorderFactory.createLineBorder(Theme.ACCENT),
-                            BorderFactory.createEmptyBorder(Theme.GAP_M, Theme.GAP_M, Theme.GAP_M, Theme.GAP_M)));
+                    if (!button.isSelected()) {
+                        button.setBackground(
+                                Theme.SECONDARY_HOVER
+                        );
+                    }
                 }
 
                 @Override
                 public void mouseExited(MouseEvent event) {
-                    button.setBorder(BorderFactory.createCompoundBorder(
-                            BorderFactory.createLineBorder(button.isSelected()
-                                    ? Theme.ACCENT : Theme.INSET_BORDER),
-                            BorderFactory.createEmptyBorder(Theme.GAP_M, Theme.GAP_M, Theme.GAP_M, Theme.GAP_M)));
+                    updateChoiceBorders(buttons);
                 }
             });
-            button.addActionListener(event -> updateChoiceBorders(buttons));
-            choiceGroup.add(button);
-            buttons.add(button);
-            grid.add(button);
         }
+
+        // Preserve answer retrieval compatibility
         choiceButtons = List.copyOf(buttons);
         choiceValues = List.copyOf(choices);
-        //return grid;
-        return holder;
+
+        updateChoiceBorders(buttons);
+
+        // Center the cards without stretching them
+        JPanel centered = new JPanel(
+                new java.awt.FlowLayout(
+                        java.awt.FlowLayout.CENTER,
+                        0,
+                        Theme.GAP_M
+                )
+        );
+
+        centered.setOpaque(false);
+        centered.add(grid);
+
+        // Allow scrolling for longer answer lists
+        JScrollPane scroller = new JScrollPane(
+                centered,
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        );
+
+        scroller.setBorder(null);
+        scroller.setOpaque(false);
+        scroller.getViewport().setOpaque(false);
+
+        scroller.getVerticalScrollBar()
+                .setUnitIncrement(16);
+
+        JPanel wrapper = new JPanel(
+                new BorderLayout()
+        );
+
+        wrapper.setOpaque(false);
+        wrapper.add(scroller, BorderLayout.CENTER);
+
+        return wrapper;
     }
+
 
     private JPanel createCodeEditor(Question question) {
         JPanel editor = new JPanel(new BorderLayout(0, Theme.GAP_S));
@@ -244,14 +316,39 @@ public class QuestionScreen extends Screen {
         return editor;
     }
 
-    private void updateChoiceBorders(List<JRadioButton> buttons) {
+
+    private void updateChoiceBorders(
+            List<JRadioButton> buttons) {
+
         for (JRadioButton button : buttons) {
-            java.awt.Color borderColor = button.isSelected() ? Theme.ACCENT : Theme.INSET_BORDER;
-            button.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(borderColor),
-                    BorderFactory.createEmptyBorder(Theme.GAP_M, Theme.GAP_M, Theme.GAP_M, Theme.GAP_M)));
+
+            boolean selected = button.isSelected();
+
+            // Selected answers receive an orange tint
+            button.setBackground(
+                    selected
+                            ? new java.awt.Color(0x403128)
+                            : Theme.INSET
+            );
+
+            // Selected answers receive an orange border
+            button.setBorder(
+                    BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(
+                                    selected
+                                            ? Theme.ACCENT
+                                            : Theme.INSET_BORDER,
+                                    2,
+                                    true
+                            ),
+                            BorderFactory.createEmptyBorder(
+                                    14, 18, 14, 18
+                            )
+                    )
+            );
         }
     }
+
 
     private String readAnswer() {
         if (codeArea != null) return codeArea.getText();

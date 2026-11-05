@@ -1,5 +1,6 @@
 package edu.batstateu.javajolt;
 
+import edu.batstateu.javajolt.enums.ChallengeTier;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.InputMode;
 import edu.batstateu.javajolt.enums.Topic;
@@ -11,6 +12,19 @@ public abstract class Question {
     private Topic topic;
     private Difficulty difficulty;
     private String explanation; // shown after every answer, right or wrong
+    private ChallengeTier challengeTier =
+        ChallengeTier.FOUNDATIONAL;
+
+    public ChallengeTier getChallengeTier() {
+    return challengeTier;
+}
+
+    public Question withChallengeTier(ChallengeTier tier) {
+        this.challengeTier =
+                java.util.Objects.requireNonNull(tier);
+
+        return this;
+    }
 
     // CONSTRUCTOR
     public Question(int id, String question, Topic topic, Difficulty difficulty, String explanation) {
