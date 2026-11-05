@@ -5,5 +5,6 @@ public enum ScreenId {
     MAIN_MENU,
     TOPIC_SELECTION,
     QUESTION,
-    TEXTBOOK
+    TEXTBOOK,
+    RESULTS
 }

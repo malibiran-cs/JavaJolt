@@ -19,6 +19,7 @@ import edu.batstateu.javajolt.ui.swing.screen.QuestionScreen;
 import edu.batstateu.javajolt.ui.swing.screen.TextbookScreen;
 import edu.batstateu.javajolt.ui.swing.screen.TopicSelectionScreen;
 import edu.batstateu.javajolt.ui.swing.screen.WelcomeScreen;
+import edu.batstateu.javajolt.ui.swing.screen.ResultsScreen;
 import java.awt.CardLayout;
 import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
@@ -47,6 +48,8 @@ public class MainWindow extends JFrame {
     private final QuestionScreen questionScreen;
     private TopicSelectionScreen topicScreen;
     private int questionIndex;
+    private ResultsScreen resultsScreen;
+    private int xpAtLessonStart;
 
     public MainWindow(
             Player player,
@@ -173,15 +176,42 @@ public class MainWindow extends JFrame {
     }
 
 
+
     private void startLesson(Topic topic) {
+        startLesson(topic, difficulty);
+    }
+
+    private void startLesson(
+            Topic topic,
+            Difficulty lessonDifficulty) {
+
+        // Remember XP before the quiz begins
+        xpAtLessonStart = player.getXp();
+
+        // Reset player HP
         player.setHp(Player.getStartingHp());
-        session = new GameSession(player, topic, difficulty,
-                questionService.selectQuestions(topic, difficulty));
+
+        // Create the quiz session
+        session = new GameSession(
+                player,
+                topic,
+                lessonDifficulty,
+                questionService.selectQuestions(
+                        topic,
+                        lessonDifficulty
+                )
+        );
+
         questionIndex = -1;
         lessonResultRecorded = false;
-        showNextQuestion();
+
+        // Display the question screen first
         showScreen(ScreenId.QUESTION);
+
+        // Load the first question
+        showNextQuestion();
     }
+
 
     
 private boolean saveProgress() {
@@ -294,30 +324,49 @@ private void confirmExit() {
         }.execute();
     }
 
+
     private void showNextQuestion() {
-        if (session == null) return;
+
+        if (session == null) {
+            return;
+        }
+
         questionIndex++;
+
+        // Check whether the lesson is finished
         if (questionIndex >= session.getQuestions().size()
                 || !player.isAlive()) {
 
+            // Prevent recording rewards twice
             if (lessonResultRecorded) {
                 return;
             }
 
             lessonResultRecorded = true;
 
-            boolean passed = lessonRunnerService.hasPassed(session);
+            boolean passed =
+                    lessonRunnerService.hasPassed(session);
+
             Difficulty oldDifficulty = difficulty;
 
+            // Record completed lessons and bonus XP
             lessonRunnerService.recordLessonCompletion(session);
 
-            difficulty =
-                    DifficultyProgressionService.currentDifficulty(player);
+            // Calculate XP earned during this session
+            int xpEarned = Math.max(
+                    0,
+                    player.getXp() - xpAtLessonStart
+            );
 
+            // Update difficulty progression
+            difficulty =
+                    DifficultyProgressionService
+                            .currentDifficulty(player);
+
+            // Refresh Main Menu statistics
             mainMenuScreen.refresh(player);
 
-            questionScreen.showLessonResult(session, passed);
-
+            // Save player progress
             if (!saveProgress()) {
                 JOptionPane.showMessageDialog(
                         this,
@@ -327,10 +376,48 @@ private void confirmExit() {
                 );
             }
 
+            Topic completedTopic = session.getTopic();
+            Difficulty completedDifficulty =
+                    session.getDifficulty();
+
+            // Remove the previous results screen
+            if (resultsScreen != null) {
+                container.remove(resultsScreen);
+            }
+
+            // Create the new results screen
+            resultsScreen = new ResultsScreen(
+                    session,
+                    passed,
+                    xpEarned,
+
+                    // TRY AGAIN
+                    () -> startLesson(
+                            completedTopic,
+                            completedDifficulty
+                    ),
+
+                    // CHOOSE TOPIC
+                    this::showTopicSelection,
+
+                    // MAIN MENU
+                    () -> showScreen(ScreenId.MAIN_MENU)
+            );
+
+            // Register and display the screen
+            container.add(
+                    resultsScreen,
+                    ScreenId.RESULTS.name()
+            );
+
+            showScreen(ScreenId.RESULTS);
+
+            // Notify player of a new difficulty
             if (passed && difficulty != oldDifficulty) {
                 JOptionPane.showMessageDialog(
                         this,
-                        difficulty.getLabel() + " difficulty unlocked!",
+                        difficulty.getLabel()
+                                + " difficulty unlocked!",
                         "New Difficulty",
                         JOptionPane.INFORMATION_MESSAGE
                 );
@@ -338,10 +425,20 @@ private void confirmExit() {
 
             return;
         }
-        session.setCurrentQuestionIndex(questionIndex + 1);
-        questionScreen.showQuestion(session.getQuestions().get(questionIndex),
-                questionIndex + 1, session.getQuestions().size(), player);
+
+        // Continue displaying questions
+        session.setCurrentQuestionIndex(
+                questionIndex + 1
+        );
+
+        questionScreen.showQuestion(
+                session.getQuestions().get(questionIndex),
+                questionIndex + 1,
+                session.getQuestions().size(),
+                player
+        );
     }
+
 
     public void showScreen(ScreenId id) {
         if (id == ScreenId.MAIN_MENU) {
