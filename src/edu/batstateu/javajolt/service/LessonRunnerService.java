@@ -12,6 +12,7 @@ import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.ui.GameUI;
 
 public class LessonRunnerService {
+    // TODO(gameplay balance): Revisit damage and survival pressure when enemy attacks/status effects are designed.
     private static final int DAMAGE_PER_MISTAKE = 2;
     private static final int POINTS_PER_CORRECT = 10;
     private static final int PASS_PERCENT = 70;
@@ -65,9 +66,12 @@ public class LessonRunnerService {
         Player player = session.getPlayer();
         if (questionService.isCorrect(question, answer)) {
             player.addScore(POINTS_PER_CORRECT);
-        player.addXp(
-                xpPerCorrect(session.getQuestions().size())
-        );
+
+            // A completed topic/difficulty pair no longer awards repeat XP.
+            if (!player.isComplete(session.getTopic(), session.getDifficulty())) {
+                player.addXp(xpPerCorrect(session.getQuestions().size()));
+            }
+
             session.recordCorrect(POINTS_PER_CORRECT);
             return true;
         }
@@ -76,6 +80,8 @@ public class LessonRunnerService {
         return false;
     }
 
+    // TODO(gameplay balance): Keep HP as a meaningful survival condition alongside accuracy.
+    // Current damage may not defeat a player before the 70% accuracy rule already makes the run fail.
     public boolean hasPassed(GameSession session) {
         return session.getPlayer().isAlive()
                 && session.getAccuracyPercent() >= PASS_PERCENT;
