@@ -6,11 +6,14 @@ import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
 import edu.batstateu.javajolt.ui.swing.component.RoundedButton;
+import edu.batstateu.javajolt.ui.swing.component.CodeBlockPanel;
 
+import java.awt.Dimension;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -257,9 +260,7 @@ public class TextbookScreen extends Screen {
                 (pageIndex + 1) + " / " + pages.size()
         );
 
-        displayFormattedContent(
-        formatLessonBody(page.body())
-        );
+        displayLessonBlocks(page.body());
 
         updateQuickReference(page);
 
@@ -269,6 +270,166 @@ public class TextbookScreen extends Screen {
                 pageIndex < pages.size() - 1
         );
     }
+
+
+        private void displayLessonBlocks(List<String> lines) {
+
+        content.setText("");
+
+        StyledDocument document = content.getStyledDocument();
+
+        // Style for ordinary explanations
+        SimpleAttributeSet proseStyle = new SimpleAttributeSet();
+
+        StyleConstants.setFontFamily(
+                proseStyle, Font.SANS_SERIF
+        );
+
+        StyleConstants.setFontSize(proseStyle, 16);
+
+        StyleConstants.setForeground(
+                proseStyle, Theme.TEXT
+        );
+
+        List<String> prose = new ArrayList<>();
+        StringBuilder javaCode = new StringBuilder();
+
+        try {
+
+                for (String line : lines) {
+
+                if (isJavaCodeLine(line)) {
+
+                        // Display any explanation before the code
+                        if (!prose.isEmpty()) {
+                        appendProseBlock(
+                                document, prose, proseStyle
+                        );
+                        prose.clear();
+                        }
+
+                        // Remove the four-space console indentation
+                        javaCode.append(line.substring(4))
+                                .append('\n');
+
+                } else {
+
+                        // Finish the current Java code block
+                        if (!javaCode.isEmpty()) {
+
+                        appendCodeBlock(
+                                document,
+                                javaCode.toString(),
+                                proseStyle
+                        );
+
+                        javaCode.setLength(0);
+                        }
+
+                        prose.add(line);
+                }
+                }
+
+                // Display any remaining content
+                if (!javaCode.isEmpty()) {
+                appendCodeBlock(
+                        document,
+                        javaCode.toString(),
+                        proseStyle
+                );
+                }
+
+                if (!prose.isEmpty()) {
+                appendProseBlock(
+                        document, prose, proseStyle
+                );
+                }
+
+                content.setCaretPosition(0);
+
+        } catch (BadLocationException e) {
+                throw new IllegalStateException(
+                        "Could not render textbook page", e
+                );
+        }
+        }
+
+        private boolean isJavaCodeLine(String line) {
+
+        if (!line.startsWith("    ")) {
+                return false;
+        }
+
+        String trimmed = line.trim();
+
+        // Avoid treating textbook diagrams as Java code
+        if (trimmed.contains("->")) {
+                return false;
+        }
+
+        return trimmed.contains(";")
+                || trimmed.endsWith("{")
+                || trimmed.equals("}")
+                || trimmed.startsWith("//")
+                || trimmed.matches(
+                        "^(if|for|while|switch|catch)\\s*\\(.*\\)$"
+                );
+        }
+
+
+        private void appendProseBlock(
+                StyledDocument document,
+                List<String> lines,
+                SimpleAttributeSet style)
+                throws BadLocationException {
+
+        // Reuse the paragraph formatter from Step 5C
+        String text = formatLessonBody(lines);
+
+        if (!text.isBlank()) {
+                document.insertString(
+                        document.getLength(),
+                        text + "\n\n",
+                        style
+                );
+        }
+        }
+
+        private void appendCodeBlock(
+                StyledDocument document,
+                String text,
+                SimpleAttributeSet style)
+                throws BadLocationException {
+
+        String code = text.stripTrailing();
+
+        int lineCount = code.split("\n", -1).length;
+
+        // Use our new reusable component
+        CodeBlockPanel codePanel = new CodeBlockPanel(
+                "JAVA EXAMPLE",
+                code
+        );
+
+        codePanel.setPreferredSize(
+                new Dimension(
+                        480,
+                        Math.max(96, 66 + 23 * lineCount)
+                )
+        );
+
+        // Insert the actual Swing component into the textbook
+        content.setCaretPosition(document.getLength());
+        content.insertComponent(codePanel);
+
+        // Add spacing after the code
+        document.insertString(
+                document.getLength(),
+                "\n\n",
+                style
+        );
+        }
+
 
     private void displayFormattedContent(String text) {
         StyledDocument document = content.getStyledDocument();
