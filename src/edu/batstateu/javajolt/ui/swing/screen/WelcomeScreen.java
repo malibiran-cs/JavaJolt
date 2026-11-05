@@ -7,6 +7,7 @@ import edu.batstateu.javajolt.ui.swing.component.CharacterPlaceholder;
 import edu.batstateu.javajolt.ui.swing.component.RoundedButton;
 import edu.batstateu.javajolt.ui.swing.component.RoundedPanel;
 import edu.batstateu.javajolt.ui.swing.component.RoundedTextField;
+import java.awt.GridBagLayout;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -39,33 +40,96 @@ public class WelcomeScreen extends Screen {
         add(createBody(), BorderLayout.CENTER);
     }
 
-    private JPanel createGreeting() {
-        JLabel greeting = new JLabel("GREETINGS", SwingConstants.CENTER);
-        greeting.setFont(Theme.FONT_TITLE);
-        greeting.setForeground(Theme.TEXT);
+    
+        private JPanel createGreeting() {
 
-        // Creates a rounded panel to hold the greeting label.
-        // BorderLayout allows components to be arranged inside the panel.
-        RoundedPanel plate = new RoundedPanel(
-                new BorderLayout(), "panels/panel", 14);
-        
-        // Adds padding (empty space) between the panel's edges and its content.
-        // GAP_M controls the top and bottom spacing.
-        // GAP_XL controls the left and right spacing.
-        plate.setBorder(BorderFactory.createEmptyBorder(
-                Theme.GAP_M, Theme.GAP_XL,
-                Theme.GAP_M, Theme.GAP_XL));
+        JPanel header = new JPanel();
+        header.setOpaque(false);
 
-        plate.add(greeting);
+        header.setLayout(
+                new BoxLayout(header, BoxLayout.Y_AXIS)
+        );
 
-        JPanel holder = new JPanel(
-                new FlowLayout(FlowLayout.CENTER, 0, 0));
+        JLabel subtitle = new JLabel(
+                "LEARN JAVA  •  EARN XP  •  LEVEL UP"
+        );
 
-        holder.setOpaque(false);
-        holder.add(plate);
+        subtitle.setFont(Theme.FONT_BODY);
+        subtitle.setForeground(Theme.ACCENT);
+        subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        return holder;
-    }
+        JLabel title = new JLabel("WELCOME TO JAVAJOLT");
+
+        title.setFont(Theme.FONT_TITLE);
+        title.setForeground(Theme.TEXT);
+        title.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        header.add(subtitle);
+
+        header.add(
+                Box.createVerticalStrut(Theme.GAP_S)
+        );
+
+        header.add(title);
+
+        return header;
+        }
+
+    
+private RoundedPanel createMascotPanel() {
+
+    RoundedPanel panel = new RoundedPanel(
+        new BorderLayout(0, Theme.GAP_M)
+    );
+
+    panel.setBorder(
+        BorderFactory.createEmptyBorder(
+            Theme.GAP_L,
+            Theme.GAP_L,
+            Theme.GAP_L,
+            Theme.GAP_L
+        )
+    );
+
+    JLabel heading = new JLabel(
+        "YOUR CODING COMPANION"
+    );
+
+    heading.setFont(Theme.FONT_BODY);
+    heading.setForeground(Theme.ACCENT);
+
+    panel.add(heading, BorderLayout.NORTH);
+
+    // Center the mascot without stretching it
+    JPanel mascotHolder = new JPanel(
+        new GridBagLayout()
+    );
+
+    mascotHolder.setOpaque(false);
+
+    CharacterPlaceholder mascot =
+        new CharacterPlaceholder();
+
+    mascot.setPreferredSize(
+        new Dimension(230, 260)
+    );
+
+    mascotHolder.add(mascot);
+
+    panel.add(mascotHolder, BorderLayout.CENTER);
+
+    JLabel caption = new JLabel(
+        "Learn. Practice. Level up."
+    );
+
+    caption.setFont(Theme.FONT_BODY);
+    caption.setForeground(Theme.TEXT_MUTED);
+
+    panel.add(caption, BorderLayout.SOUTH);
+
+    return panel;
+}
+
 
     private JPanel createBody() {
         JPanel body = new JPanel(
@@ -73,7 +137,7 @@ public class WelcomeScreen extends Screen {
 
         body.setOpaque(false);
 
-        body.add(new CharacterPlaceholder());
+        body.add(createMascotPanel());
         body.add(createInfoPanel());
 
         return body;
@@ -87,7 +151,27 @@ public class WelcomeScreen extends Screen {
                 Theme.GAP_L, Theme.GAP_L,
                 Theme.GAP_L, Theme.GAP_L));
 
-        panel.add(createDescription(), BorderLayout.NORTH);
+        
+        JPanel intro = new JPanel(
+        new BorderLayout(0, Theme.GAP_S)
+        );
+
+        intro.setOpaque(false);
+
+        JLabel introTitle = new JLabel(
+        "READY TO START?"
+        );
+
+        introTitle.setFont(Theme.FONT_HEADING);
+        introTitle.setForeground(Theme.TEXT);
+
+        intro.add(introTitle, BorderLayout.NORTH);
+        intro.add(createDescription(), BorderLayout.CENTER);
+
+        intro.setPreferredSize(new Dimension(0, 105));
+
+        panel.add(intro, BorderLayout.NORTH);
+
         panel.add(createNameInput(), BorderLayout.CENTER);
 
         return panel;
@@ -109,14 +193,15 @@ public class WelcomeScreen extends Screen {
     }
 
     private JPanel createNameInput() {
-        JLabel label = new JLabel("Name:");
-        label.setFont(Theme.FONT_HEADING);
-        label.setForeground(Theme.TEXT);
+        JLabel label = new JLabel("YOUR NAME");
+        label.setFont(Theme.FONT_BODY);
+        label.setForeground(Theme.TEXT_MUTED);
 
         RoundedButton startButton = new RoundedButton(
                 "GET STARTED", ButtonStyle.PRIMARY);
 
-        startButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+                startButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+                startButton.setMaximumSize(new Dimension(200, 52));
 
         startButton.addActionListener(e -> {
             String playerName = nameField.getText().trim();
@@ -134,6 +219,8 @@ public class WelcomeScreen extends Screen {
             onContinue.accept(playerName);
         });
 
+        nameField.addActionListener(e -> startButton.doClick());
+
         JPanel input = new JPanel(new BorderLayout());
         input.setOpaque(false);
 
@@ -147,16 +234,19 @@ public class WelcomeScreen extends Screen {
         nameInput.setOpaque(false);
 
         // Centers the Name label horizontally.
-        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Sets the text field's maximum width to 500px and height to 80px.
-        nameField.setMaximumSize(new Dimension(500, 80));
+        nameField.setFont(Theme.FONT_BODY);
+        nameField.setPreferredSize(new Dimension(360, 52));
+        nameField.setMaximumSize(new Dimension(360, 52));
 
         // Centers the text field horizontally.
-        nameField.setAlignmentX(Component.CENTER_ALIGNMENT);
+        nameField.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // Adds the Name label and text field to the panel.
         nameInput.add(label);
+        nameInput.add(Box.createVerticalStrut(Theme.GAP_S));
         nameInput.add(nameField);
 
         // Creates another panel to group the name input and Start button.
@@ -172,7 +262,7 @@ public class WelcomeScreen extends Screen {
         content.add(nameInput);
 
         // Adds 40px of vertical space between the text field and button.
-        content.add(Box.createVerticalStrut(40));
+        content.add(Box.createVerticalStrut(Theme.GAP_L));
 
         // Adds the Get Started button.
         content.add(startButton);

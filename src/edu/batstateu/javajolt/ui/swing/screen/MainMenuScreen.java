@@ -131,8 +131,14 @@ private JPanel createMenuButtons(
 
     // Lessons
     lessonsButton.addActionListener(e -> onLessonsClicked.run());
+
+    // Progress
     progressButton.addActionListener(e -> onProgress.run());
+
+    // Save
     saveButton.addActionListener(e -> onSave.run());
+
+    // Exit
     exitButton.addActionListener(e -> onExit.run());
 
     grid.add(lessonsButton);
