@@ -23,6 +23,8 @@ public class SaveService {
     // Player Properties
     private static final String KEY_NAME = "name";
     private static final String KEY_XP = "xp";
+    private static final String KEY_SCORE = "score";
+    private static final String KEY_HIGH_SCORES = "highScores";
     private static final String KEY_DIFFICULTY = "difficulty";
     // Stored as comma-separated TOPIC:DIFFICULTY pairs, e.g. VARIABLES:BEGINNER,OPERATORS:BEGINNER.
     private static final String KEY_COMPLETED = "completedTopics";
@@ -48,6 +50,8 @@ public class SaveService {
         Properties props = new Properties();
         props.setProperty(KEY_NAME, player.getName());
         props.setProperty(KEY_XP, String.valueOf(player.getXp()));
+        props.setProperty(KEY_SCORE, String.valueOf(player.getScore()));
+        props.setProperty(KEY_HIGH_SCORES, encodeHighScores(player.copyHighScores()));
         props.setProperty(KEY_DIFFICULTY, difficulty.name());
         props.setProperty(KEY_COMPLETED, encode(player.getProgress().copyCompleted()));
 
@@ -70,10 +74,13 @@ public class SaveService {
         try {
             String name = require(props, KEY_NAME);
             int xp = Integer.parseInt(require(props, KEY_XP));
+            int score = Integer.parseInt(props.getProperty(KEY_SCORE, "0"));
             Difficulty difficulty = Difficulty.valueOf(require(props, KEY_DIFFICULTY));
             // NOTE: default to "" so old saves without this key still load as empty progress.
             Map<Topic, Set<Difficulty>> completed = decode(props.getProperty(KEY_COMPLETED, ""));
-            return new SaveData(name, xp, difficulty, completed);
+            Map<Topic, Map<Difficulty, Integer>> highScores =
+                    decodeHighScores(props.getProperty(KEY_HIGH_SCORES, ""));
+            return new SaveData(name, xp, difficulty, score, completed, highScores);
         } catch (IllegalArgumentException e) {
             throw new SaveFileException("Save file is corrupted: " + saveFile, e);
         }
@@ -104,6 +111,48 @@ public class SaveService {
             return out;
         } catch (Exception e) {
             throw new SaveFileException("Save file is corrupted: " + KEY_COMPLETED, e);
+        }
+    }
+
+
+    // Converts best scores to TOPIC:DIFFICULTY:SCORE entries.
+    private static String encodeHighScores(
+            Map<Topic, Map<Difficulty, Integer>> highScores) {
+        List<String> parts = new ArrayList<>();
+        highScores.forEach((topic, scores) ->
+                scores.forEach((difficulty, score) ->
+                        parts.add(topic.name() + ":" + difficulty.name() + ":" + score)));
+        return String.join(",", parts);
+    }
+
+    // Parses saved high scores; a blank or missing key means no records yet.
+    private static Map<Topic, Map<Difficulty, Integer>> decodeHighScores(String raw)
+            throws SaveFileException {
+        Map<Topic, Map<Difficulty, Integer>> out = new EnumMap<>(Topic.class);
+        if (raw == null || raw.isBlank()) {
+            return out;
+        }
+
+        try {
+            for (String entry : raw.split(",")) {
+                String[] parts = entry.trim().split(":", -1);
+                if (parts.length != 3) {
+                    throw new IllegalArgumentException("Invalid high-score entry: " + entry);
+                }
+
+                Topic topic = Topic.valueOf(parts[0]);
+                Difficulty difficulty = Difficulty.valueOf(parts[1]);
+                int score = Integer.parseInt(parts[2]);
+                if (score < 0) {
+                    throw new IllegalArgumentException("High score cannot be negative.");
+                }
+
+                out.computeIfAbsent(topic, key -> new EnumMap<>(Difficulty.class))
+                        .merge(difficulty, score, Math::max);
+            }
+            return out;
+        } catch (Exception e) {
+            throw new SaveFileException("Save file is corrupted: " + KEY_HIGH_SCORES, e);
         }
     }
 
