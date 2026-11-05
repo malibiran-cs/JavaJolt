@@ -12,11 +12,12 @@ import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.ui.GameUI;
 
 public class LessonRunnerService {
-    private static final int DAMAGE_PER_MISTAKE = 3;
+    private static final int DAMAGE_PER_MISTAKE = 2;
     private static final int POINTS_PER_CORRECT = 10;
     private static final int PASS_PERCENT = 70;
     // XP tuning (fixed for now, but kept in methods so they can scale by difficulty later)
     private static final int XP_PER_CORRECT = 5;
+    private static final int XP_BUDGET_PER_QUIZ = 25;
     private static final int LESSON_COMPLETE_XP = 50;
 
     private final QuestionService questionService;
@@ -64,7 +65,9 @@ public class LessonRunnerService {
         Player player = session.getPlayer();
         if (questionService.isCorrect(question, answer)) {
             player.addScore(POINTS_PER_CORRECT);
-            player.addXp(xpPerCorrect(session.getDifficulty()));
+        player.addXp(
+                xpPerCorrect(session.getQuestions().size())
+        );
             session.recordCorrect(POINTS_PER_CORRECT);
             return true;
         }
@@ -87,9 +90,25 @@ public class LessonRunnerService {
     }
 
     // XP awarded per correct answer. Fixed value for now; can scale by difficulty later.
-    public int xpPerCorrect(Difficulty difficulty) {
-        return XP_PER_CORRECT;
+
+    public int xpPerCorrect(int questionCount) {
+
+        if (questionCount <= 0) {
+            return 0;
+        }
+
+        // Distribute approximately 25 XP across the quiz
+        int scaledXp = Math.round(
+                (float) XP_BUDGET_PER_QUIZ / questionCount
+        );
+
+        // Limit the reward to 1–5 XP per correct answer
+        return Math.max(
+                1,
+                Math.min(XP_PER_CORRECT, scaledXp)
+        );
     }
+
 
     // Bonus XP for clearing a lesson. Fixed value for now; can scale by difficulty later.
     public int lessonCompleteBonus(Difficulty difficulty) {
