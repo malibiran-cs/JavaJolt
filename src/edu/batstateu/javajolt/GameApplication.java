@@ -60,7 +60,9 @@ public class GameApplication {
                 SaveData data = saves.load();
 
                 player = new Player(data.name(), data.xp());
+                player.setScore(data.score());
                 player.restoreProgress(data.completedTopics());
+                player.restoreHighScores(data.highScores());
                 loaded = true;
 
             } catch (SaveFileException e) {
