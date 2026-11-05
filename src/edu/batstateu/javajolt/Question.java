@@ -41,6 +41,10 @@ public abstract class Question {
     // DISPLAY (each question type formats its own prompt)
     public abstract String display();
 
+    // Lets question types update lesson-specific presentation before a lesson starts.
+    public void prepareForLesson() {
+    }
+
     // INPUT MODE: most questions take one line; a question type can override this (CodeQuestion does)
     public InputMode getInputMode() {
         return InputMode.SINGLE_LINE;

@@ -161,6 +161,7 @@ Set<Integer> recentlyUsed =
 
     for (Question question : selected) {
         selectedIds.add(question.getId());
+        question.prepareForLesson();
     }
 
     topicHistory.put(difficulty, selectedIds);

@@ -3,6 +3,8 @@ package edu.batstateu.javajolt.types;
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MultipleChoiceQuestion extends Question {
@@ -23,6 +25,35 @@ public class MultipleChoiceQuestion extends Question {
     public boolean isCorrect(String userInput) {
         String in = userInput.trim().replaceAll("[.)]$", "");
         return in.equalsIgnoreCase(answer);
+    }
+
+    @Override
+    public void prepareForLesson() {
+        String correctChoice = null;
+        for (String choice : choices) {
+            if (choice.startsWith(answer + ".")) {
+                correctChoice = choice.substring(choice.indexOf('.') + 1).trim();
+                break;
+            }
+        }
+
+        List<String> shuffledChoices = new ArrayList<>();
+        for (String choice : choices) {
+            shuffledChoices.add(choice.substring(choice.indexOf('.') + 1).trim());
+        }
+        Collections.shuffle(shuffledChoices);
+
+        List<String> labeledChoices = new ArrayList<>();
+        String[] labels = {"A", "B", "C", "D", "E", "F"};
+        for (int i = 0; i < shuffledChoices.size(); i++) {
+            String label = labels[i];
+            String choice = shuffledChoices.get(i);
+            labeledChoices.add(label + ". " + choice);
+            if (choice.equals(correctChoice)) {
+                answer = label;
+            }
+        }
+        choices = labeledChoices;
     }
 
     // DISPLAY
