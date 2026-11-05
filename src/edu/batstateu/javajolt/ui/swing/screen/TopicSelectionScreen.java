@@ -27,7 +27,6 @@ import javax.swing.JPanel;
 
 public class TopicSelectionScreen extends Screen {
 
-    private static final int GAP_L = 24;
     private static final int GAP_M = 12;
 
     public TopicSelectionScreen(

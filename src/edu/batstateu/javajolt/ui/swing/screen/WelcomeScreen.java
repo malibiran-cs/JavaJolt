@@ -9,7 +9,6 @@ import edu.batstateu.javajolt.ui.swing.component.RoundedPanel;
 import edu.batstateu.javajolt.ui.swing.component.RoundedTextField;
 import java.awt.GridBagLayout;
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Dimension;
 import java.awt.Component;
@@ -21,7 +20,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
-import javax.swing.SwingConstants;
 
 public class WelcomeScreen extends Screen {
 
