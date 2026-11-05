@@ -20,7 +20,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
@@ -49,7 +48,7 @@ public class TextbookScreen extends Screen {
     private final JLabel title = new JLabel();
     private final JLabel pageCounter = new JLabel();
     private final JTextPane content = new JTextPane();
-    private final JTextArea quickReference = new JTextArea();
+    private final JTextPane quickReference = new JTextPane();
 
     private final RoundedButton previousButton =
             new RoundedButton("Previous", ButtonStyle.SECONDARY);
@@ -122,8 +121,6 @@ public class TextbookScreen extends Screen {
 
         quickReference.setBackground(Theme.PANEL);
         quickReference.setForeground(Theme.TEXT);
-        quickReference.setLineWrap(true);
-        quickReference.setWrapStyleWord(true);
 
         quickReference.setBorder(
         BorderFactory.createEmptyBorder(
@@ -261,7 +258,7 @@ public class TextbookScreen extends Screen {
         );
 
         displayFormattedContent(
-                String.join("\n", page.body())
+        formatLessonBody(page.body())
         );
 
         updateQuickReference(page);
@@ -304,6 +301,20 @@ public class TextbookScreen extends Screen {
         try {
             document.remove(0, document.getLength());
             document.insertString(0, text, normal);
+
+                SimpleAttributeSet paragraphStyle =
+                new SimpleAttributeSet();
+
+                StyleConstants.setLineSpacing(
+                        paragraphStyle, 0.20f
+                );
+
+                document.setParagraphAttributes(
+                        0,
+                        document.getLength(),
+                        paragraphStyle,
+                        false
+                );
 
             String[] lines = text.split("\n", -1);
             int offset = 0;
@@ -382,6 +393,150 @@ public class TextbookScreen extends Screen {
         }
     }
 
+    
+        private String formatLessonBody(List<String> lines) {
+
+        StringBuilder formatted = new StringBuilder();
+
+        boolean previousWasProse = false;
+
+        for (String line : lines) {
+
+                // Preserve paragraph separation
+                if (line.isBlank()) {
+
+                if (formatted.length() > 0
+                        && !formatted.toString().endsWith("\n\n")) {
+
+                        formatted.append("\n\n");
+                }
+
+                previousWasProse = false;
+                continue;
+                }
+
+                // Indented lines are treated as code,
+                // examples, tables, or special formatting.
+                boolean isProse =
+                        !Character.isWhitespace(line.charAt(0));
+
+                if (isProse && previousWasProse) {
+
+                // Join console-wrapped explanation lines
+                formatted.append(" ").append(line.trim());
+
+                } else {
+
+                if (formatted.length() > 0
+                        && formatted.charAt(formatted.length() - 1)
+                        != '\n') {
+
+                        formatted.append("\n");
+                }
+
+                formatted.append(line);
+                }
+
+                previousWasProse = isProse;
+        }
+
+        return formatted.toString().stripTrailing();
+        }
+
+
+
+        private void styleQuickReference() {
+
+        StyledDocument document =
+                quickReference.getStyledDocument();
+
+        String text = quickReference.getText();
+
+        // DEFAULT TEXT
+        SimpleAttributeSet normal = new SimpleAttributeSet();
+        StyleConstants.setFontFamily(normal, Font.SANS_SERIF);
+        StyleConstants.setFontSize(normal, 15);
+        StyleConstants.setForeground(normal, Theme.TEXT);
+
+        document.setCharacterAttributes(
+                0, document.getLength(), normal, true
+        );
+
+        // MAIN TITLE
+        SimpleAttributeSet titleStyle = new SimpleAttributeSet();
+        StyleConstants.setFontFamily(titleStyle, Font.SANS_SERIF);
+        StyleConstants.setFontSize(titleStyle, 20);
+        StyleConstants.setBold(titleStyle, true);
+        StyleConstants.setForeground(titleStyle, Theme.ACCENT);
+
+        // SECTION HEADINGS
+        SimpleAttributeSet headingStyle = new SimpleAttributeSet();
+        StyleConstants.setFontSize(headingStyle, 13);
+        StyleConstants.setBold(headingStyle, true);
+        StyleConstants.setForeground(headingStyle, Theme.ACCENT);
+
+        // PAGE INFORMATION
+        SimpleAttributeSet mutedStyle = new SimpleAttributeSet();
+        StyleConstants.setForeground(mutedStyle, Theme.TEXT_MUTED);
+        StyleConstants.setFontSize(mutedStyle, 13);
+
+        // CURRENT FOCUS
+        SimpleAttributeSet focusStyle = new SimpleAttributeSet();
+        StyleConstants.setBold(focusStyle, true);
+        StyleConstants.setForeground(focusStyle, Theme.TEXT);
+        StyleConstants.setFontSize(focusStyle, 17);
+
+        // JAVA CODE
+        SimpleAttributeSet codeStyle = new SimpleAttributeSet();
+        StyleConstants.setFontFamily(codeStyle, Font.MONOSPACED);
+        StyleConstants.setForeground(
+                codeStyle, new Color(0xA5D6A7)
+        );
+        StyleConstants.setBackground(codeStyle, Theme.INSET);
+        StyleConstants.setFontSize(codeStyle, 15);
+
+        String[] lines = text.split("\n", -1);
+
+        int offset = 0;
+        String previousLine = "";
+
+        for (String line : lines) {
+
+                SimpleAttributeSet selectedStyle = null;
+
+                if (line.equals("LESSON SNAPSHOT")) {
+                selectedStyle = titleStyle;
+
+                } else if (line.equals("CURRENT FOCUS")
+                        || line.equals("KEY IDEA")
+                        || line.equals("CODE TO REMEMBER")
+                        || line.equals("STUDY TIP")) {
+
+                selectedStyle = headingStyle;
+
+                } else if (line.contains("  |  Page ")) {
+                selectedStyle = mutedStyle;
+
+                } else if (previousLine.equals("CURRENT FOCUS")) {
+                selectedStyle = focusStyle;
+
+                } else if (previousLine.equals("CODE TO REMEMBER")) {
+                selectedStyle = codeStyle;
+                }
+
+                if (selectedStyle != null && !line.isEmpty()) {
+                document.setCharacterAttributes(
+                        offset,
+                        line.length(),
+                        selectedStyle,
+                        false
+                );
+                }
+
+                previousLine = line.trim();
+                offset += line.length() + 1;
+        }
+        }
 
 
         private void updateQuickReference(LessonPage page) {
@@ -474,6 +629,9 @@ public class TextbookScreen extends Screen {
         notes.append(tip);
 
         quickReference.setText(notes.toString());
+
+        styleQuickReference();
+
         quickReference.setCaretPosition(0);
         }
 
