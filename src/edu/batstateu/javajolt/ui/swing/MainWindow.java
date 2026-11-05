@@ -352,6 +352,13 @@ private void confirmExit() {
             // Record completed lessons and bonus XP
             lessonRunnerService.recordLessonCompletion(session);
 
+            // Keep the best score for this topic and difficulty for future records.
+            player.recordHighScore(
+                    session.getTopic(),
+                    session.getDifficulty(),
+                    session.getScoreEarned()
+            );
+
             // Calculate XP earned during this session
             int xpEarned = Math.max(
                     0,
