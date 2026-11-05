@@ -81,18 +81,14 @@ public class MainWindow extends JFrame {
             showScreen(ScreenId.MAIN_MENU);
         }), ScreenId.WELCOME.name());
 
-    mainMenuScreen = new MainMenuScreen(
-            player,
-            this::showTopicSelection,
-            this::saveWithFeedback,
-            this::showProgress,
-            this::confirmExit
-    );
+        mainMenuScreen = new MainMenuScreen(
+                player,
+                this::showTopicSelection,
+                this::saveWithFeedback,
+                this::showProgress,
+                this::confirmExit
+        );
 
-    container.add(
-            mainMenuScreen,
-            ScreenId.MAIN_MENU.name()
-    );
         container.add(
                 mainMenuScreen,
                 ScreenId.MAIN_MENU.name()
