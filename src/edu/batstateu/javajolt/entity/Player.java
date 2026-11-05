@@ -1,5 +1,6 @@
 package edu.batstateu.javajolt.entity;
 
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -7,11 +8,14 @@ import java.util.Set;
 import edu.batstateu.javajolt.enums.*;
 import edu.batstateu.javajolt.service.PlayerProgressService;
 public class Player {
+    // TODO(gameplay balance): If HP progression is added, separate maximum HP from current HP.
     private static final int STARTING_HP = 10;
     private String name;
     private int hp = STARTING_HP;
     private int xp;      // persistent: written to the save file and restored on load
-    private int score;   // session only: never saved, resets to 0 each launch
+    private int score;   // cumulative score across quiz attempts; persisted
+    private final Map<Topic, EnumMap<Difficulty, Integer>> highScores =
+            new EnumMap<>(Topic.class);
     private PlayerProgressService progress = new PlayerProgressService();
 
     public Player(String name, int xp) {
@@ -31,6 +35,51 @@ public class Player {
 
     public int addScore(int amount) {
         return score += amount;
+    }
+
+    // Records the best score earned for one topic and difficulty.
+    public boolean recordHighScore(Topic topic, Difficulty difficulty, int score) {
+        int previousHighScore = getHighScore(topic, difficulty);
+        if (score <= previousHighScore) {
+            return false;
+        }
+
+        highScores.computeIfAbsent(topic, key -> new EnumMap<>(Difficulty.class))
+                .put(difficulty, score);
+        return true;
+    }
+
+    public int getHighScore(Topic topic, Difficulty difficulty) {
+        Map<Difficulty, Integer> scores = highScores.get(topic);
+        if (scores == null) {
+            return 0;
+        }
+        return scores.getOrDefault(difficulty, 0);
+    }
+
+    // Returns a detached copy so save data cannot mutate the player's records.
+    public Map<Topic, Map<Difficulty, Integer>> copyHighScores() {
+        Map<Topic, Map<Difficulty, Integer>> copy = new EnumMap<>(Topic.class);
+        highScores.forEach((topic, scores) -> {
+            copy.put(topic, new EnumMap<>(scores));
+        });
+        return copy;
+    }
+
+    // Restores high scores from saved data; missing records remain empty for older saves.
+    public void restoreHighScores(Map<Topic, ? extends Map<Difficulty, Integer>> data) {
+        highScores.clear();
+        data.forEach((topic, scores) -> {
+            EnumMap<Difficulty, Integer> topicScores = new EnumMap<>(Difficulty.class);
+            scores.forEach((difficulty, value) -> {
+                if (value != null && value >= 0) {
+                    topicScores.put(difficulty, value);
+                }
+            });
+            if (!topicScores.isEmpty()) {
+                highScores.put(topic, topicScores);
+            }
+        });
     }
 
     public int addXp(int amount) {
