@@ -11,7 +11,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -384,57 +383,100 @@ public class TextbookScreen extends Screen {
     }
 
 
-private void updateQuickReference(LessonPage page) {
-    List<String> paragraphs = new ArrayList<>();
-    StringBuilder paragraph = new StringBuilder();
-    String example = null;
 
-    for (String line : page.body()) {
-        String trimmed = line.trim();
+        private void updateQuickReference(LessonPage page) {
 
-        if (trimmed.isEmpty() || line.startsWith("    ")) {
-            if (!paragraph.isEmpty()) {
-                paragraphs.add(paragraph.toString());
-                paragraph.setLength(0);
-            }
+        // Find the first explanatory paragraph
+        StringBuilder keyIdea = new StringBuilder();
+        boolean readingParagraph = false;
 
-            if (example == null && line.startsWith("    ")
-                    && (trimmed.contains(";") || trimmed.startsWith("//"))) {
-                example = trimmed;
-            }
-        } else {
-            if (!paragraph.isEmpty()) paragraph.append(' ');
-            paragraph.append(trimmed);
+        for (String line : page.body()) {
+
+                String trimmed = line.trim();
+
+                if (trimmed.isEmpty() || line.startsWith("    ")) {
+                if (readingParagraph) {
+                        break;
+                }
+                continue;
+                }
+
+                if (keyIdea.length() > 0) {
+                keyIdea.append(" ");
+                }
+
+                keyIdea.append(trimmed);
+                readingParagraph = true;
         }
-    }
 
-    if (!paragraph.isEmpty()) {
-        paragraphs.add(paragraph.toString());
-    }
+        // Find the first recognizable Java code line
+        String example = null;
 
-    StringBuilder notes = new StringBuilder()
-            .append("QUICK REFERENCE\n\n")
-            .append("TOPIC: ").append(topic.getLabel()).append('\n')
-            .append("PAGE ").append(pageIndex + 1)
-            .append(" OF ").append(pages.size())
-            .append("\n\n").append(page.title())
-            .append("\n\nKEY IDEAS\n");
+        for (String line : page.body()) {
 
-    for (int i = 0; i < Math.min(2, paragraphs.size()); i++) {
-        notes.append("• ").append(paragraphs.get(i)).append("\n\n");
-    }
+                String trimmed = line.trim();
 
-    if (paragraphs.isEmpty()) {
-        notes.append("Review the example on this page.\n\n");
-    }
+                if (line.startsWith("    ")
+                        && (trimmed.endsWith(";")
+                        || trimmed.startsWith("//")
+                        || trimmed.endsWith("{"))) {
 
-    if (example != null) {
-        notes.append("JAVA EXAMPLE\n").append(example);
-    }
+                example = trimmed;
+                break;
+                }
+        }
 
-    quickReference.setText(notes.toString());
-    quickReference.setCaretPosition(0);
-}
+        // Keep the reference concise
+        String summary = keyIdea.toString();
+
+        if (summary.length() > 160) {
+                int cut = summary.lastIndexOf(' ', 157);
+
+                if (cut < 0) {
+                cut = 157;
+                }
+
+                summary = summary.substring(0, cut) + "...";
+        }
+
+        if (summary.isBlank()) {
+                summary = "Review the explanation on this page.";
+        }
+
+        String tip = (example != null)
+                ? "Try writing this code without looking at it."
+                : "Explain this concept in your own words.";
+
+        // Build the reference panel
+        StringBuilder notes = new StringBuilder();
+
+        notes.append("LESSON SNAPSHOT\n\n");
+
+        notes.append(topic.getLabel())
+                .append("  |  Page ")
+                .append(pageIndex + 1)
+                .append(" of ")
+                .append(pages.size())
+                .append("\n\n");
+
+        notes.append("CURRENT FOCUS\n");
+        notes.append(page.title()).append("\n\n");
+
+        notes.append("KEY IDEA\n");
+        notes.append(summary).append("\n\n");
+
+        if (example != null) {
+                notes.append("CODE TO REMEMBER\n");
+                notes.append(example).append("\n\n");
+        }
+
+        notes.append("STUDY TIP\n");
+        notes.append(tip);
+
+        quickReference.setText(notes.toString());
+        quickReference.setCaretPosition(0);
+        }
+
 
     private int countQuotes(String text) {
         int count = 0;

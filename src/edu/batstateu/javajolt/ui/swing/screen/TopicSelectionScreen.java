@@ -15,9 +15,13 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.RenderingHints;
+import java.awt.GridBagLayout;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import javax.swing.JScrollPane;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -42,15 +46,97 @@ public class TopicSelectionScreen extends Screen {
         title.setForeground(Theme.TEXT);
         add(title, BorderLayout.NORTH);
 
+        
         JPanel topicPanel = new JPanel(
-                new GridLayout(0, 2, GAP_M, GAP_M));
+                new GridLayout(0, 2, GAP_M, GAP_M)
+        );
+
         topicPanel.setOpaque(false);
 
+        // Create a card for every Java topic
         for (int i = 0; i < topics.length; i++) {
-            Topic topic = topics[i];
-            topicPanel.add(new TopicCard(
-                    topic, i + 1, unlocked.contains(topic), onTopicSelected));
+        Topic topic = topics[i];
+
+        topicPanel.add(new TopicCard(
+                topic,
+                i + 1,
+                unlocked.contains(topic),
+                onTopicSelected
+        ));
         }
+
+        // Center the topic grid without stretching the cards
+        JPanel centeredPanel = new JPanel(
+                new GridBagLayout()
+        );
+
+        centeredPanel.setBackground(Theme.BACKGROUND);
+        centeredPanel.add(topicPanel);
+
+        // Allow scrolling when the window becomes smaller
+        JScrollPane scrollPane = new JScrollPane(
+                centeredPanel
+        );
+
+        scrollPane.setBorder(null);
+
+        scrollPane.getViewport().setBackground(
+                Theme.BACKGROUND
+        );
+
+        scrollPane.setVerticalScrollBarPolicy(
+                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+        );
+
+        scrollPane.setHorizontalScrollBarPolicy(
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+        );
+
+        // Make scrolling smoother
+        scrollPane.getVerticalScrollBar()
+                .setUnitIncrement(16);
+
+
+        scrollPane.getViewport().addComponentListener(
+        new ComponentAdapter() {
+
+                private int currentColumns = 2;
+
+                @Override
+                public void componentResized(ComponentEvent e) {
+
+                int availableWidth =
+                        scrollPane.getViewport().getWidth();
+
+                // Switch to one column in narrower windows
+                int newColumns = availableWidth >= 700 ? 2 : 1;
+
+                // Only update when the column count changes
+                if (newColumns != currentColumns) {
+
+                        currentColumns = newColumns;
+
+                        topicPanel.setLayout(
+                        new GridLayout(
+                                0,
+                                newColumns,
+                                GAP_M,
+                                GAP_M
+                        )
+                        );
+
+                        // Refresh the layout
+                        topicPanel.revalidate();
+                        centeredPanel.revalidate();
+                        scrollPane.revalidate();
+                        scrollPane.repaint();
+                }
+                }
+        }
+        );
+
+        add(scrollPane, BorderLayout.CENTER);
+
 
         add(topicPanel, BorderLayout.CENTER);
 
