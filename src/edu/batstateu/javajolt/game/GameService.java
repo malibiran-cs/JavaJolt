@@ -53,6 +53,8 @@ public class GameService {
         SaveData saveData = loadSave();
         if(saveData != null) {
             player = new Player(saveData.name(), saveData.xp());
+            player.setScore(saveData.score());
+            player.restoreHighScores(saveData.highScores());
 
             // Get completed topics
             Map<Topic, Set<Difficulty>> completedTopics = saveData.completedTopics();
@@ -120,6 +122,7 @@ public class GameService {
 
             // Question loop for a lesson
             lessonRunnerService.playLesson(session);
+            player.recordHighScore(topic, difficulty, session.getScoreEarned());
 
             // Show results
             boolean passed = lessonRunnerService.hasPassed(session);
