@@ -1,6 +1,7 @@
 
 package edu.batstateu.javajolt.ui.swing.screen;
 
+import java.util.Arrays;
 import javax.swing.JProgressBar;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Achievement;
@@ -45,7 +46,7 @@ public class AchievementsScreen extends Screen {
         // =====================================
 
         JPanel header = new JPanel(
-                new BorderLayout(Theme.GAP_M, 0)
+                new BorderLayout(Theme.GAP_M, Theme.GAP_M)
         );
 
         header.setOpaque(false);
@@ -65,6 +66,63 @@ public class AchievementsScreen extends Screen {
 
         header.add(heading, BorderLayout.WEST);
         header.add(counter, BorderLayout.EAST);
+
+
+        // =====================================
+        // OVERALL ACHIEVEMENT PROGRESS
+        // =====================================
+
+        int totalAchievements = Achievement.values().length;
+        int remaining = totalAchievements - unlocked;
+
+        JPanel overview = new JPanel(
+                new BorderLayout(0, Theme.GAP_S)
+        );
+
+        overview.setOpaque(false);
+
+        JLabel collectionStatus = new JLabel(
+                remaining == 0
+                        ? "Collection complete! All achievements earned."
+                        : remaining + " more achievements to collect"
+        );
+
+        collectionStatus.setFont(
+                Theme.FONT_BODY.deriveFont(13f)
+        );
+
+        collectionStatus.setForeground(Theme.TEXT_MUTED);
+
+        JProgressBar collectionBar = new JProgressBar(
+                0, totalAchievements
+        );
+
+        collectionBar.setValue(unlocked);
+        collectionBar.setForeground(Theme.ACCENT);
+        collectionBar.setBackground(Theme.INSET_BORDER);
+
+        collectionBar.setBorderPainted(false);
+        collectionBar.setStringPainted(false);
+
+        collectionBar.setPreferredSize(
+                new Dimension(1, 10)
+        );
+
+        overview.add(
+                collectionStatus,
+                BorderLayout.NORTH
+        );
+
+        overview.add(
+                collectionBar,
+                BorderLayout.SOUTH
+        );
+
+        header.add(
+                overview,
+                BorderLayout.SOUTH
+        );
+
 
         add(header, BorderLayout.NORTH);
 
@@ -91,20 +149,35 @@ public class AchievementsScreen extends Screen {
                 )
         );
 
-        for (Achievement achievement : Achievement.values()) {
 
-            boolean isUnlocked =
-                    achievement.isUnlocked(player);
+// Sort achievements: unlocked first, locked afterward
+Achievement[] orderedAchievements =
+        Achievement.values();
 
-            grid.add(
-                    createAchievementCard(
-                            achievement,
-                            isUnlocked,
-                            achievement.getProgress(player),
-                            achievement.getTarget()
-                    )
-            );
+Arrays.sort(
+        orderedAchievements,
+        (first, second) -> Boolean.compare(
+                second.isUnlocked(player),
+                first.isUnlocked(player)
+        )
+);
+
+// Display achievements in their new order
+        for (Achievement achievement : orderedAchievements) {
+
+        boolean isUnlocked =
+                achievement.isUnlocked(player);
+
+        grid.add(
+                createAchievementCard(
+                        achievement,
+                        isUnlocked,
+                        achievement.getProgress(player),
+                        achievement.getTarget()
+                )
+        );
         }
+
 
         // =====================================
         // SCROLLABLE CONTENT
