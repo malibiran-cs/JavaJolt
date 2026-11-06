@@ -1,6 +1,7 @@
 
 package edu.batstateu.javajolt.ui.swing.screen;
 
+import javax.swing.JProgressBar;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Achievement;
 import edu.batstateu.javajolt.ui.swing.Theme;
@@ -98,7 +99,9 @@ public class AchievementsScreen extends Screen {
             grid.add(
                     createAchievementCard(
                             achievement,
-                            isUnlocked
+                            isUnlocked,
+                            achievement.getProgress(player),
+                            achievement.getTarget()
                     )
             );
         }
@@ -149,17 +152,18 @@ public class AchievementsScreen extends Screen {
     // =====================================
     // REUSABLE ACHIEVEMENT CARD
     // =====================================
-
     private RoundedPanel createAchievementCard(
             Achievement achievement,
-            boolean unlocked) {
+            boolean unlocked,
+            int progress,
+            int target) {
 
         RoundedPanel card = new RoundedPanel(
                 new BorderLayout(0, Theme.GAP_S)
         );
 
         card.setPreferredSize(
-                new Dimension(320, 132)
+                new Dimension(320, 176)
         );
 
         card.setBorder(
@@ -181,66 +185,169 @@ public class AchievementsScreen extends Screen {
         );
 
         // Achievement title and status
-        JPanel titleRow = new JPanel(
-                new BorderLayout(Theme.GAP_S, 0)
-        );
+            JPanel titleRow = new JPanel(
+                    new BorderLayout(Theme.GAP_S, 0)
+            );
 
-        titleRow.setOpaque(false);
+            titleRow.setOpaque(false);
 
-        JLabel title = new JLabel(
-                achievement.getTitle()
-        );
+            JLabel title = new JLabel(
+                    achievement.getTitle()
+            );
 
-        title.setFont(
-                Theme.FONT_BODY.deriveFont(Font.BOLD)
-        );
+            title.setFont(
+                    Theme.FONT_BODY.deriveFont(Font.BOLD)
+            );
 
-        title.setForeground(
-                unlocked
-                        ? Theme.TEXT
-                        : Theme.TEXT_MUTED
-        );
+            title.setForeground(
+                    unlocked
+                            ? Theme.TEXT
+                            : Theme.TEXT_MUTED
+            );
 
-        JLabel status = new JLabel(
-                unlocked ? "UNLOCKED" : "LOCKED"
-        );
+            JLabel status = new JLabel(
+                    unlocked ? "UNLOCKED" : "LOCKED"
+            );
 
-        status.setFont(
-                Theme.FONT_BODY.deriveFont(
-                        Font.BOLD, 11f
-                )
-        );
+            status.setFont(
+                    Theme.FONT_BODY.deriveFont(
+                            Font.BOLD, 11f
+                    )
+            );
 
-        status.setForeground(
-                unlocked
-                        ? UNLOCKED_COLOR
-                        : Theme.TEXT_MUTED
-        );
+            status.setForeground(
+                    unlocked
+                            ? UNLOCKED_COLOR
+                            : Theme.TEXT_MUTED
+            );
 
-        titleRow.add(title, BorderLayout.CENTER);
-        titleRow.add(status, BorderLayout.EAST);
+            titleRow.add(title, BorderLayout.CENTER);
+            titleRow.add(status, BorderLayout.EAST);
 
-        card.add(titleRow, BorderLayout.NORTH);
+            card.add(titleRow, BorderLayout.NORTH);
 
-        // Achievement description
-        JTextArea description = new JTextArea(
-                achievement.getDescription()
-        );
+            // Achievement description
+            JTextArea description = new JTextArea(
+                    achievement.getDescription()
+            );
 
-        description.setFont(
-                Theme.FONT_BODY.deriveFont(14f)
-        );
+            description.setFont(
+                    Theme.FONT_BODY.deriveFont(14f)
+            );
 
-        description.setForeground(Theme.TEXT_MUTED);
+            description.setForeground(Theme.TEXT_MUTED);
 
-        description.setOpaque(false);
-        description.setEditable(false);
-        description.setFocusable(false);
+            description.setOpaque(false);
+            description.setEditable(false);
+            description.setFocusable(false);
 
-        description.setLineWrap(true);
-        description.setWrapStyleWord(true);
+            description.setLineWrap(true);
+            description.setWrapStyleWord(true);
 
-        card.add(description, BorderLayout.CENTER);
+            card.add(description, BorderLayout.CENTER);
+
+
+            // =====================================
+            // ACHIEVEMENT PROGRESS
+            // =====================================
+
+            JPanel progressPanel = new JPanel(
+                    new BorderLayout(0, 6)
+            );
+
+            progressPanel.setOpaque(false);
+
+            JPanel progressText = new JPanel(
+                    new BorderLayout()
+            );
+
+            progressText.setOpaque(false);
+
+            // XP achievements display XP units
+            String unit = achievement.name().startsWith("XP_")
+                    ? " XP"
+                    : "";
+
+            JLabel amount = new JLabel(
+                    progress + " / " + target + unit
+            );
+
+            amount.setFont(
+                    Theme.FONT_BODY.deriveFont(12f)
+            );
+
+            amount.setForeground(
+                    unlocked
+                            ? UNLOCKED_COLOR
+                            : Theme.ACCENT
+            );
+
+            // Calculate completion percentage
+            int percentage = target == 0
+                    ? 0
+                    : (int) Math.round(
+                            100.0 * progress / target
+                    );
+
+            JLabel percentageLabel = new JLabel(
+                    percentage + "%"
+            );
+
+            percentageLabel.setFont(
+                    Theme.FONT_BODY.deriveFont(12f)
+            );
+
+            percentageLabel.setForeground(
+                    Theme.TEXT_MUTED
+            );
+
+            progressText.add(
+                    amount,
+                    BorderLayout.WEST
+            );
+
+            progressText.add(
+                    percentageLabel,
+                    BorderLayout.EAST
+            );
+
+            // Progress bar
+            JProgressBar bar = new JProgressBar(
+                    0, target
+            );
+
+            bar.setValue(progress);
+
+            bar.setForeground(
+                    unlocked
+                            ? UNLOCKED_COLOR
+                            : Theme.ACCENT
+            );
+
+            bar.setBackground(Theme.INSET_BORDER);
+            bar.setBorderPainted(false);
+            bar.setStringPainted(false);
+
+            bar.setPreferredSize(
+                    new Dimension(1, 8)
+            );
+
+            progressPanel.add(
+                    progressText,
+                    BorderLayout.NORTH
+            );
+
+            progressPanel.add(
+                    bar,
+                    BorderLayout.SOUTH
+            );
+
+            // Attach progress section to card
+            card.add(
+                    progressPanel,
+                    BorderLayout.SOUTH
+            );
+
 
         return card;
     }

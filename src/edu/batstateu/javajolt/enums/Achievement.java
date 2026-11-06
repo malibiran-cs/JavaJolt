@@ -83,6 +83,103 @@ public enum Achievement {
     private final String description;
     private final Predicate<Player> requirement;
 
+    
+    public int getTarget() {
+
+        return switch (this) {
+
+            case FIRST_STEPS, TOPIC_SPECIALIST -> 1;
+
+            case STEADY_LEARNER -> 3;
+
+            case BEGINNER_MASTER,
+                INTERMEDIATE_MASTER,
+                ADVANCED_MASTER -> Topic.values().length;
+
+            case TOPIC_EXPLORER -> 5;
+
+            case XP_ROOKIE -> 100;
+
+            case XP_VETERAN -> 500;
+
+            case XP_LEGEND -> 1000;
+        };
+    }
+
+
+    public int getProgress(Player player) {
+
+        Objects.requireNonNull(player);
+
+        int current = switch (this) {
+
+            case FIRST_STEPS,
+                STEADY_LEARNER,
+                BEGINNER_MASTER ->
+                    completedAt(player, Difficulty.BEGINNER);
+
+            case INTERMEDIATE_MASTER ->
+                    completedAt(player, Difficulty.INTERMEDIATE);
+
+            case ADVANCED_MASTER ->
+                    completedAt(player, Difficulty.ADVANCED);
+
+            case TOPIC_SPECIALIST ->
+                    hasMasteredTopic(player) ? 1 : 0;
+
+            case TOPIC_EXPLORER ->
+                    startedTopics(player);
+
+            case XP_ROOKIE,
+                XP_VETERAN,
+                XP_LEGEND ->
+                    player.getXp();
+        };
+
+        // Keep progress within the achievement's limits
+        return Math.min(
+                getTarget(),
+                Math.max(0, current)
+        );
+    }
+
+    
+public int getProgress(Player player) {
+
+    Objects.requireNonNull(player);
+
+    int current = switch (this) {
+
+        case FIRST_STEPS,
+             STEADY_LEARNER,
+             BEGINNER_MASTER ->
+                completedAt(player, Difficulty.BEGINNER);
+
+        case INTERMEDIATE_MASTER ->
+                completedAt(player, Difficulty.INTERMEDIATE);
+
+        case ADVANCED_MASTER ->
+                completedAt(player, Difficulty.ADVANCED);
+
+        case TOPIC_SPECIALIST ->
+                hasMasteredTopic(player) ? 1 : 0;
+
+        case TOPIC_EXPLORER ->
+                startedTopics(player);
+
+        case XP_ROOKIE,
+             XP_VETERAN,
+             XP_LEGEND ->
+                player.getXp();
+    };
+
+    // Keep progress within the achievement's limits
+    return Math.min(
+            getTarget(),
+            Math.max(0, current)
+    );
+}
+
 
     Achievement(
             String title,

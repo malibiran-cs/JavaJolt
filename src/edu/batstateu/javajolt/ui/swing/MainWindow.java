@@ -1,6 +1,9 @@
 
 package edu.batstateu.javajolt.ui.swing;
 
+import edu.batstateu.javajolt.enums.Achievement;
+import java.util.ArrayList;
+import java.util.EnumSet;
 import edu.batstateu.javajolt.ui.swing.screen.AchievementsScreen;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.entity.LessonPage;
@@ -36,6 +39,8 @@ public class MainWindow extends JFrame {
     private final CardLayout cards = new CardLayout();
     private final JPanel container = new JPanel(cards);
 
+    private final EnumSet<Achievement> achievementsAtLessonStart =
+        EnumSet.noneOf(Achievement.class);
     private AchievementsScreen achievementsScreen;
     private final Player player;
     private final QuestionService questionService;
@@ -218,6 +223,17 @@ public class MainWindow extends JFrame {
         // Remember XP before the quiz begins
         xpAtLessonStart = player.getXp();
 
+                
+        achievementsAtLessonStart.clear();
+
+        for (Achievement achievement : Achievement.values()) {
+
+            if (achievement.isUnlocked(player)) {
+                achievementsAtLessonStart.add(achievement);
+            }
+        }
+
+
         // Reset player HP
         player.setHp(Player.getStartingHp());
 
@@ -382,6 +398,24 @@ private void confirmExit() {
             // Record completed lessons and bonus XP
             lessonRunnerService.recordLessonCompletion(session);
 
+            
+            // Check for newly unlocked achievements
+            List<Achievement> newlyUnlocked = new ArrayList<>();
+
+            for (Achievement achievement : Achievement.values()) {
+
+                boolean unlockedNow =
+                        achievement.isUnlocked(player);
+
+                boolean wasUnlocked =
+                        achievementsAtLessonStart.contains(achievement);
+
+                if (unlockedNow && !wasUnlocked) {
+                    newlyUnlocked.add(achievement);
+                }
+            }
+
+
             // Keep the best score for this topic and difficulty for future records.
             player.recordHighScore(
                     session.getTopic(),
@@ -448,6 +482,34 @@ private void confirmExit() {
             );
 
             showScreen(ScreenId.RESULTS);
+
+            
+            // Notify the player about newly earned achievements
+            if (!newlyUnlocked.isEmpty()) {
+
+                StringBuilder message = new StringBuilder(
+                        newlyUnlocked.size() == 1
+                                ? "Achievement unlocked!\n\n"
+                                : "New achievements unlocked!\n\n"
+                );
+
+                for (Achievement achievement : newlyUnlocked) {
+
+                    message.append("\u2605  ")
+                            .append(achievement.getTitle())
+                            .append("\n")
+                            .append(achievement.getDescription())
+                            .append("\n\n");
+                }
+
+                JOptionPane.showMessageDialog(
+                        this,
+                        message.toString().trim(),
+                        "New Achievement",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            }
+
 
             // Notify player of a new difficulty
             if (passed && difficulty != oldDifficulty) {
