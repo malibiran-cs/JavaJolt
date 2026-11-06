@@ -62,12 +62,13 @@ public class MainMenuScreen extends Screen {
         private final JLabel advancedProgressLabel =
                 new JLabel("0 / 7 COMPLETED");
 
-    public MainMenuScreen(
-            Player player,
-            Runnable onLessonsClicked,
-            Runnable onSave,
-            Runnable onProgress,
-            Runnable onExit) {
+        public MainMenuScreen(
+                Player player,
+                Runnable onLessonsClicked,
+                Runnable onSave,
+                Runnable onProgress,
+                Runnable onAchievements,
+                Runnable onExit) {
 
         refreshInternal(player);
 
@@ -76,10 +77,10 @@ public class MainMenuScreen extends Screen {
                 onLessonsClicked,
                 onSave,
                 onProgress,
+                onAchievements,
                 onExit
         ), BorderLayout.CENTER);
     }
-
 
     public void refresh(Player player) {
                 refreshInternal(player);
@@ -263,6 +264,7 @@ public class MainMenuScreen extends Screen {
                 Runnable onLessonsClicked,
                 Runnable onSave,
                 Runnable onProgress,
+                Runnable onAchievements,
                 Runnable onExit) {
 
         JPanel body = new JPanel(
@@ -290,6 +292,7 @@ public class MainMenuScreen extends Screen {
                 onLessonsClicked,
                 onSave,
                 onProgress,
+                onAchievements,
                 onExit
         ));
 
@@ -501,11 +504,12 @@ public class MainMenuScreen extends Screen {
 
 
 
-private JPanel createMenuButtons(
-        Runnable onLessonsClicked,
-        Runnable onSave,
-        Runnable onProgress,
-        Runnable onExit) {
+        private JPanel createMenuButtons(
+                Runnable onLessonsClicked,
+                Runnable onSave,
+                Runnable onProgress,
+                Runnable onAchievements,
+                Runnable onExit) {
 
     // Main navigation card
     RoundedPanel panel = new RoundedPanel(
@@ -568,6 +572,12 @@ private JPanel createMenuButtons(
                     ButtonStyle.SECONDARY
             );
 
+    RoundedButton achievementsButton =
+            new RoundedButton(
+                    "Achievements",
+                    ButtonStyle.SECONDARY
+            );
+
     RoundedButton exitButton =
             new RoundedButton(
                     "Exit Game",
@@ -585,6 +595,10 @@ private JPanel createMenuButtons(
 
     saveButton.addActionListener(
             e -> onSave.run()
+    );
+
+    achievementsButton.addActionListener(
+            e -> onAchievements.run()
     );
 
     exitButton.addActionListener(
@@ -611,6 +625,7 @@ private JPanel createMenuButtons(
 
     secondaryButtons.add(progressButton);
     secondaryButtons.add(saveButton);
+    secondaryButtons.add(achievementsButton);
     secondaryButtons.add(exitButton);
 
     buttons.add(secondaryButtons, BorderLayout.CENTER);

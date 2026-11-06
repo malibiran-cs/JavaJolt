@@ -1,6 +1,7 @@
 
 package edu.batstateu.javajolt.ui.swing;
 
+import edu.batstateu.javajolt.ui.swing.screen.AchievementsScreen;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.entity.LessonPage;
 import edu.batstateu.javajolt.enums.Difficulty;
@@ -35,6 +36,7 @@ public class MainWindow extends JFrame {
     private final CardLayout cards = new CardLayout();
     private final JPanel container = new JPanel(cards);
 
+    private AchievementsScreen achievementsScreen;
     private final Player player;
     private final QuestionService questionService;
     private final LessonRunnerService lessonRunnerService;
@@ -89,6 +91,7 @@ public class MainWindow extends JFrame {
                 this::showTopicSelection,
                 this::saveWithFeedback,
                 this::showProgress,
+                this::showAchievements,
                 this::confirmExit
         );
 
@@ -132,6 +135,31 @@ public class MainWindow extends JFrame {
 
         container.add(topicScreen, ScreenId.TOPIC_SELECTION.name());
         showScreen(ScreenId.TOPIC_SELECTION);
+    }
+
+    
+    private void showAchievements() {
+
+        // Remove the previous gallery, if one exists.
+        if (achievementsScreen != null) {
+            container.remove(achievementsScreen);
+        }
+
+        // Create a fresh gallery with current player progress.
+        achievementsScreen = new AchievementsScreen(
+                player,
+                () -> showScreen(ScreenId.MAIN_MENU)
+        );
+
+        container.add(
+                achievementsScreen,
+                ScreenId.ACHIEVEMENTS.name()
+        );
+
+        showScreen(ScreenId.ACHIEVEMENTS);
+
+        container.revalidate();
+        container.repaint();
     }
 
 
