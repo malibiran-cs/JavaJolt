@@ -92,11 +92,13 @@ public class MainMenuScreen extends Screen {
         int level = LevelService.calculateLevel(xp);
 
         // Calculate XP needed for the current level
-        int currentLevelXp =
-                (level == 1) ? 0 : 100 + (level - 2) * 50;
+        int currentLevelXp = Math.toIntExact(
+        LevelService.totalXpForLevel(level)
+        );
 
-        // Calculate XP required for the next level
-        int nextLevelXp = 100 + (level - 1) * 50;
+        int nextLevelXp = Math.toIntExact(
+                LevelService.totalXpForLevel(level + 1)
+        );
 
         int xpEarned = xp - currentLevelXp;
         int xpRequired = nextLevelXp - currentLevelXp;

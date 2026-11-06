@@ -1,5 +1,7 @@
 package edu.batstateu.javajolt.ui.swing.screen;
 
+import edu.batstateu.javajolt.entity.Player;
+import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
@@ -33,10 +35,12 @@ public class TopicSelectionScreen extends Screen {
 
     private static final int GAP_M = 12;
 
-    public TopicSelectionScreen(
-            List<Topic> availableTopics,
-            Consumer<Topic> onTopicSelected,
-            Runnable onBack) {
+        public TopicSelectionScreen(
+                Player player,
+                Difficulty difficulty,
+                List<Topic> availableTopics,
+                Consumer<Topic> onTopicSelected,
+                Runnable onBack) {
 
         Topic[] topics = Topic.values();
         Set<Topic> unlocked = Set.copyOf(availableTopics);
@@ -61,6 +65,7 @@ public class TopicSelectionScreen extends Screen {
                 topic,
                 i + 1,
                 unlocked.contains(topic),
+                player.isComplete(topic, difficulty),
                 onTopicSelected
         ));
         }
@@ -146,8 +151,22 @@ public class TopicSelectionScreen extends Screen {
         RoundedButton back = new RoundedButton("BACK", ButtonStyle.SECONDARY);
         back.addActionListener(e -> onBack.run());
 
+
+        int completedCount = 0;
+
+        for (Topic topic : topics) {
+        if (player.isComplete(topic, difficulty)) {
+                completedCount++;
+        }
+        }
+
         JLabel progress = new JLabel(
-                unlocked.size() + " of " + topics.length + " topics available");
+                completedCount + " / "
+                + topics.length + " "
+                + difficulty.getLabel()
+                + " topics completed"
+        );
+
         progress.setFont(Theme.FONT_BODY.deriveFont(13f));
         progress.setForeground(Theme.TEXT_MUTED);
 
@@ -173,7 +192,7 @@ public class TopicSelectionScreen extends Screen {
         private static final Color LOCKED_BACKGROUND = new Color(0x1B1D21);
 
         TopicCard(Topic topic, int number, boolean available,
-                  Consumer<Topic> onTopicSelected) {
+                  boolean completed, Consumer<Topic> onTopicSelected) {
             setPreferredSize(CARD_SIZE);
             setLayout(new BorderLayout(0, Theme.GAP_S));
             setBorder(BorderFactory.createEmptyBorder(14, 18, 12, 18));
@@ -199,9 +218,19 @@ public class TopicSelectionScreen extends Screen {
             numberLabel.setFont(Theme.FONT_BODY.deriveFont(Font.BOLD, 11f));
             numberLabel.setForeground(Theme.TEXT_MUTED);
 
-            JLabel status = new JLabel(available ? "AVAILABLE" : "LOCKED");
+                JLabel status = new JLabel(
+                        completed
+                                ? "COMPLETED"
+                                : available ? "AVAILABLE" : "LOCKED"
+);
             status.setFont(Theme.FONT_BODY.deriveFont(Font.BOLD, 11f));
-            status.setForeground(available ? Theme.ACCENT : Theme.TEXT_MUTED);
+                status.setForeground(
+        completed
+                ? new Color(0x8FD3A3)
+                : available
+                        ? Theme.ACCENT
+                        : Theme.TEXT_MUTED
+);
 
             top.add(numberLabel, BorderLayout.WEST);
             top.add(status, BorderLayout.EAST);
@@ -228,11 +257,16 @@ public class TopicSelectionScreen extends Screen {
             middle.add(summary);
             add(middle, BorderLayout.CENTER);
 
-            JLabel action = new JLabel(available
-                    ? "OPEN LESSON  >"
-                    : "COMPLETE PREVIOUS LESSONS");
+            JLabel action = new JLabel(
+        completed
+                ? "REVIEW LESSON  >"
+                : available
+                        ? "OPEN LESSON  >"
+                        : "COMPLETE PREVIOUS LESSONS"
+);
             action.setFont(Theme.FONT_BODY.deriveFont(Font.BOLD, 11f));
-            action.setForeground(available ? Theme.ACCENT : Theme.TEXT_MUTED);
+            action.setForeground(completed || available
+                    ? Theme.ACCENT : Theme.TEXT_MUTED);
             add(action, BorderLayout.SOUTH);
         }
 
