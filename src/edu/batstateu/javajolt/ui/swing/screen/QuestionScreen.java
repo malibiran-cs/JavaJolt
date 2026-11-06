@@ -1,5 +1,6 @@
 package edu.batstateu.javajolt.ui.swing.screen;
 
+import edu.batstateu.javajolt.ui.swing.component.JavaCodeEditor;
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.InputMode;
@@ -44,7 +45,7 @@ public class QuestionScreen extends Screen {
     private final RoundedButton topicsButton = new RoundedButton("Choose another topic", ButtonStyle.SECONDARY);
     private final Runnable onTopics;
     private RoundedTextField textField;
-    private JTextArea codeArea;
+    private JavaCodeEditor codeArea;
     private ButtonGroup choiceGroup;
     private List<JRadioButton> choiceButtons = List.of();
     private List<String> choiceValues = List.of();
@@ -156,15 +157,95 @@ public class QuestionScreen extends Screen {
         if (!question.getChoices().isEmpty()) {
             return createChoiceEditor(question.getChoices());
         }
-        JPanel holder = new JPanel(new java.awt.GridBagLayout());
-        holder.setOpaque(false);
-        textField = new RoundedTextField();
-        textField.setFont(Theme.FONT_HEADING);
-        textField.setHorizontalAlignment(SwingConstants.CENTER);
-        textField.setPreferredSize(new Dimension(Theme.ANSWER_FIELD_WIDTH, Theme.ANSWER_FIELD_HEIGHT));
-        holder.add(textField);
-        return holder;
+        return createIdentificationEditor();
     }
+
+    
+private JPanel createIdentificationEditor() {
+
+    JPanel wrapper = new JPanel(new BorderLayout());
+    wrapper.setOpaque(false);
+
+    // Main answer card
+    RoundedPanel card = new RoundedPanel(
+            new BorderLayout(0, Theme.GAP_M),
+            "panels/panel_inset",
+            16
+    );
+
+    card.setBorder(
+            BorderFactory.createEmptyBorder(
+                    Theme.GAP_L,
+                    Theme.GAP_L,
+                    Theme.GAP_L,
+                    Theme.GAP_L
+            )
+    );
+
+    // Answer heading
+    JLabel title = createLabel("TYPE YOUR ANSWER");
+    title.setForeground(Theme.ACCENT);
+
+    card.add(title, BorderLayout.NORTH);
+
+    // Answer input
+    textField = new RoundedTextField();
+
+    textField.setFont(Theme.FONT_HEADING);
+    textField.setHorizontalAlignment(SwingConstants.LEFT);
+
+    textField.setPreferredSize(
+            new Dimension(
+                    Theme.ANSWER_FIELD_WIDTH,
+                    Theme.ANSWER_FIELD_HEIGHT
+            )
+    );
+
+    // Pressing Enter submits the answer
+    textField.addActionListener(event -> {
+        if (submitButton.isVisible()
+                && submitButton.isEnabled()) {
+            submitButton.doClick();
+        }
+    });
+
+    // Instructions
+    JLabel hint = createLabel(
+            "Enter a short answer, then press Enter or Submit Answer."
+    );
+
+    hint.setForeground(Theme.TEXT_MUTED);
+
+    // Organize input and instructions
+    JPanel input = new JPanel(
+            new BorderLayout(0, Theme.GAP_S)
+    );
+
+    input.setOpaque(false);
+
+    input.add(textField, BorderLayout.NORTH);
+    input.add(hint, BorderLayout.SOUTH);
+
+    card.add(input, BorderLayout.CENTER);
+
+    // Position answer card toward the top
+    JPanel top = new JPanel(new BorderLayout());
+
+    top.setOpaque(false);
+
+    top.setBorder(
+            BorderFactory.createEmptyBorder(
+                    Theme.GAP_M, 0, 0, 0
+            )
+    );
+
+    top.add(card, BorderLayout.CENTER);
+
+    wrapper.add(top, BorderLayout.NORTH);
+
+    return wrapper;
+}
+
 
 
     private JPanel createChoiceEditor(List<String> choices) {
@@ -293,28 +374,214 @@ public class QuestionScreen extends Screen {
     }
 
 
-    private JPanel createCodeEditor(Question question) {
-        JPanel editor = new JPanel(new BorderLayout(0, Theme.GAP_S));
-        editor.setOpaque(false);
-        StringBuilder hints = new StringBuilder("Expected output: ").append(question.getExpectedOutput());
-        if (!question.getRequiredConcepts().isEmpty()) {
-            hints.append("    |    Required: ").append(String.join(", ", question.getRequiredConcepts()));
+    
+private JPanel createCodeEditor(Question question) {
+
+    JPanel editor = new JPanel(
+            new BorderLayout(0, Theme.GAP_M)
+    );
+
+    editor.setOpaque(false);
+
+    // =====================================
+    // EDITOR HEADER
+    // =====================================
+
+    JPanel toolbar = new JPanel(new BorderLayout());
+    toolbar.setOpaque(false);
+
+    JLabel title = createLabel("JAVA CODE EDITOR");
+    title.setForeground(Theme.ACCENT);
+
+    JLabel instruction = createLabel(
+            "Edit the template, then select Submit answer."
+    );
+
+    instruction.setForeground(Theme.TEXT_MUTED);
+
+    toolbar.add(title, BorderLayout.WEST);
+    toolbar.add(instruction, BorderLayout.EAST);
+
+    editor.add(toolbar, BorderLayout.NORTH);
+
+    // =====================================
+    // MAIN CODE EDITOR
+    // =====================================
+
+    codeArea = new JavaCodeEditor(
+            question.getTemplate(),
+            Theme.CODE_EDITOR_ROWS,
+            Theme.CODE_EDITOR_COLUMNS
+    );
+    codeArea.setFont(Theme.FONT_CODE);
+    codeArea.setForeground(Theme.TEXT);
+    codeArea.setCaretColor(Theme.ACCENT);
+
+    codeArea.setSelectionColor(
+            new java.awt.Color(0x504037)
+    );
+
+    codeArea.setSelectedTextColor(Theme.TEXT);
+    codeArea.setBackground(Theme.INSET);
+
+    codeArea.setBorder(
+            BorderFactory.createEmptyBorder(
+                    Theme.GAP_M,
+                    Theme.GAP_M,
+                    Theme.GAP_M,
+                    Theme.GAP_M
+            )
+    );
+
+    // Preserve Java code indentation
+    codeArea.setLineWrap(false);
+    codeArea.setTabSize(4);
+
+    // =====================================
+    // LINE NUMBER GUTTER
+    // =====================================
+
+    JTextArea lineNumbers = new JTextArea();
+
+    lineNumbers.setEditable(false);
+    lineNumbers.setFocusable(false);
+
+    lineNumbers.setFont(Theme.FONT_CODE);
+    lineNumbers.setForeground(Theme.TEXT_MUTED);
+    lineNumbers.setBackground(Theme.PANEL);
+
+    lineNumbers.setColumns(3);
+
+    lineNumbers.setBorder(
+            BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(
+                            0, 0, 0, 1,
+                            Theme.INSET_BORDER
+                    ),
+                    BorderFactory.createEmptyBorder(
+                            Theme.GAP_M,
+                            Theme.GAP_S,
+                            Theme.GAP_M,
+                            Theme.GAP_S
+                    )
+            )
+    );
+
+    // Update line numbers when code changes
+    Runnable refreshLineNumbers = () -> {
+
+        int lineCount = codeArea.getLineCount();
+
+        StringBuilder numbers = new StringBuilder();
+
+        for (int i = 1; i <= lineCount; i++) {
+
+            if (i > 1) {
+                numbers.append('\n');
+            }
+
+            numbers.append(i);
         }
-        if (!question.getRequiredImports().isEmpty()) {
-            hints.append("    |    Imports: ").append(String.join(", ", question.getRequiredImports()));
-        }
-        JLabel hintLabel = createLabel("<html>" + escapeHtml(hints.toString()) + "</html>");
-        editor.add(hintLabel, BorderLayout.NORTH);
-        codeArea = new JTextArea(question.getTemplate(), Theme.CODE_EDITOR_ROWS, Theme.CODE_EDITOR_COLUMNS);
-        codeArea.setFont(Theme.FONT_CODE);
-        codeArea.setForeground(Theme.TEXT);
-        codeArea.setCaretColor(Theme.ACCENT);
-        codeArea.setBackground(Theme.INSET);
-        codeArea.setBorder(BorderFactory.createEmptyBorder(Theme.GAP_M, Theme.GAP_M, Theme.GAP_M, Theme.GAP_M));
-        codeArea.setTabSize(4);
-        editor.add(new JScrollPane(codeArea), BorderLayout.CENTER);
-        return editor;
+
+        lineNumbers.setText(numbers.toString());
+    };
+
+    codeArea.getDocument().addDocumentListener(
+            new javax.swing.event.DocumentListener() {
+
+                private void refresh() {
+                    javax.swing.SwingUtilities.invokeLater(
+                            refreshLineNumbers
+                    );
+                }
+
+                @Override
+                public void insertUpdate(
+                        javax.swing.event.DocumentEvent e) {
+                    refresh();
+                }
+
+                @Override
+                public void removeUpdate(
+                        javax.swing.event.DocumentEvent e) {
+                    refresh();
+                }
+
+                @Override
+                public void changedUpdate(
+                        javax.swing.event.DocumentEvent e) {
+                    refresh();
+                }
+            }
+    );
+
+    refreshLineNumbers.run();
+
+    // =====================================
+    // SCROLLABLE CODE AREA
+    // =====================================
+
+    JScrollPane scroll = new JScrollPane(
+            codeArea,
+            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+            JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+    );
+
+    // Keep line numbers beside the code
+    scroll.setRowHeaderView(lineNumbers);
+
+    scroll.setBorder(
+            BorderFactory.createLineBorder(
+                    Theme.INSET_BORDER
+            )
+    );
+
+    scroll.getViewport().setBackground(Theme.INSET);
+
+    scroll.getVerticalScrollBar()
+            .setUnitIncrement(16);
+
+    editor.add(scroll, BorderLayout.CENTER);
+
+    // =====================================
+    // REQUIREMENTS FOOTER
+    // =====================================
+
+    StringBuilder hints =
+            new StringBuilder("Expected output: ")
+                    .append(question.getExpectedOutput());
+
+    if (!question.getRequiredConcepts().isEmpty()) {
+
+        hints.append("    |    Required: ")
+                .append(String.join(
+                        ", ",
+                        question.getRequiredConcepts()
+                ));
     }
+
+    if (!question.getRequiredImports().isEmpty()) {
+
+        hints.append("    |    Imports: ")
+                .append(String.join(
+                        ", ",
+                        question.getRequiredImports()
+                ));
+    }
+
+    JLabel requirements = createLabel(
+            "<html>"
+                    + escapeHtml(hints.toString())
+                    + "</html>"
+    );
+
+    requirements.setForeground(Theme.TEXT_MUTED);
+
+    editor.add(requirements, BorderLayout.SOUTH);
+
+    return editor;
+}
+
 
 
     private void updateChoiceBorders(

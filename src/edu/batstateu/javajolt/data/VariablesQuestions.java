@@ -463,6 +463,292 @@ public class VariablesQuestions {
                 List.of("final")
         ));
 
+        // ==============================================
+        // VARIABLES INTERMEDIATE — FOUNDATIONAL (7 NEW)
+        // ==============================================
+
+        // 130
+        questions.add(new MultipleChoiceQuestion(
+                130,
+                "Which conversion can Java perform automatically without an explicit cast?",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "An int value can be widened to double automatically.",
+                List.of(
+                        "A. double to int",
+                        "B. String to int",
+                        "C. int to double",
+                        "D. boolean to int"
+                ), "C"
+        ).withChallengeTier(ChallengeTier.FOUNDATIONAL));
+
+        // 131
+        questions.add(new MultipleChoiceQuestion(
+                131,
+                "Which local variable declaration is valid in Java 10 or later?",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "Local variables declared with var must have an initializer so Java can infer the type.",
+                List.of(
+                        "A. var score;",
+                        "B. var score = 10;",
+                        "C. var = 10;",
+                        "D. var score = null;"
+                ), "B"
+        ).withChallengeTier(ChallengeTier.FOUNDATIONAL));
+
+        // 132
+        questions.add(new MultipleChoiceQuestion(
+                132,
+                "Which literal is explicitly written as a Java long literal?",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "The suffix L marks an integer literal as long.",
+                List.of(
+                        "A. 123L",
+                        "B. 123F",
+                        "C. 123D",
+                        "D. 123.0"
+                ), "A"
+        ).withChallengeTier(ChallengeTier.FOUNDATIONAL));
+
+        // 133
+        questions.add(new MultipleChoiceQuestion(
+                133,
+                "Which use of a local final variable is valid?",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "A blank final local variable may be assigned exactly once before it is read.",
+                List.of(
+                        "A. final int max = 4; max = 5;",
+                        "B. final int max; max = 4; max = 5;",
+                        "C. final int max; System.out.println(max);",
+                        "D. final int max; max = 4; System.out.println(max);"
+                ), "D"
+        ).withChallengeTier(ChallengeTier.FOUNDATIONAL));
+
+        // 134
+        questions.add(new MultipleChoiceQuestion(
+                134,
+                "What does the cast (int) 7.9 evaluate to in Java?",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "Casting a finite positive double to int discards its fractional part instead of rounding.",
+                List.of("A. 7", "B. 8", "C. 7.9", "D. Compilation error"),
+                "A"
+        ).withChallengeTier(ChallengeTier.FOUNDATIONAL));
+
+        // 135
+        questions.add(new MultipleChoiceQuestion(
+                135,
+                "Where can a local variable declared inside an if block be accessed?",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "A local variable's scope is limited to its declaring block and nested scopes where it remains visible.",
+                List.of(
+                        "A. Anywhere in the project",
+                        "B. Only within that block and its nested blocks",
+                        "C. From any method of the same class",
+                        "D. From every class in the same package"
+                ), "B"
+        ).withChallengeTier(ChallengeTier.FOUNDATIONAL));
+
+        // 136
+        questions.add(new MultipleChoiceQuestion(
+                136,
+                "Which statement about the Java type String is correct?",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "String is a reference type represented by a class, not one of Java's eight primitive types.",
+                List.of(
+                        "A. String is a primitive numeric type",
+                        "B. String can only store one character",
+                        "C. String is a reference type",
+                        "D. String values must use single quotes"
+                ), "C"
+        ).withChallengeTier(ChallengeTier.FOUNDATIONAL));
+
+        // ==============================================
+        // VARIABLES INTERMEDIATE — APPLICATION (6 NEW)
+        // ==============================================
+
+        // 137
+        questions.add(new IdentificationQuestion(
+                137,
+                "What number will this code print?\n"
+                + "int total = 3;\n"
+                + "{ int bonus = 5; total += bonus; }\n"
+                + "System.out.println(total);",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "bonus is visible in its block, and total becomes 3 + 5 = 8.",
+                List.of("8")
+        ).withChallengeTier(ChallengeTier.APPLICATION));
+
+        // 138
+        questions.add(new MultipleChoiceQuestion(
+                138,
+                "What does this code print?\n"
+                + "double result = 5 / 2;\n"
+                + "System.out.println(result);",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "Both operands are int, so division produces 2 before assignment converts it to 2.0.",
+                List.of("A. 2", "B. 2.0", "C. 2.5", "D. Compilation error"),
+                "B"
+        ).withChallengeTier(ChallengeTier.APPLICATION));
+
+        // 139
+        questions.add(new MultipleChoiceQuestion(
+                139,
+                "What does this code print?\n"
+                + "int a = 7;\n"
+                + "int b = 3;\n"
+                + "double average = (a + b) / 2.0;\n"
+                + "System.out.println(average);",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "The sum is 10, and dividing by double 2.0 gives 5.0.",
+                List.of("A. 5.0", "B. 5", "C. 10.0", "D. 3.5"),
+                "A"
+        ).withChallengeTier(ChallengeTier.APPLICATION));
+
+        // 140
+        questions.add(new MultipleChoiceQuestion(
+                140,
+                "What does this code print?\n"
+                + "String label = \"A\";\n"
+                + "System.out.println(label + 1 + 2);",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "String concatenation happens left to right, so the result is A12.",
+                List.of("A. A3", "B. 3A", "C. A12", "D. Compilation error"),
+                "C"
+        ).withChallengeTier(ChallengeTier.APPLICATION));
+
+        // 141
+        questions.add(new IdentificationQuestion(
+                141,
+                "What number will this code print?\n"
+                + "char letter = 'A';\n"
+                + "int code = letter + 2;\n"
+                + "System.out.println(code);",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "The Unicode value of 'A' is 65; numeric promotion adds 2 to produce 67.",
+                List.of("67")
+        ).withChallengeTier(ChallengeTier.APPLICATION));
+
+        // 142
+        questions.add(new MultipleChoiceQuestion(
+                142,
+                "What does this code print?\n"
+                + "long count = 2_000_000_000L;\n"
+                + "count += 500_000_000L;\n"
+                + "System.out.println(count);",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "The long type can store 2,500,000,000; underscores only improve literal readability.",
+                List.of("A. -1794967296", "B. 2000000000", "C. 500000000", "D. 2500000000"),
+                "D"
+        ).withChallengeTier(ChallengeTier.APPLICATION));
+
+        // ==============================================
+        // VARIABLES INTERMEDIATE — CHALLENGE (8 NEW)
+        // ==============================================
+
+        // 143
+        questions.add(new MultipleChoiceQuestion(
+                143,
+                "What does this code print?\n"
+                + "double value = 5.9 + 2.8;\n"
+                + "System.out.println((int) value);",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "The sum is approximately 8.7, then casting to int truncates it to 8.",
+                List.of("A. 7", "B. 8", "C. 9", "D. Compilation error"),
+                "B"
+        ).withChallengeTier(ChallengeTier.CHALLENGE));
+
+        // 144
+        questions.add(new MultipleChoiceQuestion(
+                144,
+                "What does this code print?\n"
+                + "int first = 6;\n"
+                + "int second = first;\n"
+                + "first += 4;\n"
+                + "second *= 2;\n"
+                + "System.out.println(first + \":\" + second);",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "Primitive values are copied: first becomes 10 and second becomes 12.",
+                List.of("A. 10:12", "B. 10:20", "C. 6:12", "D. 12:10"),
+                "A"
+        ).withChallengeTier(ChallengeTier.CHALLENGE));
+
+        // 145
+        questions.add(new IdentificationQuestion(
+                145,
+                "What number will this code print?\n"
+                + "int value = 4;\n"
+                + "{ int multiplier = 3; value *= multiplier; }\n"
+                + "System.out.println(value);",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "The inner block can modify value declared in the enclosing block: 4 times 3 is 12.",
+                List.of("12")
+        ).withChallengeTier(ChallengeTier.CHALLENGE));
+
+        // 146
+        questions.add(new MultipleChoiceQuestion(
+                146,
+                "What happens when this code is compiled?\n"
+                + "int count = 2;\n"
+                + "if (count > 0) { int bonus = 3; }\n"
+                + "System.out.println(bonus);",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "bonus is declared inside the if block and is not in scope afterward.",
+                List.of("A. Prints 3", "B. Prints 0", "C. Compilation error", "D. Prints 2"),
+                "C"
+        ).withChallengeTier(ChallengeTier.CHALLENGE));
+
+        // 147
+        questions.add(new MultipleChoiceQuestion(
+                147,
+                "What does this code print?\n"
+                + "int value = Integer.MAX_VALUE;\n"
+                + "System.out.println(value + 1);",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "Adding one to the maximum 32-bit signed int overflows to Integer.MIN_VALUE.",
+                List.of("A. 2147483648", "B. 2147483647", "C. 0", "D. -2147483648"),
+                "D"
+        ).withChallengeTier(ChallengeTier.CHALLENGE));
+
+        // 148
+        questions.add(new MultipleChoiceQuestion(
+                148,
+                "What does this code print?\n"
+                + "int total = 7;\n"
+                + "double half = (double) total / 2;\n"
+                + "System.out.println(half);",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "The explicit double cast causes floating-point division, giving 3.5.",
+                List.of("A. 3", "B. 3.0", "C. 3.5", "D. 4.0"),
+                "C"
+        ).withChallengeTier(ChallengeTier.CHALLENGE));
+
+        // 149
+        questions.add(new CodeQuestion(
+                149,
+                "In the provided Code class, declare a final int named BASE with value 7. "
+                + "Calculate half of BASE using floating-point division "
+                + "and store it in a double variable named half. Print half.",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "Example: final int BASE = 7; double half = BASE / 2.0; System.out.println(half);",
+                "3.5",
+                List.of("final int BASE", "double half", "System.out.println"),
+                List.of()
+        ).withChallengeTier(ChallengeTier.CHALLENGE));
+
+        // 150
+        questions.add(new CodeQuestion(
+                150,
+                "In the provided Code class, declare int n = 5, then use variables "
+                + "to calculate n squared and n cubed. Print 25 and 125 "
+                + "on separate lines. Use multiplication, not Math.pow().",
+                Topic.VARIABLES, Difficulty.INTERMEDIATE,
+                "Example: int n = 5; int square = n * n; int cube = square * n; "
+                + "System.out.println(square); System.out.println(cube);",
+                "25\n125",
+                List.of("int n", "*", "System.out.println"),
+                List.of()
+        ).withChallengeTier(ChallengeTier.CHALLENGE));
+
+
         // ADVANCED
         // This checks whether learners know that String methods return a new value
         // instead of mutating the original String object.

@@ -20,6 +20,8 @@ public class QuestionBank {
         questions.addAll(ExceptionHandlingQuestions.getQuestions());
         questions.addAll(OOPQuestions.getQuestions());
 
+        ExtraQuestionPacks.install(questions);
+
         checkForDuplicateIds();
     }
 

@@ -65,7 +65,7 @@ public class OperatorsQuestions {
                 "12\n2",
                 List.of("+", "%"),
                 List.of()
-        ).withChallengeTier(ChallengeTier.APPLICATION));
+        ).withChallengeTier(ChallengeTier.CHALLENGE));
 
 
         // =====================================
