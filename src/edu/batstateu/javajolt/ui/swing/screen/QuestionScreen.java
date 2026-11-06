@@ -1,5 +1,10 @@
 package edu.batstateu.javajolt.ui.swing.screen;
 
+import javax.swing.JTextPane;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import edu.batstateu.javajolt.ui.swing.component.JavaCodeEditor;
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
@@ -25,12 +30,13 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextPane;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
 /** Displays a question and collects its answer; the owner supplies game callbacks. */
 public class QuestionScreen extends Screen {
-    private final JTextArea promptText = new JTextArea();
+        private final JTextPane promptText = new JTextPane();
     private final JLabel progressLabel = new JLabel();
     private final JLabel answerHeading = createHeading("ANSWER");
     private final JLabel playerNameLabel = createLabel("PLAYER");
@@ -86,8 +92,6 @@ public class QuestionScreen extends Screen {
         progressLabel.setFont(Theme.FONT_BODY);
         promptText.setForeground(Theme.TEXT);
         promptText.setFont(Theme.FONT_HEADING);
-        promptText.setLineWrap(true);
-        promptText.setWrapStyleWord(true);
         promptText.setEditable(false);
         promptText.setFocusable(false);
         promptText.setOpaque(false);
@@ -127,7 +131,7 @@ public class QuestionScreen extends Screen {
         hpLabel.setText("HP: " + player.getHp());
         xpScoreLabel.setText("XP: " + player.getXp() + "   SCORE: " + player.getScore());
         progressLabel.setText("QUESTION " + number + " OF " + total);
-        promptText.setText(question.getQuestion());
+        renderQuestionPrompt(question.getQuestion());
         promptText.setCaretPosition(0);
         answerContent.removeAll();
         actionRow.removeAll();
@@ -149,6 +153,96 @@ public class QuestionScreen extends Screen {
         answerContent.revalidate();
         answerContent.repaint();
     }
+
+    
+        private void renderQuestionPrompt(String rawPrompt) {
+
+        StyledDocument document =
+                promptText.getStyledDocument();
+
+        // Style for ordinary question instructions
+        SimpleAttributeSet prose = new SimpleAttributeSet();
+
+        StyleConstants.setFontFamily(
+                prose, Theme.FONT_HEADING.getFamily()
+        );
+
+        StyleConstants.setFontSize(prose, 19);
+        StyleConstants.setBold(prose, true);
+        StyleConstants.setForeground(prose, Theme.TEXT);
+        StyleConstants.setSpaceBelow(prose, 6);
+
+        // Style for Java code snippets
+        SimpleAttributeSet code = new SimpleAttributeSet();
+
+        StyleConstants.setFontFamily(
+                code, Theme.FONT_CODE.getFamily()
+        );
+
+        StyleConstants.setFontSize(
+                code, Theme.FONT_CODE.getSize()
+        );
+
+        StyleConstants.setForeground(
+                code, new java.awt.Color(0xC8D4F0)
+        );
+
+        StyleConstants.setLeftIndent(code, Theme.GAP_M);
+        StyleConstants.setSpaceAbove(code, 2);
+        StyleConstants.setSpaceBelow(code, 2);
+
+        String prompt = rawPrompt == null
+                ? ""
+                : rawPrompt.replace("\r\n", "\n");
+
+        try {
+                document.remove(0, document.getLength());
+
+                for (String line : prompt.split("\n", -1)) {
+
+                SimpleAttributeSet style =
+                        looksLikeCode(line) ? code : prose;
+
+                int start = document.getLength();
+
+                document.insertString(
+                        start,
+                        line + "\n",
+                        style
+                );
+
+                document.setParagraphAttributes(
+                        start,
+                        line.length() + 1,
+                        style,
+                        false
+                );
+                }
+
+        } catch (BadLocationException e) {
+                throw new IllegalStateException(
+                        "Unable to render question", e
+                );
+        }
+        }
+
+        private boolean looksLikeCode(String line) {
+
+        String trimmed = line.strip();
+
+        if (trimmed.isEmpty()) {
+                return false;
+        }
+
+        return line.startsWith("    ")
+                || trimmed.endsWith(";")
+                || trimmed.endsWith("{")
+                || trimmed.equals("}")
+                || trimmed.startsWith("} else")
+                || trimmed.startsWith("@Override")
+                || trimmed.startsWith("//");
+        }
+
 
     private JPanel createAnswerEditor(Question question) {
         if (question.getInputMode() == InputMode.MULTI_LINE) {
@@ -630,19 +724,160 @@ private JPanel createCodeEditor(Question question) {
         return "";
     }
 
-    public void showAnswerResult(boolean correct, String explanation, Player player) {
-        submitButton.setEnabled(true);
+
+        public void showAnswerResult(
+                boolean correct,
+                String explanation,
+                Player player) {
+
+        // Refresh displayed player statistics
+        hpLabel.setText("HP: " + player.getHp());
+
+        xpScoreLabel.setText(
+                "XP: " + player.getXp()
+                + "   SCORE: " + player.getScore()
+        );
+
+        // Change the section heading
+        answerHeading.setText("ANSWER FEEDBACK");
+
         answerContent.removeAll();
-        String status = correct ? "CORRECT!" : player.isAlive() ? "NOT QUITE.  HP LEFT: " + player.getHp() : "NOT QUITE.  OUT OF HP!";
-        answerContent.add(createResultArea(status + "\n\n" + explanation), BorderLayout.CENTER);
-        answerContent.add(answerHeading, BorderLayout.NORTH);
         actionRow.removeAll();
-        actionRow.add(createCenteredButton(nextButton), BorderLayout.CENTER);
+
+        answerHeading.setText("ANSWER");
+        submitButton.setEnabled(true);
+
+        // Display the new feedback card
+        answerContent.add(
+                createFeedbackCard(correct, explanation, player),
+                BorderLayout.CENTER
+        );
+
+        answerContent.add(
+                answerHeading,
+                BorderLayout.NORTH
+        );
+
+        // Show the continuation button
+        nextButton.setText(
+                player.isAlive()
+                        ? "Continue"
+                        : "View results"
+        );
+
         nextButton.setVisible(true);
-        answerContent.add(actionRow, BorderLayout.SOUTH);
+
+        actionRow.add(
+                createCenteredButton(nextButton),
+                BorderLayout.CENTER
+        );
+
+        answerContent.add(
+                actionRow,
+                BorderLayout.SOUTH
+        );
+
         answerContent.revalidate();
         answerContent.repaint();
-    }
+        }
+
+
+        private JPanel createFeedbackCard(
+                boolean correct,
+                String explanation,
+                Player player) {
+
+        RoundedPanel card = new RoundedPanel(
+                new BorderLayout(0, Theme.GAP_M),
+                "panels/panel_inset",
+                16
+        );
+
+        // Orange for correct, red for incorrect
+        card.setBorder(
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                                correct
+                                        ? Theme.ACCENT
+                                        : Theme.DANGER,
+                                2,
+                                true
+                        ),
+                        BorderFactory.createEmptyBorder(
+                                Theme.GAP_L,
+                                Theme.GAP_L,
+                                Theme.GAP_L,
+                                Theme.GAP_L
+                        )
+                )
+        );
+
+        // FEEDBACK TITLE
+        JLabel status = createHeading(
+                correct
+                        ? "CORRECT ANSWER!"
+                        : "NOT QUITE!"
+        );
+
+        status.setForeground(
+                correct
+                        ? Theme.ACCENT
+                        : Theme.DANGER
+        );
+
+        card.add(status, BorderLayout.NORTH);
+
+        // EXPLANATION
+        String message = correct
+                ? "Well done!\n\n"
+                : "Review the explanation and "
+                        + "try the next question.\n\n";
+
+        String explanationText =
+                explanation == null || explanation.isBlank()
+                        ? "No explanation available."
+                        : explanation;
+
+        JTextArea details = new JTextArea(
+                message + explanationText
+        );
+
+        details.setFont(Theme.FONT_BODY);
+        details.setForeground(Theme.TEXT);
+
+        details.setOpaque(false);
+        details.setEditable(false);
+        details.setFocusable(false);
+
+        details.setLineWrap(true);
+        details.setWrapStyleWord(true);
+        details.setCaretPosition(0);
+
+        // Scroll if explanation is lengthy
+        JScrollPane scroll = new JScrollPane(details);
+
+        scroll.setBorder(
+                BorderFactory.createEmptyBorder()
+        );
+
+        scroll.setOpaque(false);
+        scroll.getViewport().setOpaque(false);
+
+        card.add(scroll, BorderLayout.CENTER);
+
+        // HP STATUS
+        JLabel footer = createLabel(
+                player.isAlive()
+                        ? "HP remaining: " + player.getHp()
+                        : "Out of HP - continue to see your results."
+        );
+
+        footer.setForeground(Theme.TEXT_MUTED);
+
+        card.add(footer, BorderLayout.SOUTH);
+
+        return card;
+        }
 
     public void setCheckingAnswer(boolean checking) {
         submitButton.setEnabled(!checking);
