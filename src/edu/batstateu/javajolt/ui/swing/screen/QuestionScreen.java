@@ -1,5 +1,13 @@
 package edu.batstateu.javajolt.ui.swing.screen;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
+import javax.swing.JProgressBar;
+import javax.swing.KeyStroke;
 import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
@@ -38,6 +46,8 @@ import javax.swing.SwingConstants;
 public class QuestionScreen extends Screen {
         private final JTextPane promptText = new JTextPane();
     private final JLabel progressLabel = new JLabel();
+    private final JProgressBar questionProgress =
+        new JProgressBar(0, 100);
     private final JLabel answerHeading = createHeading("ANSWER");
     private final JLabel playerNameLabel = createLabel("PLAYER");
     private final JLabel hpLabel = createLabel("HP: --");
@@ -102,7 +112,37 @@ public class QuestionScreen extends Screen {
         promptScroll.setBorder(BorderFactory.createEmptyBorder());
         promptScroll.setOpaque(false);
         promptScroll.getViewport().setOpaque(false);
-        question.add(progressLabel, BorderLayout.NORTH);
+        
+        JPanel questionHeader = new JPanel(
+                new BorderLayout(0, Theme.GAP_S)
+        );
+
+        questionHeader.setOpaque(false);
+
+        questionProgress.setForeground(Theme.ACCENT);
+        questionProgress.setBackground(Theme.INSET);
+        questionProgress.setBorderPainted(false);
+        questionProgress.setStringPainted(false);
+
+        questionProgress.setPreferredSize(
+                new Dimension(1, 8)
+        );
+
+        questionHeader.add(
+                progressLabel,
+                BorderLayout.NORTH
+        );
+
+        questionHeader.add(
+                questionProgress,
+                BorderLayout.SOUTH
+        );
+
+        question.add(
+                questionHeader,
+                BorderLayout.NORTH
+        );
+
         question.add(promptScroll, BorderLayout.CENTER);
 
         CharacterPlaceholder enemy = new CharacterPlaceholder();
@@ -131,6 +171,13 @@ public class QuestionScreen extends Screen {
         hpLabel.setText("HP: " + player.getHp());
         xpScoreLabel.setText("XP: " + player.getXp() + "   SCORE: " + player.getScore());
         progressLabel.setText("QUESTION " + number + " OF " + total);
+        questionProgress.setValue(
+        total == 0
+                ? 0
+                : (int) Math.round(
+                        100.0 * number / total
+                )
+        );
         renderQuestionPrompt(question.getQuestion());
         promptText.setCaretPosition(0);
         answerContent.removeAll();
@@ -139,6 +186,7 @@ public class QuestionScreen extends Screen {
         codeArea = null;
         choiceGroup = null;
         choiceButtons = List.of();
+        installQuizShortcut();
         choiceValues = List.of();
         feedbackLabel.setText(" ");
         feedbackLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -155,6 +203,49 @@ public class QuestionScreen extends Screen {
     }
 
     
+        private void installQuizShortcut() {
+
+        getInputMap(
+                JComponent.WHEN_IN_FOCUSED_WINDOW
+        ).put(
+                KeyStroke.getKeyStroke(
+                        KeyEvent.VK_ENTER,
+                        InputEvent.CTRL_DOWN_MASK
+                ),
+                "submit-or-continue"
+        );
+
+        getActionMap().put(
+                "submit-or-continue",
+                new AbstractAction() {
+
+                        @Override
+                        public void actionPerformed(
+                                ActionEvent event) {
+
+                        if (nextButton.isVisible()
+                                && nextButton.isEnabled()) {
+
+                                nextButton.doClick();
+
+                        } else if (submitButton.isVisible()
+                                && submitButton.isEnabled()) {
+
+                                submitButton.doClick();
+                        }
+                        }
+                }
+        );
+
+        submitButton.setToolTipText(
+                "Submit answer (Ctrl+Enter)"
+        );
+
+        nextButton.setToolTipText(
+                "Continue (Ctrl+Enter)"
+        );
+        }
+
         private void renderQuestionPrompt(String rawPrompt) {
 
         StyledDocument document =
