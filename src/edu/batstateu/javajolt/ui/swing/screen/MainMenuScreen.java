@@ -34,9 +34,33 @@ public class MainMenuScreen extends Screen {
     private final JLabel xpProgressLabel =
             new JLabel();
 
+        private int countCompleted(
+        Player player,
+        Difficulty difficulty) {
+
+    int count = 0;
+
+    for (Topic topic : Topic.values()) {
+        if (player.isComplete(topic, difficulty)) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
     private final JLabel firstLessonStatus = new JLabel("LOCKED");
     private final JLabel threeLessonsStatus = new JLabel("LOCKED");
     private final JLabel beginnerMasterStatus = new JLabel("LOCKED");
+
+        private final JLabel beginnerProgressLabel =
+                new JLabel("0 / 7 COMPLETED");
+
+        private final JLabel intermediateProgressLabel =
+                new JLabel("0 / 7 COMPLETED");
+
+        private final JLabel advancedProgressLabel =
+                new JLabel("0 / 7 COMPLETED");
 
     public MainMenuScreen(
             Player player,
@@ -91,14 +115,27 @@ public class MainMenuScreen extends Screen {
                 + " XP UNTIL LEVEL " + (level + 1)
         );
 
-        // Count completed Beginner lessons
-        int completedLessons = 0;
 
-        for (Topic topic : Topic.values()) {
-            if (player.isComplete(topic, Difficulty.BEGINNER)) {
-                completedLessons++;
-            }
-        }
+        // Update learning progress for each difficulty
+        int completedLessons = countCompleted(
+                player, Difficulty.BEGINNER
+        );
+
+        beginnerProgressLabel.setText(
+                completedLessons + " / "
+                + Topic.values().length + " COMPLETED"
+        );
+
+        intermediateProgressLabel.setText(
+                countCompleted(player, Difficulty.INTERMEDIATE)
+                + " / " + Topic.values().length + " COMPLETED"
+        );
+
+        advancedProgressLabel.setText(
+                countCompleted(player, Difficulty.ADVANCED)
+                + " / " + Topic.values().length + " COMPLETED"
+        );
+
 
         // Update achievement progress
         updateMilestone(firstLessonStatus, completedLessons, 1);
@@ -219,22 +256,111 @@ public class MainMenuScreen extends Screen {
     }
 
 
-    private JPanel createBody(
-            Runnable onLessonsClicked,
-            Runnable onSave,
-            Runnable onProgress,
-            Runnable onExit) {
-        JPanel body = new JPanel(new GridLayout(1, 2, Theme.GAP_L, 0));
+
+        private JPanel createBody(
+                Runnable onLessonsClicked,
+                Runnable onSave,
+                Runnable onProgress,
+                Runnable onExit) {
+
+        JPanel body = new JPanel(
+                new BorderLayout(0, Theme.GAP_M)
+        );
+
         body.setOpaque(false);
-        body.add(createBadgesPanel());
-        body.add(createMenuButtons(
+
+        // Learning overview at the top
+        body.add(
+                createProgressOverview(),
+                BorderLayout.NORTH
+        );
+
+        // Preserve existing achievements and navigation
+        JPanel columns = new JPanel(
+                new GridLayout(1, 2, Theme.GAP_L, 0)
+        );
+
+        columns.setOpaque(false);
+
+        columns.add(createBadgesPanel());
+
+        columns.add(createMenuButtons(
                 onLessonsClicked,
                 onSave,
                 onProgress,
                 onExit
         ));
+
+        body.add(columns, BorderLayout.CENTER);
+
         return body;
-    }
+        }
+
+        
+        private JPanel createProgressOverview() {
+
+        JPanel overview = new JPanel(
+                new GridLayout(1, 3, Theme.GAP_M, 0)
+        );
+
+        overview.setOpaque(false);
+
+        overview.add(createProgressCard(
+                "BEGINNER",
+                beginnerProgressLabel
+        ));
+
+        overview.add(createProgressCard(
+                "INTERMEDIATE",
+                intermediateProgressLabel
+        ));
+
+        overview.add(createProgressCard(
+                "ADVANCED",
+                advancedProgressLabel
+        ));
+
+        return overview;
+        }
+
+
+        private RoundedPanel createProgressCard(
+                String title,
+                JLabel value) {
+
+        RoundedPanel card = new RoundedPanel(
+                new BorderLayout(0, Theme.GAP_S)
+        );
+
+        card.setBorder(
+                BorderFactory.createEmptyBorder(
+                        Theme.GAP_M,
+                        Theme.GAP_L,
+                        Theme.GAP_M,
+                        Theme.GAP_L
+                )
+        );
+
+        JLabel heading = new JLabel(title);
+
+        heading.setFont(
+                Theme.FONT_BODY.deriveFont(
+                        java.awt.Font.BOLD, 12f
+                )
+        );
+
+        heading.setForeground(Theme.TEXT_MUTED);
+
+        value.setFont(Theme.FONT_HEADING);
+        value.setForeground(Theme.ACCENT);
+
+        card.add(heading, BorderLayout.NORTH);
+        card.add(value, BorderLayout.CENTER);
+
+        return card;
+        }
+
+
 
 
     private RoundedPanel createBadgesPanel() {

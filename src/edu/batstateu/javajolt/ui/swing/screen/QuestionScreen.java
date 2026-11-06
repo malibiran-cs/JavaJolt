@@ -8,6 +8,15 @@ import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JProgressBar;
 import javax.swing.KeyStroke;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
+import javax.swing.JProgressBar;
+import javax.swing.KeyStroke;
 import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
