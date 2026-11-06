@@ -1,5 +1,6 @@
 package edu.batstateu.javajolt.ui.swing.screen;
 
+import edu.batstateu.javajolt.enums.Achievement;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.service.LevelService;
 import edu.batstateu.javajolt.ui.swing.Theme;
@@ -141,29 +142,54 @@ public class MainMenuScreen extends Screen {
 
 
         // Update achievement progress
-        updateMilestone(firstLessonStatus, completedLessons, 1);
-        updateMilestone(threeLessonsStatus, completedLessons, 3);
-        updateMilestone(beginnerMasterStatus, completedLessons, 7);
+
+        updateMilestone(
+                firstLessonStatus,
+                Achievement.FIRST_STEPS,
+                player
+        );
+
+        updateMilestone(
+                threeLessonsStatus,
+                Achievement.STEADY_LEARNER,
+                player
+        );
+
+        updateMilestone(
+                beginnerMasterStatus,
+                Achievement.BEGINNER_MASTER,
+                player
+        );
+
     }
 
+
         private void updateMilestone(
-                        JLabel status,
-                        int completed,
-                        int required) {
+                JLabel status,
+                Achievement achievement,
+                Player player) {
 
-                boolean unlocked = completed >= required;
+        boolean unlocked =
+                achievement.isUnlocked(player);
 
-                status.setText(
-                                unlocked ? "UNLOCKED" :
-                                                completed + " / " + required
-                );
+        int progress =
+                achievement.getProgress(player);
 
-                status.setForeground(
-                                unlocked ? Theme.ACCENT : Theme.TEXT_MUTED
-                );
+        int target =
+                achievement.getTarget();
+
+        status.setText(
+                unlocked
+                        ? "UNLOCKED"
+                        : progress + " / " + target
+        );
+
+        status.setForeground(
+                unlocked
+                        ? new java.awt.Color(0x8FD3A3)
+                        : Theme.TEXT_MUTED
+        );
         }
-
-
     private JPanel createTop() {
         JPanel top = new JPanel(new BorderLayout(0, Theme.GAP_L));
         top.setOpaque(false);

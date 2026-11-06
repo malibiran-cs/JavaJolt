@@ -353,7 +353,12 @@ private void confirmExit() {
             @Override
             protected void done() {
                 try {
-                    questionScreen.showAnswerResult(get(), current.getExplanation(), player);
+                questionScreen.showAnswerResult(
+                        get(),
+                        current.getExplanation(),
+                        player,
+                        session.getScoreEarned()
+                );
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     questionScreen.setCheckingAnswer(false);
@@ -534,7 +539,8 @@ private void confirmExit() {
                 session.getQuestions().get(questionIndex),
                 questionIndex + 1,
                 session.getQuestions().size(),
-                player
+                player,
+                session.getScoreEarned()
         );
     }
 

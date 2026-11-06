@@ -175,10 +175,18 @@ public class QuestionScreen extends Screen {
         return battle;
     }
 
-    public void showQuestion(Question question, int number, int total, Player player) {
+        public void showQuestion(
+                Question question,
+                int number,
+                int total,
+                Player player,
+                int quizScore) {
         playerNameLabel.setText(player.getName());
         hpLabel.setText("HP: " + player.getHp());
-        xpScoreLabel.setText("XP: " + player.getXp() + "   SCORE: " + player.getScore());
+        xpScoreLabel.setText(
+                "XP: " + player.getXp()
+                + "   QUIZ SCORE: " + quizScore
+        );
         progressLabel.setText("QUESTION " + number + " OF " + total);
         questionProgress.setValue(
         total == 0
@@ -828,14 +836,15 @@ private JPanel createCodeEditor(Question question) {
         public void showAnswerResult(
                 boolean correct,
                 String explanation,
-                Player player) {
+                Player player,
+                int quizScore) {
 
         // Refresh displayed player statistics
         hpLabel.setText("HP: " + player.getHp());
 
         xpScoreLabel.setText(
                 "XP: " + player.getXp()
-                + "   SCORE: " + player.getScore()
+                + "   QUIZ SCORE: " + quizScore
         );
 
         // Change the section heading

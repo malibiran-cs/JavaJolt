@@ -17,6 +17,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 
+import javax.swing.JComboBox;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -151,40 +152,22 @@ public class AchievementsScreen extends Screen {
 
 
 // Sort achievements: unlocked first, locked afterward
-Achievement[] orderedAchievements =
-        Achievement.values();
+        populateAchievementGrid(grid, player, "All");
 
-Arrays.sort(
-        orderedAchievements,
-        (first, second) -> Boolean.compare(
-                second.isUnlocked(player),
-                first.isUnlocked(player)
-        )
-);
 
-// Display achievements in their new order
-        for (Achievement achievement : orderedAchievements) {
+                // =====================================
+                // SCROLLABLE CONTENT
+                // =====================================
 
-        boolean isUnlocked =
-                achievement.isUnlocked(player);
-
-        grid.add(
-                createAchievementCard(
-                        achievement,
-                        isUnlocked,
-                        achievement.getProgress(player),
-                        achievement.getTarget()
-                )
+        JPanel gridHost = new JPanel(
+                new BorderLayout()
         );
-        }
 
-
-        // =====================================
-        // SCROLLABLE CONTENT
-        // =====================================
+        gridHost.setOpaque(false);
+        gridHost.add(grid, BorderLayout.NORTH);
 
         JScrollPane scroll = new JScrollPane(
-                grid,
+                gridHost,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
         );
@@ -196,7 +179,76 @@ Arrays.sort(
         scroll.getVerticalScrollBar()
                 .setUnitIncrement(16);
 
-        add(scroll, BorderLayout.CENTER);
+                        
+        // =====================================
+        // ACHIEVEMENT FILTERS
+        // =====================================
+
+        JPanel filterRow = new JPanel(
+                new FlowLayout(
+                        FlowLayout.LEFT,
+                        Theme.GAP_M,
+                        0
+                )
+        );
+
+        filterRow.setOpaque(false);
+
+        JLabel filterLabel = new JLabel("SHOW");
+
+        filterLabel.setFont(
+                Theme.FONT_BODY.deriveFont(
+                        Font.BOLD, 12f
+                )
+        );
+
+        filterLabel.setForeground(Theme.TEXT_MUTED);
+
+        JComboBox<String> filterBox = new JComboBox<>(
+                new String[]{
+                        "All",
+                        "Unlocked",
+                        "Locked"
+                }
+        );
+
+        filterBox.setFont(
+                Theme.FONT_BODY.deriveFont(14f)
+        );
+
+        filterBox.setBackground(Theme.INSET);
+        filterBox.setForeground(Theme.TEXT);
+
+        // Update cards whenever the filter changes
+        filterBox.addActionListener(e -> {
+
+        String selected =
+                (String) filterBox.getSelectedItem();
+
+        populateAchievementGrid(
+                grid,
+                player,
+                selected
+        );
+
+        scroll.getVerticalScrollBar().setValue(0);
+        });
+
+        filterRow.add(filterLabel);
+        filterRow.add(filterBox);
+
+        // Place filters above the scrollable gallery
+        JPanel center = new JPanel(
+                new BorderLayout(0, Theme.GAP_M)
+        );
+
+        center.setOpaque(false);
+
+        center.add(filterRow, BorderLayout.NORTH);
+        center.add(scroll, BorderLayout.CENTER);
+
+        add(center, BorderLayout.CENTER);
+
 
         // =====================================
         // BACK BUTTON
@@ -225,6 +277,83 @@ Arrays.sort(
     // =====================================
     // REUSABLE ACHIEVEMENT CARD
     // =====================================
+
+
+        private void populateAchievementGrid(
+                JPanel grid,
+                Player player,
+                String filter) {
+
+        // Clear the previously displayed cards
+        grid.removeAll();
+
+        Achievement[] ordered = Achievement.values();
+
+        // Unlocked achievements first
+        Arrays.sort(
+                ordered,
+                (first, second) -> Boolean.compare(
+                        second.isUnlocked(player),
+                        first.isUnlocked(player)
+                )
+        );
+
+        int displayed = 0;
+
+        for (Achievement achievement : ordered) {
+
+                boolean unlocked =
+                        achievement.isUnlocked(player);
+
+                // Apply the selected filter
+                if ("Unlocked".equals(filter) && !unlocked) {
+                continue;
+                }
+
+                if ("Locked".equals(filter) && unlocked) {
+                continue;
+                }
+
+                grid.add(
+                        createAchievementCard(
+                                achievement,
+                                unlocked,
+                                achievement.getProgress(player),
+                                achievement.getTarget()
+                        )
+                );
+
+                displayed++;
+        }
+
+        // Display a message for empty results
+        if (displayed == 0) {
+
+                JLabel empty = new JLabel(
+                        "No " + filter.toLowerCase()
+                                + " achievements to display."
+                );
+
+                empty.setFont(Theme.FONT_BODY);
+                empty.setForeground(Theme.TEXT_MUTED);
+
+                empty.setBorder(
+                        BorderFactory.createEmptyBorder(
+                                Theme.GAP_L,
+                                Theme.GAP_M,
+                                Theme.GAP_L,
+                                Theme.GAP_M
+                        )
+                );
+
+                grid.add(empty);
+        }
+
+        grid.revalidate();
+        grid.repaint();
+        }
+
+
     private RoundedPanel createAchievementCard(
             Achievement achievement,
             boolean unlocked,

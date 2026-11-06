@@ -143,44 +143,6 @@ public enum Achievement {
         );
     }
 
-    
-public int getProgress(Player player) {
-
-    Objects.requireNonNull(player);
-
-    int current = switch (this) {
-
-        case FIRST_STEPS,
-             STEADY_LEARNER,
-             BEGINNER_MASTER ->
-                completedAt(player, Difficulty.BEGINNER);
-
-        case INTERMEDIATE_MASTER ->
-                completedAt(player, Difficulty.INTERMEDIATE);
-
-        case ADVANCED_MASTER ->
-                completedAt(player, Difficulty.ADVANCED);
-
-        case TOPIC_SPECIALIST ->
-                hasMasteredTopic(player) ? 1 : 0;
-
-        case TOPIC_EXPLORER ->
-                startedTopics(player);
-
-        case XP_ROOKIE,
-             XP_VETERAN,
-             XP_LEGEND ->
-                player.getXp();
-    };
-
-    // Keep progress within the achievement's limits
-    return Math.min(
-            getTarget(),
-            Math.max(0, current)
-    );
-}
-
-
     Achievement(
             String title,
             String description,

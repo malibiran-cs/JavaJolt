@@ -73,13 +73,31 @@ public class ResultsScreen extends Screen {
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setOpaque(false);
 
+
+        String resultMessage;
+
+        if (passed && xpEarned > 0) {
+
+        resultMessage =
+                "Lesson passed! Your XP has been added.";
+
+        } else if (passed) {
+
+        resultMessage =
+                "Lesson passed! No repeat XP awarded.";
+
+        } else {
+
+        resultMessage =
+                "Lesson not passed. Review and try again.";
+        }
+
         JLabel message = createLabel(
-                passed
-                        ? "Great work! You've completed this lesson."
-                        : "Review the textbook and try again.",
-                Theme.FONT_HEADING,
+                resultMessage,
+                Theme.FONT_BODY,
                 Theme.TEXT
         );
+
 
         body.add(message);
         body.add(Box.createVerticalStrut(Theme.GAP_L));
@@ -108,8 +126,42 @@ public class ResultsScreen extends Screen {
                 "+" + Math.max(0, xpEarned)
         ));
 
+
         body.add(stats);
+        body.add(Box.createVerticalStrut(Theme.GAP_M));
+
+        // =====================================
+        // QUIZ SCORE AND PERSONAL BEST
+        // =====================================
+
+        int quizScore = session.getScoreEarned();
+
+        int personalBest = session.getPlayer().getHighScore(
+                session.getTopic(),
+                session.getDifficulty()
+        );
+
+        JPanel scoreStats = new JPanel(
+                new GridLayout(1, 2, Theme.GAP_M, 0)
+        );
+
+        scoreStats.setOpaque(false);
+
+        // Current quiz score
+        scoreStats.add(createStatCard(
+                "QUIZ SCORE",
+                String.valueOf(quizScore)
+        ));
+
+        // Highest score for this topic and difficulty
+        scoreStats.add(createStatCard(
+                "PERSONAL BEST",
+                String.valueOf(personalBest)
+        ));
+
+        body.add(scoreStats);
         body.add(Box.createVerticalStrut(Theme.GAP_L));
+
 
         // ACCURACY BAR
         JLabel accuracyLabel = createLabel(
@@ -140,6 +192,18 @@ public class ResultsScreen extends Screen {
         );
 
         body.add(accuracyBar);
+
+        
+        body.add(Box.createVerticalStrut(Theme.GAP_M));
+
+        JLabel resultStatus = createLabel(
+                passed ? "STATUS: PASSED" : "STATUS: NOT PASSED",
+                Theme.FONT_BODY.deriveFont(Font.BOLD, 14f),
+                passed ? Theme.ACCENT : Theme.DANGER
+        );
+
+        body.add(resultStatus);
+
 
         body.add(Box.createVerticalStrut(Theme.GAP_L));
 
