@@ -41,13 +41,16 @@ public class GameUI { //Angelo
     }
 
     // Questions
-    // Shows the question and returns whatever the player typed
-    public String askQuestion(Question question, int number, int total, Player player) {
+    // Shows the question and returns whatever the player typed. Score and XP are
+    // read from the session (provisional until settlement) so replayed attempts
+    // show only what they would actually earn.
+    public String askQuestion(Question question, int number, int total, GameSession session) {
+        Player player = session.getPlayer();
         System.out.println(NEW_LINE + THIN);
         System.out.println(" Question " + number + " of " + total
                 + "     HP: " + player.getHp()
-                + "     Score: " + player.getScore()
-                + "     XP: " + player.getXp());
+                + "     Score: " + session.getScoreEarned()
+                + "     XP: " + (player.getXp() + session.getProvisionalXp()));
         System.out.println(THIN);
         System.out.print(question.display());
         return switch (question.getInputMode()) {

@@ -180,11 +180,13 @@ public class QuestionScreen extends Screen {
                 int number,
                 int total,
                 Player player,
+                int displayXp,
                 int quizScore) {
         playerNameLabel.setText(player.getName());
         hpLabel.setText("HP: " + player.getHp());
+        // displayXp is provisional quiz XP; it commits to the player only at settlement.
         xpScoreLabel.setText(
-                "XP: " + player.getXp()
+                "XP: " + displayXp
                 + "   QUIZ SCORE: " + quizScore
         );
         progressLabel.setText("QUESTION " + number + " OF " + total);
@@ -837,13 +839,15 @@ private JPanel createCodeEditor(Question question) {
                 boolean correct,
                 String explanation,
                 Player player,
+                int displayXp,
                 int quizScore) {
 
         // Refresh displayed player statistics
         hpLabel.setText("HP: " + player.getHp());
 
+        // displayXp is provisional quiz XP; it commits to the player only at settlement.
         xpScoreLabel.setText(
-                "XP: " + player.getXp()
+                "XP: " + displayXp
                 + "   QUIZ SCORE: " + quizScore
         );
 

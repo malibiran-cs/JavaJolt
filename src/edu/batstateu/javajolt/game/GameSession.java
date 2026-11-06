@@ -15,6 +15,8 @@ public class GameSession {
     private int correctCount;
     private int mistakeCount;
     private int scoreEarned;
+    private int provisionalXp; // first-clear XP earned so far; commits at settlement
+    private boolean settled;   // end-of-quiz settlement already ran for this attempt
 
     // Constructor
     public GameSession(Player player, Topic topic, Difficulty difficulty, List<Question> questions) {
@@ -32,6 +34,15 @@ public class GameSession {
 
     public void recordMistake() {
         mistakeCount++;
+    }
+
+    public void addProvisionalXp(int amount) {
+        provisionalXp += amount;
+    }
+
+    // Marks the attempt as rewarded so settlement can run exactly once.
+    public void markSettled() {
+        settled = true;
     }
 
     // Percentage
@@ -93,5 +104,13 @@ public class GameSession {
 
     public int getScoreEarned() {
         return scoreEarned;
+    }
+
+    public int getProvisionalXp() {
+        return provisionalXp;
+    }
+
+    public boolean isSettled() {
+        return settled;
     }
 }

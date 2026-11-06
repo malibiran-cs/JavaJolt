@@ -227,7 +227,7 @@ public class MainWindow extends JFrame {
         // Remember XP before the quiz begins
         xpAtLessonStart = player.getXp();
 
-                
+                 
         achievementsAtLessonStart.clear();
 
         for (Achievement achievement : Achievement.values()) {
@@ -238,18 +238,11 @@ public class MainWindow extends JFrame {
         }
 
 
-        // Reset player HP
-        player.setHp(Player.getStartingHp());
-
-        // Create the quiz session
-        session = new GameSession(
+        // Single start-of-quiz home: questions, level-derived max HP, full HP.
+        session = lessonRunnerService.startSession(
                 player,
                 topic,
-                lessonDifficulty,
-                questionService.selectQuestions(
-                        topic,
-                        lessonDifficulty
-                )
+                lessonDifficulty
         );
 
         questionIndex = -1;
@@ -368,6 +361,7 @@ private void confirmExit() {
                         get(),
                         current.getExplanation(),
                         player,
+                        player.getXp() + session.getProvisionalXp(),
                         session.getScoreEarned()
                 );
                 } catch (InterruptedException e) {
@@ -411,8 +405,9 @@ private void confirmExit() {
 
             Difficulty oldDifficulty = difficulty;
 
-            // Record completed lessons and bonus XP
-            lessonRunnerService.recordLessonCompletion(session);
+            // Settle the finished attempt exactly once: score always commits;
+            // first-clear XP plus the completion bonus only for a passed uncleared pair.
+            lessonRunnerService.settleAttempt(session);
 
             
             // Check for newly unlocked achievements
@@ -551,6 +546,7 @@ private void confirmExit() {
                 questionIndex + 1,
                 session.getQuestions().size(),
                 player,
+                player.getXp() + session.getProvisionalXp(),
                 session.getScoreEarned()
         );
     }

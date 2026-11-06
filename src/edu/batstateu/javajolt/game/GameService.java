@@ -1,5 +1,4 @@
 package edu.batstateu.javajolt.game;
-import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.entity.SaveData;
 import edu.batstateu.javajolt.enums.Difficulty;
@@ -89,13 +88,6 @@ public class GameService {
         boolean playing = true;
 
         while (playing) {
-            // Flags (might be useful, can add more,)
-            /* 
-                E.g. The isLessonComplete (meaning if all questions for a specific topic and difficulty)
-                     can be used to add more XP than XP gained per question, or check next player action!
-            */
-            boolean isLessonComplete = false;
-
             // Ask topic from available topics (first, or completed topics)
             List<Topic> availableTopics = player.getProgress().getAvailableTopics(difficulty);
             Topic topic;
@@ -116,21 +108,25 @@ public class GameService {
                 lessonRunnerService.study(topic, difficulty);
             }
         
-            // Load questions based on chosen topic and currently saved difficulty, create new session
-            List<Question> questions = questionService.selectQuestions(topic, difficulty);
-            GameSession session = new GameSession(player, topic, difficulty, questions);
+            // Start the quiz: questions, level-derived max HP, full HP (single start-of-quiz home)
+            GameSession session = lessonRunnerService.startSession(player, topic, difficulty);
 
             // Question loop for a lesson
             lessonRunnerService.playLesson(session);
+
+            // Settle the finished attempt exactly once: score commits; first-clear
+            // XP plus the completion bonus commit only for a passed uncleared pair.
+            lessonRunnerService.settleAttempt(session);
+
+            // Keep the best score for this topic and difficulty for future records.
             player.recordHighScore(topic, difficulty, session.getScoreEarned());
 
             // Show results
             boolean passed = lessonRunnerService.hasPassed(session);
             ui.showResult(session, passed);
             
-            // Add topic to completed topics in current difficulty and check progress
+            // Check progress and tell the player what unlocked
             if(passed) {
-                isLessonComplete = player.getProgress().complete(topic, difficulty);
                 if(player.getProgress().isDifficultyComplete(difficulty)) {
                     ui.showMessage("Congratulations! You completed all topics for " +
                         difficulty.getLabel() + " difficulty!"
@@ -141,11 +137,6 @@ public class GameService {
                     Topic nextTopic = updatedTopics.get(updatedTopics.size() - 1);
                     ui.showMessage("Next topic unlocked: " + nextTopic.getLabel());
                 }
-            }
-
-            // Bonus XP once the whole lesson is cleared
-            if(isLessonComplete) {
-                player.addXp(lessonRunnerService.lessonCompleteBonus(difficulty));
             }
             
             /*

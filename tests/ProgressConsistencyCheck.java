@@ -42,8 +42,13 @@ public class ProgressConsistencyCheck {
                 "Failed quiz cannot complete lesson");
 
         require(
-                player.getXp() == 8 * runner.xpPerCorrect(12),
-                "Failed attempt XP incorrect"
+                player.getXp() == 0,
+                "Failed attempt must award zero XP"
+        );
+
+        require(
+                failed.getScoreEarned() == 80,
+                "Failed attempt score must still commit"
         );
 
         require(player.getHighScore(TOPIC, LEVEL) == 80,
@@ -206,7 +211,7 @@ public class ProgressConsistencyCheck {
             );
         }
 
-        runner.recordLessonCompletion(session);
+        runner.settleAttempt(session);
 
         player.recordHighScore(
                 TOPIC,

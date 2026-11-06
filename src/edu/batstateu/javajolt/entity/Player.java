@@ -8,10 +8,12 @@ import java.util.Set;
 import edu.batstateu.javajolt.enums.*;
 import edu.batstateu.javajolt.service.PlayerProgressService;
 public class Player {
-    // TODO(gameplay balance): If HP progression is added, separate maximum HP from current HP.
+    // NOTE: maxHp is derived per quiz from the player's level (LevelRewardService,
+    // not saved); HP itself stays session-only and always restores to maxHp at quiz start.
     private static final int STARTING_HP = 10;
     private String name;
     private int hp = STARTING_HP;
+    private int maxHp = STARTING_HP;
     private int xp;      // persistent: written to the save file and restored on load
     private int score;   // cumulative score across quiz attempts; persisted
     private final Map<Topic, EnumMap<Difficulty, Integer>> highScores =
@@ -30,7 +32,12 @@ public class Player {
     }
 
     public int heal(int amount) {
-        return hp += amount;
+        hp = Math.min(maxHp, hp + amount);
+        return hp;
+    }
+
+    public void restoreFullHp() {
+        hp = maxHp;
     }
 
     public int addScore(int amount) {
@@ -135,6 +142,15 @@ public class Player {
 
     public void setHp(int hp) {
         this.hp = hp;
+    }
+
+    public int getMaxHp() {
+        return maxHp;
+    }
+
+    // Guarded: a quiz always plays with at least 1 max HP.
+    public void setMaxHp(int maxHp) {
+        this.maxHp = Math.max(1, maxHp);
     }
 
     public int getScore() {

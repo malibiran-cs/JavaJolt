@@ -44,15 +44,23 @@ public class LessonRunnerService {
         }
     }
 
+    // Single start-of-quiz home: questions through QuestionService, the session,
+    // the level-derived max HP, and a full HP restore (brief Phase 2).
+    public GameSession startSession(Player player, Topic topic, Difficulty difficulty) {
+        List<Question> questions = questionService.selectQuestions(topic, difficulty);
+        GameSession session = new GameSession(player, topic, difficulty, questions);
+        player.setMaxHp(LevelRewardService.maxHpForLevel(LevelService.calculateLevel(player.getXp())));
+        player.restoreFullHp();
+        return session;
+    }
+
     public void playLesson(GameSession session) {
         Player player = session.getPlayer();
         List<Question> questions = session.getQuestions();
-        // Restore HP at the beginning of each lesson.
-        player.setHp(Player.getStartingHp());
         for (int i = 0; i < questions.size() && player.isAlive(); i++) {
             Question question = questions.get(i);
             session.setCurrentQuestionIndex(i + 1);
-            String answer = ui.askQuestion(question, i + 1, questions.size(), player);
+            String answer = ui.askQuestion(question, i + 1, questions.size(), session);
             if (submitAnswer(session, question, answer)) {
                 ui.showCorrect(question);
             } else {
@@ -62,17 +70,17 @@ public class LessonRunnerService {
     }
 
     // Records one answer using the same rules for console and Swing callers.
+    // Score and XP accumulate in the session; settleAttempt owns the persistent commit.
     public boolean submitAnswer(GameSession session, Question question, String answer) {
         Player player = session.getPlayer();
         if (questionService.isCorrect(question, answer)) {
-            player.addScore(POINTS_PER_CORRECT);
+            session.recordCorrect(POINTS_PER_CORRECT);
 
-            // A completed topic/difficulty pair no longer awards repeat XP.
+            // First-clear XP is provisional until the attempt settles.
             if (!player.isComplete(session.getTopic(), session.getDifficulty())) {
-                player.addXp(xpPerCorrect(session.getQuestions().size()));
+                session.addProvisionalXp(xpPerCorrect(session.getQuestions().size()));
             }
 
-            session.recordCorrect(POINTS_PER_CORRECT);
             return true;
         }
         player.takeDamage(DAMAGE_PER_MISTAKE);
@@ -87,12 +95,29 @@ public class LessonRunnerService {
                 && session.getAccuracyPercent() >= PASS_PERCENT;
     }
 
-    // Applies the progress reward once when a lesson is passed.
-    public void recordLessonCompletion(GameSession session) {
-        if (hasPassed(session)
-                && session.getPlayer().getProgress().complete(session.getTopic(), session.getDifficulty())) {
-            session.getPlayer().addXp(lessonCompleteBonus(session.getDifficulty()));
+    // End-of-quiz settlement; runs exactly once per attempt. Every finished attempt
+    // commits its score; first-clear per-answer XP plus the 50 XP completion bonus
+    // commit together only when a passed attempt clears an uncleared pair. Failed
+    // attempts, replays of completed pairs, and abandoned quizzes (window closed,
+    // back navigation, different quiz) earn no XP, and abandoned quizzes bank no score.
+    // Returns true when this attempt newly completed the topic/difficulty pair.
+    public boolean settleAttempt(GameSession session) {
+        if (session.isSettled()) {
+            return false;
         }
+        session.markSettled();
+
+        Player player = session.getPlayer();
+        player.addScore(session.getScoreEarned());
+
+        if (hasPassed(session)
+                && !player.isComplete(session.getTopic(), session.getDifficulty())) {
+            player.addXp(session.getProvisionalXp()
+                    + lessonCompleteBonus(session.getDifficulty()));
+            player.complete(session.getTopic(), session.getDifficulty());
+            return true;
+        }
+        return false;
     }
 
     // XP awarded per correct answer. Fixed value for now; can scale by difficulty later.
