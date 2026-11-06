@@ -57,6 +57,8 @@ public class MainWindow extends JFrame {
     private int questionIndex;
     private ResultsScreen resultsScreen;
     private int xpAtLessonStart;
+    // No real save is created before the new player confirms a name.
+    private boolean welcomeCompleted;
 
     public MainWindow(
             Player player,
@@ -85,9 +87,11 @@ public class MainWindow extends JFrame {
         this.lessonRunnerService = lessonRunnerService;
         this.difficulty = difficulty;
         this.saveService = saveService;
+        this.welcomeCompleted = saveService.hasSave();
 
         container.add(new WelcomeScreen(name -> {
             player.setName(name);
+            welcomeCompleted = true;
             showScreen(ScreenId.MAIN_MENU);
         }), ScreenId.WELCOME.name());
 
@@ -261,6 +265,9 @@ public class MainWindow extends JFrame {
 
     
 private boolean saveProgress() {
+    if (!welcomeCompleted) {
+        return false;
+    }
     try {
         saveService.save(player, difficulty);
         return true;
@@ -323,6 +330,10 @@ private void showProgress() {
 }
 
 private void confirmExit() {
+    if (!welcomeCompleted) {
+        dispose();
+        return;
+    }
     int choice = JOptionPane.showConfirmDialog(
             this,
             "Save progress and exit JavaJolt?",
