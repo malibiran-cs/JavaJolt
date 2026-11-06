@@ -66,6 +66,7 @@ public class TopicSelectionScreen extends Screen {
                 i + 1,
                 unlocked.contains(topic),
                 player.isComplete(topic, difficulty),
+                player,
                 onTopicSelected
         ));
         }
@@ -188,11 +189,12 @@ public class TopicSelectionScreen extends Screen {
     }
 
     private static final class TopicCard extends JButton {
-        private static final Dimension CARD_SIZE = new Dimension(310, 148);
+        private static final Dimension CARD_SIZE = new Dimension(340, 184);
         private static final Color LOCKED_BACKGROUND = new Color(0x1B1D21);
 
         TopicCard(Topic topic, int number, boolean available,
-                  boolean completed, Consumer<Topic> onTopicSelected) {
+                  boolean completed, Player player,
+                  Consumer<Topic> onTopicSelected) {
             setPreferredSize(CARD_SIZE);
             setLayout(new BorderLayout(0, Theme.GAP_S));
             setBorder(BorderFactory.createEmptyBorder(14, 18, 12, 18));
@@ -267,10 +269,106 @@ public class TopicSelectionScreen extends Screen {
             action.setFont(Theme.FONT_BODY.deriveFont(Font.BOLD, 11f));
             action.setForeground(completed || available
                     ? Theme.ACCENT : Theme.TEXT_MUTED);
-            add(action, BorderLayout.SOUTH);
+                
+        JPanel footerArea = new JPanel(
+                new BorderLayout(0, Theme.GAP_S)
+        );
+
+        footerArea.setOpaque(false);
+
+        // Three difficulty indicators
+        JPanel levelProgress = new JPanel(
+                new GridLayout(1, 3, 6, 0)
+        );
+
+        levelProgress.setOpaque(false);
+
+        levelProgress.add(createDifficultyChip(
+                "BEGINNER",
+                Difficulty.BEGINNER,
+                player,
+                topic
+        ));
+
+        levelProgress.add(createDifficultyChip(
+                "INTERM.",
+                Difficulty.INTERMEDIATE,
+                player,
+                topic
+        ));
+
+        levelProgress.add(createDifficultyChip(
+                "ADVANCED",
+                Difficulty.ADVANCED,
+                player,
+                topic
+        ));
+
+        // Progress indicators above the existing action
+        footerArea.add(
+                levelProgress,
+                BorderLayout.NORTH
+        );
+
+        footerArea.add(
+                action,
+                BorderLayout.SOUTH
+        );
+
+        add(footerArea, BorderLayout.SOUTH);
+
         }
 
-        @Override
+        private static JLabel createDifficultyChip(
+                String label,
+                Difficulty difficulty,
+                Player player,
+                Topic topic) {
+
+        boolean complete =
+                player.isComplete(topic, difficulty);
+
+        JLabel chip = new JLabel(
+                (complete ? "\u2713 " : "\u2013 ") + label,
+                javax.swing.SwingConstants.CENTER
+        );
+
+        chip.setFont(
+                Theme.FONT_BODY.deriveFont(
+                        Font.BOLD, 10f
+                )
+        );
+
+        chip.setOpaque(true);
+
+        chip.setBackground(
+                complete
+                        ? new Color(0x21372C)
+                        : Theme.INSET
+        );
+
+        chip.setForeground(
+                complete
+                        ? new Color(0x8FD3A3)
+                        : Theme.TEXT_MUTED
+        );
+
+        chip.setBorder(
+                BorderFactory.createEmptyBorder(
+                        5, 2, 5, 2
+                )
+        );
+
+        chip.setToolTipText(
+                difficulty.getLabel()
+                        + (complete
+                                ? " completed"
+                                : " not completed")
+        );
+
+        return chip;
+        }
+
         protected void paintComponent(Graphics graphics) {
             Graphics2D g = (Graphics2D) graphics.create();
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
