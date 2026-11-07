@@ -11,7 +11,7 @@ import java.util.List;
 
 // Stateless power-up rules: the fixed pool unlocks by level, each unlocked
 // power-up is usable once per quiz, and a use marks the session only when it
-// actually applies. Time Stop stays locked until the Phase 7 timer exists.
+// actually applies. Time Stop freezes only the current question timer.
 public class PowerUpService {
 
     // Level >= the power-up's unlock level.
@@ -25,7 +25,7 @@ public class PowerUpService {
     }
 
     // A use that applies arms its session effect; one that does not (Hint on
-    // a non-multiple-choice question, Time Stop, locked, already used) leaves the
+    // a non-multiple-choice question, expired timer, locked, already used) leaves the
     // session untouched so it can be rejected without being consumed.
     public PowerUpResult use(GameSession session, PowerUp powerUp, Question current) {
         if (!canUse(session, powerUp)) {
@@ -40,7 +40,7 @@ public class PowerUpService {
                 session.markUsed(powerUp);
                 session.armShield();
                 yield new PowerUpResult(true,
-                        "Shield armed: your next mistake deals no damage.",
+                        "Shield armed: your next damaging attack deals no damage.",
                         List.of());
             }
             case POINT_BOOST -> {
@@ -50,9 +50,14 @@ public class PowerUpService {
                         "Point Boost armed: your next correct answer earns double base points.",
                         List.of());
             }
-            case TIME_STOP -> new PowerUpResult(false,
-                    "Time Stop is not available yet.",
-                    List.of());
+            case TIME_STOP -> {
+                if (!isApplicable(powerUp, session, current)) {
+                    yield new PowerUpResult(false, "There is no running countdown to freeze.", List.of());
+                }
+                session.freezeQuestionTimer();
+                session.markUsed(powerUp);
+                yield new PowerUpResult(true, "Time Stop: countdown frozen for this question.", List.of());
+            }
         };
     }
 
@@ -71,12 +76,11 @@ public class PowerUpService {
     }
 
     // Display rules for the current question: whether the power-up could apply
-    // if used now (independent of unlock/once-per-quiz state). Time Stop waits
-    // for the Phase 7 timer; Shield and Boost act at any point in the quiz.
+    // if used now (independent of unlock/once-per-quiz state).
     public boolean isApplicable(PowerUp powerUp, GameSession session, Question current) {
         return switch (powerUp) {
             case HINT -> current != null && current.supportsHint();
-            case TIME_STOP -> false;
+            case TIME_STOP -> current != null && session.isQuestionTimerRunning();
             case SHIELD, POINT_BOOST -> true;
         };
     }

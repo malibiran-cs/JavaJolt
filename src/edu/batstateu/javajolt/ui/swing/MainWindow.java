@@ -37,6 +37,9 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingWorker;
+import javax.swing.Timer;
+import java.util.concurrent.TimeUnit;
+import edu.batstateu.javajolt.service.AnswerTimerService;
 
 public class MainWindow extends JFrame {
     private final CardLayout cards = new CardLayout();
@@ -51,6 +54,12 @@ public class MainWindow extends JFrame {
     private Difficulty difficulty;
     private final SaveService saveService;
     private final PowerUpService powerUpService;
+    private final AnswerTimerService answerTimerService;
+    private static final int COUNTDOWN_TICK_MILLIS = 100;
+    private Timer countdown;
+    private long countdownVersion;
+    private long countdownDeadline;
+    private int remainingSeconds;
     private final MainMenuScreen mainMenuScreen;
     private boolean lessonResultRecorded;
     private final LessonService lessonService = new LessonService();
@@ -72,7 +81,8 @@ public class MainWindow extends JFrame {
             QuestionService questionService,
             LessonRunnerService lessonRunnerService,
             Difficulty difficulty,
-            PowerUpService powerUpService) {
+            PowerUpService powerUpService,
+            AnswerTimerService answerTimerService) {
 
         this(
                 player,
@@ -80,6 +90,7 @@ public class MainWindow extends JFrame {
                 lessonRunnerService,
                 difficulty,
                 powerUpService,
+                answerTimerService,
                 new SaveService()
         );
     }
@@ -90,6 +101,7 @@ public class MainWindow extends JFrame {
             LessonRunnerService lessonRunnerService,
             Difficulty difficulty,
             PowerUpService powerUpService,
+            AnswerTimerService answerTimerService,
             SaveService saveService) {
         super("JavaJolt");
         this.player = player;
@@ -97,6 +109,7 @@ public class MainWindow extends JFrame {
         this.lessonRunnerService = lessonRunnerService;
         this.difficulty = difficulty;
         this.powerUpService = powerUpService;
+        this.answerTimerService = answerTimerService;
         this.saveService = saveService;
         this.welcomeCompleted = saveService.hasSave();
 
@@ -235,6 +248,8 @@ public class MainWindow extends JFrame {
             Topic topic,
             Difficulty lessonDifficulty) {
 
+        stopCountdown();
+        questionActive = false;
         // Remember XP before the quiz begins
         xpAtLessonStart = player.getXp();
 
@@ -357,7 +372,10 @@ private void confirmExit() {
 
 
     private void submitAnswer(String answer) {
-        if (session == null || questionIndex >= session.getQuestions().size()) return;
+        if (session == null || !questionActive || !player.isAlive()
+                || questionIndex < 0 || questionIndex >= session.getQuestions().size()) return;
+        stopCountdown();
+        GameSession answerSession = session;
         // No power-up may be used once an answer was submitted: this flag turns
         // off before checking and stays off through the result and transitions.
         questionActive = false;
@@ -366,11 +384,15 @@ private void confirmExit() {
         new SwingWorker<Boolean, Void>() {
             @Override
             protected Boolean doInBackground() {
-                return lessonRunnerService.submitAnswer(session, current, answer);
+                return lessonRunnerService.submitAnswer(answerSession, current, answer);
             }
 
             @Override
             protected void done() {
+                if (session != answerSession || !isDisplayable()
+                        || !questionScreen.isVisible()) {
+                    return;
+                }
                 try {
                 questionScreen.showAnswerResult(
                         get(),
@@ -389,11 +411,13 @@ private void confirmExit() {
                     JOptionPane.showMessageDialog(MainWindow.this,
                             "The answer could not be checked.", "Question Error",
                             JOptionPane.ERROR_MESSAGE);
+                    restoreQuestionAfterCheckFailure();
                 } catch (ExecutionException e) {
                     questionScreen.setCheckingAnswer(false);
                     JOptionPane.showMessageDialog(MainWindow.this,
                             "The answer could not be checked.", "Question Error",
                             JOptionPane.ERROR_MESSAGE);
+                    restoreQuestionAfterCheckFailure();
                 }
             }
         }.execute();
@@ -401,10 +425,12 @@ private void confirmExit() {
 
 
     private void showNextQuestion() {
-
-        if (session == null) {
+        if (session == null || !questionScreen.isVisible() || lessonResultRecorded
+                || (questionActive && player.isAlive())) {
             return;
         }
+        stopCountdown();
+        questionActive = false;
 
         questionIndex++;
 
@@ -590,6 +616,70 @@ private void confirmExit() {
                 session.isLastAnswerBoosted()
         );
         refreshBattleInfo(true);
+        startCountdown(answerTimerService.getTimeLimitSeconds(session.getDifficulty(),
+                session.getQuestions().get(questionIndex).getInputMode()));
+    }
+
+    private void restoreQuestionAfterCheckFailure() {
+        questionActive = true;
+        refreshBattleInfo(true);
+        if (session.isQuestionTimerRunning()) {
+            startCountdown(remainingSeconds);
+        }
+    }
+
+    private void startCountdown(int seconds) {
+        stopCountdown();
+        remainingSeconds = seconds;
+        countdownDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(remainingSeconds);
+        questionScreen.showCountdown(remainingSeconds, false);
+        long version = countdownVersion;
+        GameSession timedSession = session;
+        int timedIndex = questionIndex;
+        countdown = new Timer(COUNTDOWN_TICK_MILLIS, event -> {
+            if (version != countdownVersion || event.getSource() != countdown
+                    || session != timedSession || questionIndex != timedIndex || !questionActive) {
+                return;
+            }
+            long nanosLeft = Math.max(0, countdownDeadline - System.nanoTime());
+            remainingSeconds = (int) ((nanosLeft + TimeUnit.SECONDS.toNanos(1) - 1)
+                    / TimeUnit.SECONDS.toNanos(1));
+            questionScreen.showCountdown(remainingSeconds, false);
+            if (remainingSeconds == 0) {
+                stopCountdown();
+                handleTimeout();
+            }
+        });
+        countdown.start();
+    }
+
+    private void stopCountdown() {
+        countdownVersion++;
+        if (countdown != null) {
+            countdown.stop();
+            countdown = null;
+        }
+    }
+
+    private void handleTimeout() {
+        if (!questionActive || session == null) {
+            return;
+        }
+        answerTimerService.applyTimeout(session);
+        if (!player.isAlive()) {
+            // Reuse the existing completion path without recording an answer.
+            showNextQuestion();
+            return;
+        }
+        questionScreen.showTimeout(player);
+        refreshBattleInfo(true);
+    }
+
+    @Override
+    public void dispose() {
+        stopCountdown();
+        questionActive = false;
+        super.dispose();
     }
 
     // Applies one proposed power-up use. The flag guard enforces the amendment
@@ -608,6 +698,10 @@ private void confirmExit() {
         PowerUpResult result =
                 powerUpService.use(session, powerUp, current);
 
+        if (result.applied() && powerUp == PowerUp.TIME_STOP) {
+            stopCountdown();
+            questionScreen.showCountdown(remainingSeconds, true);
+        }
         if (result.applied() && !result.removedChoices().isEmpty()) {
             questionScreen.applyHintRemovedChoices(result.removedChoices());
         }
@@ -696,6 +790,10 @@ private void confirmExit() {
 
 
     public void showScreen(ScreenId id) {
+        if (id != ScreenId.QUESTION) {
+            stopCountdown();
+            questionActive = false;
+        }
         if (id == ScreenId.MAIN_MENU) {
             mainMenuScreen.refresh(player);
         }

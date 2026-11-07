@@ -28,6 +28,7 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
   - `LevelRewardService`: level-based quizzes rewards (max HP per level).
   - `ScoreService`: per-answer score points (base, streak growth, later boost multiplier).
   - `PowerUpService`: power-up unlock and use rules (stateless; one use per power-up per quiz).
+  - `AnswerTimerService`: per-input-mode time limits and once-per-question timeout attacks; Swing owns the countdown lifecycle.
   - `CodeQuestionService`: compile and run the player's code.
 - `entity/`: data holders that guard their own state (`Player`, `SaveData`, `LessonPage`, `PowerUpResult`).
 - `Question` and `types/`: abstract `Question` and its subclasses (`MultipleChoiceQuestion`, `IdentificationQuestion`, `CodeQuestion`).
@@ -118,7 +119,7 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
 - **Smallest change that works:** Put new work in new files or classes rather than editing working code. Don't rename, reformat or refactor unrelated code.
 - **Don't add:** Libraries, build tools or frameworks.
 - **Don't touch:** `out/` (compiled output), `saves/`, and the kit's asset files.
-- **Keep it compiling:** The project is a VS Code Java project (source `src/`, output `out/`). Run from the project root, because `data/lessons` and `saves` are relative paths. There are no automated tests yet, so keep logic in injectable services where it can be tested later.
+- **Keep it compiling:** The project is a VS Code Java project (source `src/`, output `out/`). Run from the project root, because `data/lessons` and `saves` are relative paths. Plain Java checks live in `preview/` and `tests/`; keep logic in injectable services. `SwingTimerFlowCheck` requires a graphical desktop and uses temporary saves.
 - **Explain in chat:** After a change, list the files created or changed and explain each part and why, in an organized way. Don't over-comment the code instead.
 - **Don't fix or copy deviations:** Section 7 lists known deviations. Don't imitate them in new code, and don't fix them unless asked.
 

@@ -5,6 +5,8 @@ import edu.batstateu.javajolt.data.EnemyRoster;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.entity.PowerUpResult;
 import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.InputMode;
+import edu.batstateu.javajolt.service.AnswerTimerService;
 import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.game.Enemy;
@@ -21,10 +23,10 @@ import edu.batstateu.javajolt.types.MultipleChoiceQuestion;
 import java.util.ArrayList;
 import java.util.List;
 
-// Dev tool: in-memory checks for Phase 2-6 mechanics - D1 level boundaries,
+// Dev tool: in-memory checks for Phase 2-7 mechanics - D1 level boundaries,
 // D3 max HP bands, end-of-quiz settlement rules, the Phase 3 enemy damage
 // model (lethality, survivability, independent defeat categories), Phase 4
-// streak scoring, and the Phase 5-6 power-ups. Everything
+// streak scoring, the Phase 5-6 power-ups, and Phase 7 timeout rules. Everything
 // runs on fresh Player objects in memory; no save path is ever opened.
 public class MechanicsCheck {
 
@@ -65,6 +67,7 @@ public class MechanicsCheck {
         checkReplayEarnsNothing();
         checkStreakScoring();
         checkPowerUps();
+        checkAnswerTimer();
         checkFailedAttemptEarnsNoXp();
         checkAbandonmentBanksNothing();
         checkDeathBeforeFinish();
@@ -185,7 +188,7 @@ public class MechanicsCheck {
     // correct one, verified over 200 runs; non-multiple-choice use is not
     // consumed), Shield zeroes the next mistake without stopping the
     // escalation chain, Point Boost survives a mistake and boosts only the
-    // next correct answer, and Time Stop stays locked until Phase 7.
+    // next correct answer, and Time Stop freezes the current question.
     private static void checkPowerUps() {
         // The level curve maps XP/50 to level, so the probe XP values are exact.
         Player level4 = new Player("Check", 200);
@@ -269,11 +272,13 @@ public class MechanicsCheck {
         check("power-ups: Hint on a non-multiple-choice question is not consumed",
                 !idSession.hasUsed(PowerUp.HINT));
 
-        // Time Stop waits for the Phase 7 timer: unused, not consumed.
+        // Time Stop freezes the active question and consumes its quiz use.
         GameSession stopSession = newSession(master);
+        stopSession.setCurrentQuestionIndex(1);
         PowerUpResult stopResult = powerUps.use(stopSession, PowerUp.TIME_STOP, hintable);
-        check("power-ups: Time Stop is not applied until Phase 7",
-                !stopResult.applied() && !stopSession.hasUsed(PowerUp.TIME_STOP));
+        check("power-ups: Time Stop freezes the current question",
+                stopResult.applied() && stopSession.hasUsed(PowerUp.TIME_STOP)
+                        && stopSession.isQuestionTimerFrozen());
 
         // Shield: the shielded mistake deals 0 damage but still counts as a
         // mistake (chain incremented, correct streak reset); the NEXT
@@ -336,14 +341,138 @@ public class MechanicsCheck {
         check("applicable: Shield and Point Boost apply to any current question",
                 powerUps.isApplicable(PowerUp.SHIELD, probeSession, identification)
                         && powerUps.isApplicable(PowerUp.POINT_BOOST, probeSession, hintable));
-        check("applicable: Time Stop applies nowhere until Phase 7",
-                !powerUps.isApplicable(PowerUp.TIME_STOP, probeSession, hintable));
+        probeSession.setCurrentQuestionIndex(1);
+        check("applicable: Time Stop applies to a running question timer",
+                powerUps.isApplicable(PowerUp.TIME_STOP, probeSession, hintable));
 
         // Phase 6 display flag: which answer Point Boost actually produced.
         check("boost: the boosted answer is flagged for display",
                 flaggedAfterBoost);
         check("boost: the plain answer clears the boost flag for display",
                 !boostRun.isLastAnswerBoosted());
+    }
+
+    private static void checkAnswerTimer() {
+        AnswerTimerService timer = new AnswerTimerService();
+        int[][] limits = {{30, 120}, {20, 90}, {15, 75}};
+        for (Difficulty difficulty : Difficulty.values()) {
+            for (InputMode mode : InputMode.values()) {
+                check("timer: limit " + difficulty + " " + mode,
+                        timer.getTimeLimitSeconds(difficulty, mode)
+                                == limits[difficulty.ordinal()][mode.ordinal()]);
+            }
+            for (int hp = HP_BAND_MIN; hp <= HP_BAND_MAX; hp++) {
+                GameSession run = timerSession(difficulty, hp);
+                run.recordMistake(0);
+                int expected = difficulty == Difficulty.BEGINNER ? 0
+                        : difficulty == Difficulty.INTERMEDIATE ? 1
+                        : Enemy.baseDamageForMaxHp(hp);
+                check("timer: base-only damage " + difficulty + " HP " + hp,
+                        timer.getTimeoutDamage(run) == expected);
+                timer.applyTimeout(run);
+                timer.applyTimeout(run);
+                check("timer: applied once, mistake chain unchanged " + difficulty + " HP " + hp,
+                        run.getPlayer().getHp() == hp - expected
+                                && run.isQuestionTimedOut() && run.getLastDamage() == expected
+                                && run.getConsecutiveMistakes() == 1 && run.getAnsweredCount() == 1);
+                run.setCurrentQuestionIndex(1);
+                timer.applyTimeout(run);
+                check("timer: same index cannot re-arm timeout " + difficulty + " HP " + hp,
+                        run.getPlayer().getHp() == hp - expected);
+                run.setCurrentQuestionIndex(2);
+                check("timer: next question resets timeout " + difficulty + " HP " + hp,
+                        !run.isQuestionTimedOut());
+                timer.applyTimeout(run);
+                check("timer: next question can expire " + difficulty + " HP " + hp,
+                        run.getPlayer().getHp() == hp - 2 * expected);
+            }
+            GameSession shield = timerSession(difficulty, 15);
+            powerUps.use(shield, PowerUp.SHIELD, shield.getQuestions().get(0));
+            timer.applyTimeout(shield);
+            check("timer: Shield interaction " + difficulty,
+                    shield.getPlayer().getHp() == 15 && shield.getLastDamage() == 0
+                            && shield.isShieldArmed() == (difficulty == Difficulty.BEGINNER));
+            timer.applyTimeout(shield);
+            check("timer: repeated expiry leaves Shield state unchanged " + difficulty,
+                    shield.isShieldArmed() == (difficulty == Difficulty.BEGINNER));
+        }
+        GameSession streak = timerSession(Difficulty.ADVANCED, 15);
+        playCorrect(streak, 2);
+        int score = streak.getScoreEarned();
+        int xp = streak.getProvisionalXp();
+        powerUps.use(streak, PowerUp.POINT_BOOST, streak.getQuestions().get(0));
+        timer.applyTimeout(streak);
+        check("timer: correct streak, accuracy, score, XP, and Boost preserved",
+                streak.getCurrentStreak() == 2 && streak.getBestStreak() == 2
+                        && streak.getAnsweredCount() == 2 && streak.getMistakeCount() == 0
+                        && streak.getAccuracyPercent() == 100 && streak.getConsecutiveMistakes() == 0
+                        && streak.getScoreEarned() == score && streak.getProvisionalXp() == xp
+                        && streak.isPointBoostArmed() && streak.getLastPoints() == 12);
+        runner.submitAnswer(streak, streak.getQuestions().get(0), "anything");
+        check("timer: correct answer after expiry still earns boosted streak points",
+                streak.getAnsweredCount() == 3 && streak.getCurrentStreak() == 3
+                        && streak.getLastPoints() == 24);
+        GameSession frozen = timerSession(Difficulty.ADVANCED, 15);
+        powerUps.use(frozen, PowerUp.SHIELD, frozen.getQuestions().get(0));
+        PowerUpResult stop = powerUps.use(frozen, PowerUp.TIME_STOP, frozen.getQuestions().get(0));
+        timer.applyTimeout(frozen);
+        check("timer: Time Stop freezes without expiry, damage, or Shield consumption",
+                stop.applied() && frozen.isQuestionTimerFrozen() && !frozen.isQuestionTimedOut()
+                        && frozen.getPlayer().getHp() == 15 && frozen.isShieldArmed());
+        frozen.setCurrentQuestionIndex(1);
+        check("timer: same question preserves frozen state", frozen.isQuestionTimerFrozen());
+        frozen.setCurrentQuestionIndex(2);
+        check("timer: next question unfreezes but cannot reuse Time Stop",
+                !frozen.isQuestionTimerFrozen()
+                        && !powerUps.use(frozen, PowerUp.TIME_STOP, frozen.getQuestions().get(1)).applied());
+        timer.applyTimeout(frozen);
+        check("timer: Shield still absorbs next question timeout",
+                frozen.isQuestionTimedOut() && !frozen.isShieldArmed()
+                        && frozen.getPlayer().getHp() == 15);
+        GameSession expired = timerSession(Difficulty.ADVANCED, 15);
+        timer.applyTimeout(expired);
+        check("timer: expired countdown does not consume Time Stop",
+                !powerUps.use(expired, PowerUp.TIME_STOP, expired.getQuestions().get(0)).applied()
+                        && !expired.hasUsed(PowerUp.TIME_STOP));
+        GameSession unstarted = timerSession(Difficulty.ADVANCED, 15);
+        unstarted.setCurrentQuestionIndex(0);
+        timer.applyTimeout(unstarted);
+        check("timer: unstarted question cannot expire or consume Time Stop",
+                !unstarted.isQuestionTimedOut()
+                        && !powerUps.use(unstarted, PowerUp.TIME_STOP, unstarted.getQuestions().get(0)).applied()
+                        && !unstarted.hasUsed(PowerUp.TIME_STOP));
+        GameSession defeat = timerSession(Difficulty.ADVANCED, 15);
+        playCorrect(defeat, 2);
+        defeat.getPlayer().setHp(3);
+        timer.applyTimeout(defeat);
+        check("timer: defeat is not a mistake and fails despite perfect accuracy",
+                !defeat.getPlayer().isAlive() && defeat.getAccuracyPercent() == 100
+                        && defeat.getAnsweredCount() == 2 && defeat.getMistakeCount() == 0
+                        && defeat.getCurrentStreak() == 2 && !runner.hasPassed(defeat));
+        runner.settleAttempt(defeat);
+        runner.settleAttempt(defeat);
+        check("timer: defeat settles score once and gives no XP or completion",
+                defeat.getPlayer().getScore() == 22 && defeat.getPlayer().getXp() == 1000
+                        && !defeat.getPlayer().isComplete(Topic.VARIABLES, Difficulty.ADVANCED));
+        GameSession settled = timerSession(Difficulty.ADVANCED, 15);
+        settled.markSettled();
+        timer.applyTimeout(settled);
+        check("timer: settled attempt ignores expiry", !settled.isQuestionTimedOut());
+        GameSession fresh = timerSession(Difficulty.ADVANCED, 15);
+        check("timer: new quiz resets Time Stop and per-question state",
+                !fresh.hasUsed(PowerUp.TIME_STOP) && !fresh.isQuestionTimedOut()
+                        && !fresh.isQuestionTimerFrozen());
+    }
+
+    private static GameSession timerSession(Difficulty difficulty, int maxHp) {
+        Player player = new Player("Timer check", 1000);
+        player.setMaxHp(maxHp);
+        player.restoreFullHp();
+        GameSession session = newSession(player);
+        session.setDifficulty(difficulty);
+        session.setEnemy(roster.getEnemy(Topic.VARIABLES, difficulty));
+        session.setCurrentQuestionIndex(1);
+        return session;
     }
 
     // A 4-choice multiple-choice question prepared like the real quiz does

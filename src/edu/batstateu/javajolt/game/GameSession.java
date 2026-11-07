@@ -20,14 +20,16 @@ public class GameSession {
     private int consecutiveMistakes; // uncorrected streak; reset by every correct answer
     private int currentStreak; // consecutive correct answers; distinct from the damage counter
     private int bestStreak;    // highest currentStreak reached this attempt
-    private int lastDamage; // actual HP cost of the most recent mistake (0 when Shield blocked it)
+    private int lastDamage; // actual HP cost of the most recent mistake or timeout (0 if blocked)
     private int lastPoints; // points awarded for the most recent answer (0 on a mistake)
     private int scoreEarned;
     private int provisionalXp; // first-clear XP earned so far; commits at settlement
     private boolean settled;   // end-of-quiz settlement already ran for this attempt
     private final EnumSet<PowerUp> usedPowerUps = EnumSet.noneOf(PowerUp.class); // per-quiz usage; resets with the session
-    private boolean shieldArmed;     // set by Shield; consumed by the next mistake
+    private boolean shieldArmed;     // set by Shield; consumed by the next damaging attack
     private boolean pointBoostArmed; // set by Point Boost; consumed by the next correct answer
+    private boolean questionTimedOut;
+    private boolean questionTimerFrozen;
     private boolean lastAnswerBoosted; // whether Point Boost produced the most recent correct answer
 
     // Constructor
@@ -116,6 +118,31 @@ public class GameSession {
         return armed;
     }
 
+    public boolean isQuestionTimedOut() {
+        return questionTimedOut;
+    }
+
+    public boolean isQuestionTimerFrozen() {
+        return questionTimerFrozen;
+    }
+
+    public boolean isQuestionTimerRunning() {
+        return currentQuestionIndex > 0 && currentQuestionIndex <= questions.size()
+                && !questionTimedOut && !questionTimerFrozen && !settled && player.isAlive();
+    }
+
+    public void freezeQuestionTimer() {
+        if (isQuestionTimerRunning()) {
+            questionTimerFrozen = true;
+        }
+    }
+
+    // Timeout records damage only; it is never an answered question or a mistake.
+    public void recordTimeout(int damage) {
+        questionTimedOut = true;
+        lastDamage = damage;
+    }
+
     public void addProvisionalXp(int amount) {
         provisionalXp += amount;
     }
@@ -180,6 +207,10 @@ public class GameSession {
     }
 
     public void setCurrentQuestionIndex(int currentQuestionIndex) {
+        if (this.currentQuestionIndex != currentQuestionIndex) {
+            questionTimedOut = false;
+            questionTimerFrozen = false;
+        }
         this.currentQuestionIndex = currentQuestionIndex;
     }
 

@@ -60,6 +60,7 @@ import javax.swing.SwingConstants;
 public class QuestionScreen extends Screen {
         private final JTextPane promptText = new JTextPane();
     private final JLabel progressLabel = new JLabel();
+    private final JLabel countdownLabel = createLabel(" ");
     private final JProgressBar questionProgress =
         new JProgressBar(0, 100);
     private final JLabel answerHeading = createHeading("ANSWER");
@@ -177,6 +178,8 @@ public class QuestionScreen extends Screen {
                 BorderLayout.NORTH
         );
 
+        countdownLabel.setForeground(Theme.TEXT_MUTED);
+        questionHeader.add(countdownLabel, BorderLayout.CENTER);
         questionHeader.add(
                 questionProgress,
                 BorderLayout.SOUTH
@@ -306,6 +309,17 @@ public class QuestionScreen extends Screen {
     }
 
     // Writes a power-up result message into the existing feedback line.
+    public void showCountdown(int seconds, boolean frozen) {
+        countdownLabel.setText("TIME: " + seconds + " s" + (frozen ? " (frozen)" : ""));
+    }
+
+    // Refresh only the notice and HP so the player's input stays intact.
+    public void showTimeout(Player player) {
+        hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());
+        countdownLabel.setText("TIME: expired");
+        showPowerUpNotice("Time expired. You can still answer this question.");
+    }
+
     public void showPowerUpNotice(String message) {
         feedbackLabel.setHorizontalAlignment(SwingConstants.CENTER);
         feedbackLabel.setText(message == null || message.isBlank() ? " " : message);
