@@ -21,10 +21,10 @@ import edu.batstateu.javajolt.types.MultipleChoiceQuestion;
 import java.util.ArrayList;
 import java.util.List;
 
-// Dev tool: in-memory checks for Phase 2-5 mechanics - D1 level boundaries,
+// Dev tool: in-memory checks for Phase 2-6 mechanics - D1 level boundaries,
 // D3 max HP bands, end-of-quiz settlement rules, the Phase 3 enemy damage
 // model (lethality, survivability, independent defeat categories), Phase 4
-// streak scoring, and Phase 5 power-ups. Everything
+// streak scoring, and the Phase 5-6 power-ups. Everything
 // runs on fresh Player objects in memory; no save path is ever opened.
 public class MechanicsCheck {
 
@@ -306,12 +306,44 @@ public class MechanicsCheck {
         runner.submitAnswer(boostRun, boostRun.getQuestions().get(1), "anything");
         check("boost: the next correct answer after a mistake pays 20 (doubled base)",
                 boostRun.getScoreEarned() - beforeBoost == 20);
+        boolean flaggedAfterBoost = boostRun.isLastAnswerBoosted();
         int beforePlain = boostRun.getScoreEarned();
         runner.submitAnswer(boostRun, boostRun.getQuestions().get(2), "anything");
         check("boost: only the next correct answer is boosted (12 afterwards)",
                 boostRun.getScoreEarned() - beforePlain == 12);
         check("boost: no XP involved",
                 boostPlayer.getXp() == 1000 && boostRun.getProvisionalXp() > 0);
+
+        // Phase 6 supportsHint: the button-state hook, no random pick involved
+        // (the randomness stays inside getHintChoicesToRemove).
+        check("hint: a 4-choice multiple-choice question supports a hint",
+                hintable.supportsHint());
+        MultipleChoiceQuestion smallQuestion = new MultipleChoiceQuestion(
+                997, "Power-ups small check question", Topic.VARIABLES,
+                Difficulty.BEGINNER, "placeholder explanation",
+                List.of("A. one", "B. two"), "B");
+        check("hint: a 2-choice multiple-choice question does not support a hint",
+                !smallQuestion.supportsHint());
+        check("hint: the default (identification) does not support a hint",
+                !identification.supportsHint());
+
+        // Phase 6 isApplicable: display rules for the current question.
+        GameSession probeSession = newSession(master);
+        check("applicable: Hint applies to a 4-choice multiple-choice question",
+                powerUps.isApplicable(PowerUp.HINT, probeSession, hintable));
+        check("applicable: Hint does not apply to an identification question",
+                !powerUps.isApplicable(PowerUp.HINT, probeSession, identification));
+        check("applicable: Shield and Point Boost apply to any current question",
+                powerUps.isApplicable(PowerUp.SHIELD, probeSession, identification)
+                        && powerUps.isApplicable(PowerUp.POINT_BOOST, probeSession, hintable));
+        check("applicable: Time Stop applies nowhere until Phase 7",
+                !powerUps.isApplicable(PowerUp.TIME_STOP, probeSession, hintable));
+
+        // Phase 6 display flag: which answer Point Boost actually produced.
+        check("boost: the boosted answer is flagged for display",
+                flaggedAfterBoost);
+        check("boost: the plain answer clears the boost flag for display",
+                !boostRun.isLastAnswerBoosted());
     }
 
     // A 4-choice multiple-choice question prepared like the real quiz does

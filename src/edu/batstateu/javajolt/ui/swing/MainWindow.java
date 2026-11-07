@@ -7,7 +7,9 @@ import java.util.EnumSet;
 import edu.batstateu.javajolt.ui.swing.screen.AchievementsScreen;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.entity.LessonPage;
+import edu.batstateu.javajolt.entity.PowerUpResult;
 import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.exception.LessonFileException;
 import edu.batstateu.javajolt.exception.SaveFileException;
@@ -59,6 +61,9 @@ public class MainWindow extends JFrame {
     private int questionIndex;
     private ResultsScreen resultsScreen;
     private int xpAtLessonStart;
+    // Power-ups are only usable while an unanswered question is active;
+    // submitAnswer flips this off and showNextQuestion flips it back on.
+    private boolean questionActive;
     // No real save is created before the new player confirms a name.
     private boolean welcomeCompleted;
 
@@ -115,7 +120,7 @@ public class MainWindow extends JFrame {
                 ScreenId.MAIN_MENU.name()
         );
         questionScreen = new QuestionScreen(this::submitAnswer, this::showNextQuestion,
-                () -> showScreen(ScreenId.TOPIC_SELECTION));
+                () -> showScreen(ScreenId.TOPIC_SELECTION), this::usePowerUp);
         container.add(questionScreen, ScreenId.QUESTION.name());
 
         setContentPane(container);
@@ -253,6 +258,7 @@ public class MainWindow extends JFrame {
 
         questionIndex = -1;
         lessonResultRecorded = false;
+        questionActive = false;
 
         // Display the question screen first
         showScreen(ScreenId.QUESTION);
@@ -352,6 +358,9 @@ private void confirmExit() {
 
     private void submitAnswer(String answer) {
         if (session == null || questionIndex >= session.getQuestions().size()) return;
+        // No power-up may be used once an answer was submitted: this flag turns
+        // off before checking and stays off through the result and transitions.
+        questionActive = false;
         edu.batstateu.javajolt.Question current = session.getQuestions().get(questionIndex);
         questionScreen.setCheckingAnswer(true);
         new SwingWorker<Boolean, Void>() {
@@ -370,8 +379,10 @@ private void confirmExit() {
                         player.getXp() + session.getProvisionalXp(),
                         session.getScoreEarned(),
                         session.getCurrentStreak(),
-                        session.getLastPoints()
+                        session.getLastPoints(),
+                        session.isLastAnswerBoosted()
                 );
+                refreshBattleInfo(false);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     questionScreen.setCheckingAnswer(false);
@@ -470,6 +481,17 @@ private void confirmExit() {
             Difficulty completedDifficulty =
                     session.getDifficulty();
 
+            // Level-up / power-up notices: the same before/after pattern as the
+            // achievements above. unlockedBetween covers the (old, new] level
+            // interval, so crossing several thresholds reports all of them.
+            int levelAtStart = LevelService.calculateLevel(xpAtLessonStart);
+            int levelAtEnd = LevelService.calculateLevel(player.getXp());
+            String progressNotice = buildProgressNotice(
+                    levelAtStart,
+                    levelAtEnd,
+                    powerUpService.unlockedBetween(levelAtStart, levelAtEnd)
+            );
+
             // Remove the previous results screen
             if (resultsScreen != null) {
                 container.remove(resultsScreen);
@@ -491,7 +513,9 @@ private void confirmExit() {
                     this::showTopicSelection,
 
                     // MAIN MENU
-                    () -> showScreen(ScreenId.MAIN_MENU)
+                    () -> showScreen(ScreenId.MAIN_MENU),
+
+                    progressNotice
             );
 
             // Register and display the screen
@@ -549,6 +573,11 @@ private void confirmExit() {
                 questionIndex + 1
         );
 
+        // The new question is active: power-ups may be used again (the
+        // controller re-enables them; Hint visuals are per-question, since the
+        // answer editor is rebuilt above).
+        questionActive = true;
+
         questionScreen.showQuestion(
                 session.getQuestions().get(questionIndex),
                 questionIndex + 1,
@@ -557,8 +586,112 @@ private void confirmExit() {
                 player.getXp() + session.getProvisionalXp(),
                 session.getScoreEarned(),
                 session.getCurrentStreak(),
-                session.getLastPoints()
+                session.getLastPoints(),
+                session.isLastAnswerBoosted()
         );
+        refreshBattleInfo(true);
+    }
+
+    // Applies one proposed power-up use. The flag guard enforces the amendment
+    // here (not only in the buttons): no use after submit, during transitions,
+    // or after the quiz. PowerUpService stays authoritative for every rule.
+    private void usePowerUp(PowerUp powerUp) {
+        if (session == null
+                || questionIndex < 0
+                || questionIndex >= session.getQuestions().size()
+                || !questionActive) {
+            return;
+        }
+
+        edu.batstateu.javajolt.Question current =
+                session.getQuestions().get(questionIndex);
+        PowerUpResult result =
+                powerUpService.use(session, powerUp, current);
+
+        if (result.applied() && !result.removedChoices().isEmpty()) {
+            questionScreen.applyHintRemovedChoices(result.removedChoices());
+        }
+        questionScreen.showPowerUpNotice(result.message());
+        refreshBattleInfo(true);
+    }
+
+    // Builds the view-only battle meta from session state and pushes it to the
+    // screen. "Used" and "not applicable" fold into one disabled set; armed
+    // state uses read-only probes; nothing here has side effects on rules.
+    private void refreshBattleInfo(boolean questionActive) {
+        EnumSet<PowerUp> unlocked = EnumSet.noneOf(PowerUp.class);
+        EnumSet<PowerUp> disabled = session.getUsedPowerUps();
+        EnumSet<PowerUp> armed = EnumSet.noneOf(PowerUp.class);
+
+        edu.batstateu.javajolt.Question current = questionIndex >= 0
+                && questionIndex < session.getQuestions().size()
+                ? session.getQuestions().get(questionIndex)
+                : null;
+
+        for (PowerUp powerUp : PowerUp.values()) {
+            if (powerUpService.isUnlocked(player, powerUp)) {
+                unlocked.add(powerUp);
+            }
+            if (session.hasUsed(powerUp)
+                    || !powerUpService.isApplicable(powerUp, session, current)) {
+                disabled.add(powerUp);
+            }
+            if (powerUp == PowerUp.SHIELD && session.isShieldArmed()) {
+                armed.add(powerUp);
+            }
+            if (powerUp == PowerUp.POINT_BOOST && session.isPointBoostArmed()) {
+                armed.add(powerUp);
+            }
+        }
+
+        String enemyName = session.getEnemy() == null
+                ? ""
+                : session.getEnemy().getName();
+        questionScreen.showBattleMeta(
+                enemyName,
+                unlocked,
+                disabled,
+                armed,
+                questionActive
+        );
+    }
+
+    // End-of-quiz progress notice: the level reached and/or the power-ups that
+    // unlocked in the (old, new] interval. Blank when nothing changed.
+    private String buildProgressNotice(
+            int levelAtStart,
+            int levelAtEnd,
+            List<PowerUp> newPowerUps) {
+
+        boolean leveledUp = levelAtEnd > levelAtStart;
+        boolean unlocked = newPowerUps != null && !newPowerUps.isEmpty();
+        if (!leveledUp && !unlocked) {
+            return null; // nothing to announce; the results screen stays as-is
+        }
+
+        StringBuilder notice = new StringBuilder();
+        if (leveledUp) {
+            notice.append("New level reached: ").append(levelAtEnd).append("!");
+        }
+        if (unlocked) {
+            if (notice.length() > 0) {
+                notice.append(' ');
+            }
+            if (newPowerUps.size() == 1) {
+                notice.append("New power-up unlocked: ")
+                        .append(newPowerUps.get(0).getLabel()).append('!');
+            } else {
+                notice.append("New power-ups unlocked: ");
+                for (int i = 0; i < newPowerUps.size(); i++) {
+                    if (i > 0) {
+                        notice.append(", ");
+                    }
+                    notice.append(newPowerUps.get(i).getLabel());
+                }
+                notice.append('!');
+            }
+        }
+        return notice.toString();
     }
 
 

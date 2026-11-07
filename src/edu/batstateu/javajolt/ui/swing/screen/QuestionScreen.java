@@ -26,6 +26,7 @@ import edu.batstateu.javajolt.ui.swing.component.JavaCodeEditor;
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.InputMode;
+import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
@@ -35,10 +36,14 @@ import edu.batstateu.javajolt.ui.swing.component.RoundedPanel;
 import edu.batstateu.javajolt.ui.swing.component.RoundedTextField;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -75,8 +80,19 @@ public class QuestionScreen extends Screen {
     private ButtonGroup choiceGroup;
     private List<JRadioButton> choiceButtons = List.of();
     private List<String> choiceValues = List.of();
+    private final Consumer<PowerUp> onPowerUp; // owner-supplied; the view only proposes
+    private final Map<PowerUp, RoundedButton> powerUpButtons =
+            new EnumMap<>(PowerUp.class);
+    private final JPanel powerUpRow = createPowerUpRow();
+    private final JLabel enemyNameLabel = createLabel(" ");
+    private String currentEnemyName = "";
 
-    public QuestionScreen(Consumer<String> onSubmit, Runnable onNext, Runnable onTopics) {
+    public QuestionScreen(
+            Consumer<String> onSubmit,
+            Runnable onNext,
+            Runnable onTopics,
+            Consumer<PowerUp> onPowerUp) {
+        this.onPowerUp = onPowerUp;
         this.onTopics = onTopics;
         add(createBattleArea(), BorderLayout.NORTH);
         answerPanel.setBorder(BorderFactory.createEmptyBorder(Theme.GAP_L, Theme.GAP_L, Theme.GAP_L, Theme.GAP_L));
@@ -89,6 +105,23 @@ public class QuestionScreen extends Screen {
         topicsButton.addActionListener(event -> this.onTopics.run());
         feedbackLabel.setForeground(Theme.TEXT);
         feedbackLabel.setFont(Theme.FONT_BODY);
+    }
+
+    // One fixed button per power-up, labeled by the enum. The whole row stays
+    // invisible until the controller shows it, so today's layout is untouched
+    // while nothing is unlocked. Clicks only propose a use; services decide.
+    private JPanel createPowerUpRow() {
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.RIGHT, Theme.GAP_S, 0));
+        row.setOpaque(false);
+        for (PowerUp powerUp : PowerUp.values()) {
+            RoundedButton button =
+                    new RoundedButton(powerUp.getLabel(), ButtonStyle.SECONDARY);
+            button.addActionListener(event -> onPowerUp.accept(powerUp));
+            powerUpButtons.put(powerUp, button);
+            row.add(button);
+        }
+        row.setVisible(false);
+        return row;
     }
 
     private JPanel createBattleArea() {
@@ -162,6 +195,14 @@ public class QuestionScreen extends Screen {
         enemySide.setOpaque(false);
         enemySide.add(enemy, BorderLayout.CENTER);
 
+        // Enemy name lives under the enemy-side placeholder; invisible until the
+        // controller names it, so absent states keep the existing layout height.
+        enemyNameLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        enemyNameLabel.setForeground(Theme.TEXT_MUTED);
+        enemyNameLabel.setFont(Theme.FONT_BODY);
+        enemyNameLabel.setVisible(false);
+        enemySide.add(enemyNameLabel, BorderLayout.SOUTH);
+
         JPanel playerSection = new JPanel(new BorderLayout(Theme.GAP_M, 0));
         playerSection.setOpaque(false);
         playerSection.add(playerSide, BorderLayout.CENTER);
@@ -173,18 +214,101 @@ public class QuestionScreen extends Screen {
         enemySection.add(enemySide, BorderLayout.CENTER);
         battle.add(playerSection, BorderLayout.WEST);
         battle.add(enemySection, BorderLayout.EAST);
+        battle.add(powerUpRow, BorderLayout.SOUTH);
         battle.setBorder(BorderFactory.createEmptyBorder(0, 0, Theme.GAP_M, 0));
         return battle;
     }
 
     // One line of immediate feedback: the live consecutive-correct streak plus,
-    // right after a resolved answer, the points that answer just earned.
-    private void refreshStreakLabel(int streak, int lastPoints) {
+    // right after a resolved answer, the points that answer just earned (marked
+    // "doubled" when Point Boost produced them).
+    private void refreshStreakLabel(int streak, int lastPoints, boolean lastAnswerBoosted) {
         if (lastPoints > 0) {
-            streakLabel.setText("STREAK: " + streak + "   (+" + lastPoints + " points)");
+            streakLabel.setText(
+                    "STREAK: " + streak
+                    + "   (+" + lastPoints + " points"
+                    + (lastAnswerBoosted ? " · doubled)" : ")")
+            );
         } else {
             streakLabel.setText("STREAK: " + streak);
         }
+    }
+
+    // Battle-side meta display: names the enemy and refreshes the power-up row
+    // from view-only state. The controller folds "used" and "not applicable"
+    // into one disabled set; armed power-ups read "ready" and stay disabled.
+    // The row shows only while an unanswered question is active.
+    public void showBattleMeta(
+            String enemyName,
+            Set<PowerUp> unlocked,
+            Set<PowerUp> disabled,
+            Set<PowerUp> armed,
+            boolean questionActive) {
+
+        currentEnemyName = enemyName == null ? "" : enemyName;
+        enemyNameLabel.setText(currentEnemyName.isBlank() ? " " : currentEnemyName);
+        enemyNameLabel.setVisible(!currentEnemyName.isBlank());
+
+        boolean showRow = questionActive && !unlocked.isEmpty();
+        powerUpRow.setVisible(showRow);
+        if (showRow) {
+            for (PowerUp powerUp : PowerUp.values()) {
+                RoundedButton button = powerUpButtons.get(powerUp);
+                boolean isArmed = armed.contains(powerUp);
+
+                if (isArmed && powerUp == PowerUp.SHIELD) {
+                    button.setText("Shield ready");
+                } else if (isArmed && powerUp == PowerUp.POINT_BOOST) {
+                    button.setText("Boost ready");
+                } else {
+                    button.setText(powerUp.getLabel());
+                }
+
+                button.setVisible(unlocked.contains(powerUp));
+                button.setEnabled(
+                        unlocked.contains(powerUp)
+                                && !isArmed
+                                && !disabled.contains(powerUp)
+                );
+            }
+        }
+
+        enemyNameLabel.revalidate();
+        enemyNameLabel.repaint();
+        powerUpRow.revalidate();
+        powerUpRow.repaint();
+    }
+
+    // Hides the choices a Hint removed, matched against the raw choice values
+    // (the buttons display HTML-wrapped text, so matching goes through
+    // choiceValues). Answer letters stay fixed; nothing is renumbered. The
+    // buttons are rebuilt for every question, so no state carries over.
+    public void applyHintRemovedChoices(List<String> removedChoices) {
+        if (removedChoices == null || removedChoices.isEmpty()) {
+            return;
+        }
+
+        for (String removed : removedChoices) {
+            for (int i = 0; i < choiceValues.size(); i++) {
+                if (choiceValues.get(i).equals(removed)) {
+                    JRadioButton button = choiceButtons.get(i);
+                    if (button.isSelected() && choiceGroup != null) {
+                        choiceGroup.clearSelection();
+                    }
+                    button.setVisible(false);
+                    button.setEnabled(false);
+                }
+            }
+        }
+
+        answerContent.revalidate();
+        answerContent.repaint();
+    }
+
+    // Writes a power-up result message into the existing feedback line.
+    public void showPowerUpNotice(String message) {
+        feedbackLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        feedbackLabel.setText(message == null || message.isBlank() ? " " : message);
     }
 
         public void showQuestion(
@@ -195,15 +319,16 @@ public class QuestionScreen extends Screen {
                 int displayXp,
                 int quizScore,
                 int streak,
-                int lastPoints) {
+                int lastPoints,
+                boolean lastAnswerBoosted) {
         playerNameLabel.setText(player.getName());
-        hpLabel.setText("HP: " + player.getHp());
+        hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());
         // displayXp is provisional quiz XP; it commits to the player only at settlement.
         xpScoreLabel.setText(
                 "XP: " + displayXp
                 + "   QUIZ SCORE: " + quizScore
         );
-        refreshStreakLabel(streak, lastPoints);
+        refreshStreakLabel(streak, lastPoints, lastAnswerBoosted);
         progressLabel.setText("QUESTION " + number + " OF " + total);
         questionProgress.setValue(
         total == 0
@@ -857,17 +982,18 @@ private JPanel createCodeEditor(Question question) {
                 int displayXp,
                 int quizScore,
                 int streak,
-                int lastPoints) {
+                int lastPoints,
+                boolean lastAnswerBoosted) {
 
         // Refresh displayed player statistics
-        hpLabel.setText("HP: " + player.getHp());
+        hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());
 
         // displayXp is provisional quiz XP; it commits to the player only at settlement.
         xpScoreLabel.setText(
                 "XP: " + displayXp
                 + "   QUIZ SCORE: " + quizScore
         );
-        refreshStreakLabel(streak, lastPoints);
+        refreshStreakLabel(streak, lastPoints, lastAnswerBoosted);
 
         // Change the section heading
         answerHeading.setText("ANSWER FEEDBACK");
@@ -1000,7 +1126,10 @@ private JPanel createCodeEditor(Question question) {
         JLabel footer = createLabel(
                 player.isAlive()
                         ? "HP remaining: " + player.getHp()
-                        : "Out of HP - continue to see your results."
+                        : (currentEnemyName.isBlank()
+                                ? "Out of HP - continue to see your results."
+                                : "Defeated by " + currentEnemyName
+                                        + "! Continue to see your results.")
         );
 
         footer.setForeground(Theme.TEXT_MUTED);

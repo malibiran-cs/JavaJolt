@@ -70,6 +70,17 @@ public class PowerUpService {
                 removed);
     }
 
+    // Display rules for the current question: whether the power-up could apply
+    // if used now (independent of unlock/once-per-quiz state). Time Stop waits
+    // for the Phase 7 timer; Shield and Boost act at any point in the quiz.
+    public boolean isApplicable(PowerUp powerUp, GameSession session, Question current) {
+        return switch (powerUp) {
+            case HINT -> current != null && current.supportsHint();
+            case TIME_STOP -> false;
+            case SHIELD, POINT_BOOST -> true;
+        };
+    }
+
     // Power-ups whose unlock level falls in (oldLevel, newLevel], in unlock order.
     public List<PowerUp> unlockedBetween(int oldLevel, int newLevel) {
         List<PowerUp> unlocked = new ArrayList<>();

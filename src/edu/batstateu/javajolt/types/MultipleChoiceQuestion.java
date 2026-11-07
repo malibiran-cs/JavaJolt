@@ -82,6 +82,13 @@ public class MultipleChoiceQuestion extends Question {
         return List.of(wrongChoices.get(pick));
     }
 
+    // A multiple-choice question is hintable once there is at least one
+    // choice to spare (three or more, so the correct one always stays).
+    @Override
+    public boolean supportsHint() {
+        return choices.size() > 2;
+    }
+
     // DISPLAY
     @Override
     public String display() {

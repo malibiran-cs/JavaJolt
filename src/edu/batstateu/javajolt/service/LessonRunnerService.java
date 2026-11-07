@@ -85,7 +85,7 @@ public class LessonRunnerService {
             boolean boosted = session.consumePointBoost();
             int points =
                     scoreService.pointsForCorrect(boosted, session.getCurrentStreak() + 1);
-            session.recordCorrect(points);
+            session.recordCorrect(points, boosted);
 
             // First-clear XP is provisional until the attempt settles.
             if (!player.isComplete(session.getTopic(), session.getDifficulty())) {

@@ -61,6 +61,12 @@ public abstract class Question {
         return List.of();
     }
 
+    // Whether a Hint can apply to this question at all (button-state check;
+    // the random pick stays inside getHintChoicesToRemove). Default: no hint.
+    public boolean supportsHint() {
+        return false;
+    }
+
     public String getTemplate() {
         return "";
     }

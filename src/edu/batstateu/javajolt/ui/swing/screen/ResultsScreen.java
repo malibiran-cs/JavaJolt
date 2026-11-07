@@ -28,7 +28,8 @@ public class ResultsScreen extends Screen {
             int xpEarned,
             Runnable onRetry,
             Runnable onTopics,
-            Runnable onMenu) {
+            Runnable onMenu,
+            String progressNotice) {
 
         // HEADER
         JLabel heading = createLabel(
@@ -103,6 +104,12 @@ public class ResultsScreen extends Screen {
         body.add(Box.createVerticalStrut(Theme.GAP_L));
 
         // STATISTICS
+        // Accuracy reuses the session's existing calculation (correct over
+        // answered); the card and bar both show the counts they agree with.
+        int accuracyPercent = session.getAccuracyPercent();
+        int correctCount = session.getCorrectCount();
+        int answeredCount = session.getAnsweredCount();
+
         JPanel stats = new JPanel(
                 new GridLayout(1, 3, Theme.GAP_M, 0)
         );
@@ -111,7 +118,7 @@ public class ResultsScreen extends Screen {
 
         stats.add(createStatCard(
                 "ACCURACY",
-                session.getAccuracyPercent() + "%"
+                correctCount + "/" + answeredCount + " (" + accuracyPercent + "%)"
         ));
 
         stats.add(createStatCard(
@@ -184,7 +191,7 @@ public class ResultsScreen extends Screen {
         JProgressBar accuracyBar = new JProgressBar(0, 100);
 
         accuracyBar.setValue(
-                session.getAccuracyPercent()
+                accuracyPercent
         );
 
         accuracyBar.setForeground(
@@ -196,7 +203,7 @@ public class ResultsScreen extends Screen {
         accuracyBar.setStringPainted(true);
 
         accuracyBar.setString(
-                session.getAccuracyPercent() + "%"
+                accuracyPercent + "% (" + correctCount + "/" + answeredCount + ")"
         );
 
         body.add(accuracyBar);
@@ -212,6 +219,16 @@ public class ResultsScreen extends Screen {
 
         body.add(resultStatus);
 
+        // New level / newly unlocked power-ups; rendered only when the
+        // controller produced a notice, so ordinary runs show nothing extra.
+        if (progressNotice != null && !progressNotice.isBlank()) {
+            body.add(Box.createVerticalStrut(Theme.GAP_M));
+            body.add(createLabel(
+                    progressNotice,
+                    Theme.FONT_BODY.deriveFont(Font.BOLD, 14f),
+                    Theme.ACCENT
+            ));
+        }
 
         body.add(Box.createVerticalStrut(Theme.GAP_L));
 
@@ -222,6 +239,16 @@ public class ResultsScreen extends Screen {
         );
 
         body.add(mistakes);
+
+        // Defeat names the quiz opponent when the player ran out of HP.
+        if (!session.getPlayer().isAlive()) {
+            body.add(Box.createVerticalStrut(Theme.GAP_S));
+            body.add(createLabel(
+                    "Defeated by " + session.getEnemy().getName(),
+                    Theme.FONT_BODY,
+                    Theme.DANGER
+            ));
+        }
 
         results.add(body, BorderLayout.CENTER);
 
