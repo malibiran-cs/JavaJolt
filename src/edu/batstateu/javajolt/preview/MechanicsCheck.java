@@ -11,13 +11,15 @@ import edu.batstateu.javajolt.service.LessonRunnerService;
 import edu.batstateu.javajolt.service.LevelRewardService;
 import edu.batstateu.javajolt.service.LevelService;
 import edu.batstateu.javajolt.service.QuestionService;
+import edu.batstateu.javajolt.service.ScoreService;
 
 import java.util.ArrayList;
 import java.util.List;
 
-// Dev tool: in-memory checks for Phase 2-3 mechanics - D1 level boundaries,
-// D3 max HP bands, end-of-quiz settlement rules, and the Phase 3 enemy damage
-// model (lethality, survivability, independent defeat categories). Everything
+// Dev tool: in-memory checks for Phase 2-4 mechanics - D1 level boundaries,
+// D3 max HP bands, end-of-quiz settlement rules, the Phase 3 enemy damage
+// model (lethality, survivability, independent defeat categories), and Phase 4
+// streak scoring. Everything
 // runs on fresh Player objects in memory; no save path is ever opened.
 public class MechanicsCheck {
 
@@ -27,14 +29,17 @@ public class MechanicsCheck {
     private static final int QUIZ_SIZE = 12;
     private static final int EXPECTED_XP_PER_CORRECT = 2;
     private static final int EXPECTED_COMPLETION_BONUS = 50;
-    private static final int POINTS_PER_CORRECT = 10;
+    // Streak score contract (ScoreService): consecutive correct answers pay
+    // 10 + 2 * (streak - 1), so an uninterrupted 12-correct run sums to 252.
+    private static final int FULL_RUN_STREAK_SCORE = 252;
     private static final int HP_BAND_MIN = 10;
     private static final int HP_BAND_MAX = 15;
 
     private static final QuestionService questionService =
             new QuestionService(new edu.batstateu.javajolt.data.QuestionBank());
     private static final LessonRunnerService runner =
-            new LessonRunnerService(questionService, null, new EnemyRoster(), null);
+            new LessonRunnerService(questionService, null,
+                    new EnemyRoster(), new ScoreService(), null);
     private static final EnemyRoster roster = new EnemyRoster();
 
     private static int passed = 0;
@@ -52,6 +57,7 @@ public class MechanicsCheck {
         checkEnumerationHasBothDefeatCategories();
         checkPassSettlesOnce();
         checkReplayEarnsNothing();
+        checkStreakScoring();
         checkFailedAttemptEarnsNoXp();
         checkAbandonmentBanksNothing();
         checkDeathBeforeFinish();
@@ -107,6 +113,64 @@ public class MechanicsCheck {
     private static void checkXpPerCorrect() {
         check("per-correct XP: 12-question quiz = " + EXPECTED_XP_PER_CORRECT,
                 runner.xpPerCorrect(QUIZ_SIZE) == EXPECTED_XP_PER_CORRECT);
+    }
+
+    // Streak scoring (Phase 4): consecutive correct answers pay 10/12/14/16...,
+    // a mistake resets the streak and the next award to the base, the boost
+    // multiplier stays pure ScoreService math, and the session records both the
+    // running/best streak and the points of the most recent answer (UI feedback).
+    private static void checkStreakScoring() {
+        ScoreService scoreService = new ScoreService();
+
+        // Phase 5 boost math, already fixed: base 10 * 2, streak steps unchanged
+        // - streak 3 boosted is 24 (20 + 2 + 2), never 28 or 40.
+        check("score: pointsForCorrect(false, 3) = 14",
+                scoreService.pointsForCorrect(false, 3) == 14);
+        check("score: pointsForCorrect(true, 1) = 20 (boosted base)",
+                scoreService.pointsForCorrect(true, 1) == 20);
+        check("score: pointsForCorrect(true, 3) = 24, not 28 or 40",
+                scoreService.pointsForCorrect(true, 3) == 24);
+
+        Player player = new Player("Check", 0);
+        GameSession session = newSession(player);
+        int[] expectedPoints = {10, 12, 14, 16};
+        int total = 0;
+        for (int i = 0; i < expectedPoints.length; i++) {
+            int before = session.getScoreEarned();
+            runner.submitAnswer(session, session.getQuestions().get(i), "anything");
+            int awarded = session.getScoreEarned() - before;
+            check("streak: answer " + (i + 1) + " awards " + expectedPoints[i]
+                            + " points (recorded as lastPoints)",
+                    awarded == expectedPoints[i]
+                            && session.getLastPoints() == expectedPoints[i]);
+            total += awarded;
+        }
+        check("streak: 4 consecutive correct total = 52", total == 52);
+        check("streak: current streak 4, best streak 4",
+                session.getCurrentStreak() == 4 && session.getBestStreak() == 4);
+
+        // A mistake clears the streak and the points indicator (plain display).
+        runner.submitAnswer(session, session.getQuestions().get(4), "");
+        check("streak: mistake resets the current streak to 0",
+                session.getCurrentStreak() == 0);
+        check("streak: mistake clears lastPoints", session.getLastPoints() == 0);
+        check("streak: best streak survives the reset", session.getBestStreak() == 4);
+
+        // After a mistake the awards restart at base: 10/12/14.
+        int again = 0;
+        for (int i = 5; i < 8; i++) {
+            int before = session.getScoreEarned();
+            runner.submitAnswer(session, session.getQuestions().get(i), "anything");
+            again += session.getScoreEarned() - before;
+        }
+        check("streak: post-mistake awards restart 10/12/14 = 36", again == 36);
+
+        // An uninterrupted 12-correct run: 252 points, best streak 12.
+        Player fullPlayer = new Player("Check", 0);
+        GameSession fullSession = playAll(newSession(fullPlayer));
+        check("streak: 12-correct run = 252 points, best streak 12",
+                fullSession.getScoreEarned() == FULL_RUN_STREAK_SCORE
+                        && fullSession.getBestStreak() == 12);
     }
 
     // Enemy counter semantics: wrong increments once, correct resets to 0, and
@@ -240,8 +304,8 @@ public class MechanicsCheck {
         check("settle pass: XP = 12*2 provisional + 50 bonus = "
                 + (QUIZ_SIZE * EXPECTED_XP_PER_CORRECT + EXPECTED_COMPLETION_BONUS),
                 player.getXp() == QUIZ_SIZE * EXPECTED_XP_PER_CORRECT + EXPECTED_COMPLETION_BONUS);
-        check("settle pass: score = 12*10 = " + (QUIZ_SIZE * POINTS_PER_CORRECT),
-                player.getScore() == QUIZ_SIZE * POINTS_PER_CORRECT);
+        check("settle pass: score = 12-answer streak run = " + FULL_RUN_STREAK_SCORE,
+                player.getScore() == FULL_RUN_STREAK_SCORE);
         check("settle pass: pair is complete", player.isComplete(Topic.VARIABLES, Difficulty.BEGINNER));
         check("settle pass: session marked settled", session.isSettled());
     }
@@ -259,7 +323,7 @@ public class MechanicsCheck {
         boolean newlyCompleted = runner.settleAttempt(session);
         check("replay: settle returns false", !newlyCompleted);
         check("replay: XP unchanged", player.getXp() == xpBefore);
-        check("replay: attempt score still commits", player.getScore() == QUIZ_SIZE * POINTS_PER_CORRECT);
+        check("replay: attempt score still commits", player.getScore() == FULL_RUN_STREAK_SCORE);
     }
 
     // Failed finish (below 70% accuracy): score commits, zero XP, nothing completes.
@@ -271,7 +335,9 @@ public class MechanicsCheck {
         runner.settleAttempt(session);
 
         check("fail: zero XP", player.getXp() == 0);
-        check("fail: attempt score commits", player.getScore() == 8 * POINTS_PER_CORRECT);
+        // 8 correct in streak runs of 1/2/2/2/1 between the isolated mistakes:
+        // 10 + (10 + 12) + (10 + 12) + (10 + 12) + 10 = 86 streak points.
+        check("fail: attempt score commits", player.getScore() == 86);
         check("fail: pair not complete",
                 !player.isComplete(Topic.VARIABLES, Difficulty.BEGINNER));
     }

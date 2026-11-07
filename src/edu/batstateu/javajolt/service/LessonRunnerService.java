@@ -13,7 +13,6 @@ import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.ui.GameUI;
 
 public class LessonRunnerService {
-    private static final int POINTS_PER_CORRECT = 10;
     private static final int PASS_PERCENT = 70;
     // XP tuning (fixed for now, but kept in methods so they can scale by difficulty later)
     private static final int XP_PER_CORRECT = 5;
@@ -23,13 +22,15 @@ public class LessonRunnerService {
     private final QuestionService questionService;
     private final LessonService lessonService;
     private final EnemyRoster enemyRoster;
+    private final ScoreService scoreService;
     private final GameUI ui;
 
     public LessonRunnerService(QuestionService questionService, LessonService lessonService,
-            EnemyRoster enemyRoster, GameUI ui) {
+            EnemyRoster enemyRoster, ScoreService scoreService, GameUI ui) {
         this.questionService = questionService;
         this.lessonService = lessonService;
         this.enemyRoster = enemyRoster;
+        this.scoreService = scoreService;
         this.ui = ui;
     }
 
@@ -73,11 +74,14 @@ public class LessonRunnerService {
     }
 
     // Records one answer using the same rules for console and Swing callers.
-    // Score and XP accumulate in the session; settleAttempt owns the persistent commit.
+    // Score points come from ScoreService based on the streak that ends with
+    // this answer; they accumulate in the session (provisional) and settle only
+    // at settleAttempt, exactly like XP.
     public boolean submitAnswer(GameSession session, Question question, String answer) {
         Player player = session.getPlayer();
         if (questionService.isCorrect(question, answer)) {
-            session.recordCorrect(POINTS_PER_CORRECT);
+            session.recordCorrect(
+                    scoreService.pointsForCorrect(false, session.getCurrentStreak() + 1));
 
             // First-clear XP is provisional until the attempt settles.
             if (!player.isComplete(session.getTopic(), session.getDifficulty())) {

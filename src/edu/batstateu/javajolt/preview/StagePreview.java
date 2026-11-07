@@ -21,6 +21,7 @@ import edu.batstateu.javajolt.service.LessonRunnerService;
 import edu.batstateu.javajolt.service.LessonService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.service.SaveService;
+import edu.batstateu.javajolt.service.ScoreService;
 import edu.batstateu.javajolt.ui.GameUI;
 import edu.batstateu.javajolt.ui.swing.MainWindow;
 import edu.batstateu.javajolt.ui.swing.ScreenId;
@@ -103,6 +104,7 @@ public class StagePreview {
                         questionService,
                         new LessonService(),
                         new EnemyRoster(),
+                        new ScoreService(),
                         new GameUI());
 
         sandboxSaveService =

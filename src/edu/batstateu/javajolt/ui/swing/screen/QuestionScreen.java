@@ -61,6 +61,7 @@ public class QuestionScreen extends Screen {
     private final JLabel playerNameLabel = createLabel("PLAYER");
     private final JLabel hpLabel = createLabel("HP: --");
     private final JLabel xpScoreLabel = createLabel("XP: --   SCORE: --");
+    private final JLabel streakLabel = createLabel("STREAK: --");
     private final JPanel answerPanel = new RoundedPanel(new BorderLayout(Theme.GAP_M, Theme.GAP_M));
     private final JPanel answerContent = new JPanel(new BorderLayout(Theme.GAP_M, Theme.GAP_M));
     private final JPanel actionRow = new JPanel(new BorderLayout(Theme.GAP_M, 0));
@@ -97,11 +98,12 @@ public class QuestionScreen extends Screen {
         playerSide.setOpaque(false);
         CharacterPlaceholder player = new CharacterPlaceholder();
         player.setPreferredSize(new Dimension(Theme.CHARACTER_SIZE, Theme.CHARACTER_SIZE));
-        JPanel playerStats = new JPanel(new GridLayout(3, 1));
+        JPanel playerStats = new JPanel(new GridLayout(4, 1));
         playerStats.setOpaque(false);
         playerStats.add(playerNameLabel);
         playerStats.add(hpLabel);
         playerStats.add(xpScoreLabel);
+        playerStats.add(streakLabel);
         playerSide.add(playerStats, BorderLayout.NORTH);
         playerSide.add(player, BorderLayout.CENTER);
 
@@ -175,13 +177,25 @@ public class QuestionScreen extends Screen {
         return battle;
     }
 
+    // One line of immediate feedback: the live consecutive-correct streak plus,
+    // right after a resolved answer, the points that answer just earned.
+    private void refreshStreakLabel(int streak, int lastPoints) {
+        if (lastPoints > 0) {
+            streakLabel.setText("STREAK: " + streak + "   (+" + lastPoints + " points)");
+        } else {
+            streakLabel.setText("STREAK: " + streak);
+        }
+    }
+
         public void showQuestion(
                 Question question,
                 int number,
                 int total,
                 Player player,
                 int displayXp,
-                int quizScore) {
+                int quizScore,
+                int streak,
+                int lastPoints) {
         playerNameLabel.setText(player.getName());
         hpLabel.setText("HP: " + player.getHp());
         // displayXp is provisional quiz XP; it commits to the player only at settlement.
@@ -189,6 +203,7 @@ public class QuestionScreen extends Screen {
                 "XP: " + displayXp
                 + "   QUIZ SCORE: " + quizScore
         );
+        refreshStreakLabel(streak, lastPoints);
         progressLabel.setText("QUESTION " + number + " OF " + total);
         questionProgress.setValue(
         total == 0
@@ -840,7 +855,9 @@ private JPanel createCodeEditor(Question question) {
                 String explanation,
                 Player player,
                 int displayXp,
-                int quizScore) {
+                int quizScore,
+                int streak,
+                int lastPoints) {
 
         // Refresh displayed player statistics
         hpLabel.setText("HP: " + player.getHp());
@@ -850,6 +867,7 @@ private JPanel createCodeEditor(Question question) {
                 "XP: " + displayXp
                 + "   QUIZ SCORE: " + quizScore
         );
+        refreshStreakLabel(streak, lastPoints);
 
         // Change the section heading
         answerHeading.setText("ANSWER FEEDBACK");

@@ -362,7 +362,9 @@ private void confirmExit() {
                         current.getExplanation(),
                         player,
                         player.getXp() + session.getProvisionalXp(),
-                        session.getScoreEarned()
+                        session.getScoreEarned(),
+                        session.getCurrentStreak(),
+                        session.getLastPoints()
                 );
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -547,7 +549,9 @@ private void confirmExit() {
                 session.getQuestions().size(),
                 player,
                 player.getXp() + session.getProvisionalXp(),
-                session.getScoreEarned()
+                session.getScoreEarned(),
+                session.getCurrentStreak(),
+                session.getLastPoints()
         );
     }
 

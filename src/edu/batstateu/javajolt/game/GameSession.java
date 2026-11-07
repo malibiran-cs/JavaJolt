@@ -16,7 +16,10 @@ public class GameSession {
     private int correctCount;
     private int mistakeCount;
     private int consecutiveMistakes; // uncorrected streak; reset by every correct answer
+    private int currentStreak; // consecutive correct answers; distinct from the damage counter
+    private int bestStreak;    // highest currentStreak reached this attempt
     private int lastDamage; // actual HP cost of the most recent mistake (after Shield, once Phase 5 exists)
+    private int lastPoints; // points awarded for the most recent answer (0 on a mistake)
     private int scoreEarned;
     private int provisionalXp; // first-clear XP earned so far; commits at settlement
     private boolean settled;   // end-of-quiz settlement already ran for this attempt
@@ -33,13 +36,20 @@ public class GameSession {
     public void recordCorrect(int points) {
         correctCount++;
         consecutiveMistakes = 0;
+        currentStreak++;
+        if (currentStreak > bestStreak) {
+            bestStreak = currentStreak;
+        }
         scoreEarned += points;
+        lastPoints = points;
     }
 
     // Runs once per mistake, after its damage was already applied.
     public void recordMistake() {
         mistakeCount++;
         consecutiveMistakes++;
+        currentStreak = 0;
+        lastPoints = 0;
     }
 
     public void addProvisionalXp(int amount) {
@@ -139,6 +149,18 @@ public class GameSession {
 
     public void setLastDamage(int lastDamage) {
         this.lastDamage = lastDamage;
+    }
+
+    public int getCurrentStreak() {
+        return currentStreak;
+    }
+
+    public int getBestStreak() {
+        return bestStreak;
+    }
+
+    public int getLastPoints() {
+        return lastPoints;
     }
 
     public boolean isSettled() {

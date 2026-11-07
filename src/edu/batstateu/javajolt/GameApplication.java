@@ -10,6 +10,7 @@ import edu.batstateu.javajolt.game.GameService;
 import edu.batstateu.javajolt.service.DifficultyProgressionService;
 import edu.batstateu.javajolt.data.EnemyRoster;
 import edu.batstateu.javajolt.service.LessonRunnerService;
+import edu.batstateu.javajolt.service.ScoreService;
 import edu.batstateu.javajolt.service.LessonService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.service.SaveService;
@@ -32,7 +33,8 @@ public class GameApplication {
         GameUI consoleUI = new GameUI();
 
         LessonRunnerService runner =
-                new LessonRunnerService(questions, lessons, new EnemyRoster(), consoleUI);
+                new LessonRunnerService(questions, lessons, new EnemyRoster(),
+                        new ScoreService(), consoleUI);
 
         // Console mode remains available for development.
         if (args.length > 0

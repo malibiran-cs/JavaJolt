@@ -26,6 +26,7 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
   - `PlayerProgressService`: completed topics and unlocking.
   - `LevelService`: XP to level.
   - `LevelRewardService`: level-based quizzes rewards (max HP per level).
+  - `ScoreService`: per-answer score points (base, streak growth, later boost multiplier).
   - `CodeQuestionService`: compile and run the player's code.
 - `entity/`: data holders that guard their own state (`Player`, `SaveData`, `LessonPage`).
 - `Question` and `types/`: abstract `Question` and its subclasses (`MultipleChoiceQuestion`, `IdentificationQuestion`, `CodeQuestion`).
@@ -62,7 +63,7 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
 - **Encapsulation:** Entities protect their own rules (`Player.takeDamage` never goes below 0). Prefer intention-revealing methods (`addXp`, `complete`) over raw setters from outside. Hand out copies of internal collections (see `copyCompleted`), never the live ones.
 - **Content is data, not logic:** Questions go in `data/<Topic>Questions`, textbook pages in `data/lessons/*.txt`. Never hardcode content in services or UI.
 - **Persistence behind one door:** Only `SaveService` touches the save file. It converts to and from `SaveData`; no other class knows the file format or keys.
-- **No magic numbers:** Gameplay values are named `private static final` constants in the service that owns the rule (`PASS_PERCENT`, `DAMAGE_PER_MISTAKE` in `LessonRunnerService`). UI values (colors, fonts, spacing) go in `Theme`.
+- **No magic numbers:** Gameplay values are named `private static final` constants in the service that owns the rule (`PASS_PERCENT` in `LessonRunnerService`, `BASE_POINTS` in `ScoreService`). UI values (colors, fonts, spacing) go in `Theme`.
 
 ### Errors
 

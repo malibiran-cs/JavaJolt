@@ -30,6 +30,7 @@ public class ProgressConsistencyCheck {
                 new QuestionService(new QuestionBank()),
                 new LessonService(),
                 new edu.batstateu.javajolt.data.EnemyRoster(),
+                new edu.batstateu.javajolt.service.ScoreService(),
                 new GameUI()
         );
 
@@ -47,12 +48,14 @@ public class ProgressConsistencyCheck {
                 "Failed attempt must award zero XP"
         );
 
+        // 8 correct in streak runs of 1/1/1/1/4 between the spread mistakes:
+        // 10 + 10 + 10 + 10 + (10 + 12 + 14 + 16) = 92 streak points.
         require(
-                failed.getScoreEarned() == 80,
+                failed.getScoreEarned() == 92,
                 "Failed attempt score must still commit"
         );
 
-        require(player.getHighScore(TOPIC, LEVEL) == 80,
+        require(player.getHighScore(TOPIC, LEVEL) == 92,
                 "Failed attempt high score incorrect");
 
         System.out.println("PASS: Failed attempt");
@@ -75,7 +78,8 @@ public class ProgressConsistencyCheck {
         require(player.getXp() - beforePass == expectedXp,
                 "First-pass XP incorrect");
 
-        require(player.getHighScore(TOPIC, LEVEL) == 90,
+        // 9 correct in streak runs of 1/1/1/6: 10 * 3 + (10..20) = 120 streak points.
+        require(player.getHighScore(TOPIC, LEVEL) == 120,
                 "High score did not improve");
 
         System.out.println("PASS: First completion");
@@ -120,7 +124,7 @@ public class ProgressConsistencyCheck {
             require(restored.isComplete(TOPIC, LEVEL),
                     "Completion was not restored");
 
-            require(restored.getHighScore(TOPIC, LEVEL) == 90,
+            require(restored.getHighScore(TOPIC, LEVEL) == 120,
                     "High score was not restored");
 
             System.out.println("PASS: Save and load");
@@ -134,7 +138,8 @@ public class ProgressConsistencyCheck {
             require(restored.getXp() == beforeReplay,
                     "Replay awarded duplicate XP");
 
-            require(restored.getHighScore(TOPIC, LEVEL) == 120,
+            // 12 correct in one uninterrupted run = 252 streak points, a new best.
+            require(restored.getHighScore(TOPIC, LEVEL) == 252,
                     "Perfect replay did not improve high score");
 
             System.out.println("PASS: No duplicate XP");
@@ -143,7 +148,8 @@ public class ProgressConsistencyCheck {
             // TEST 5: Lower scores must not overwrite records
             attempt(restored, runner, 9);
 
-            require(restored.getHighScore(TOPIC, LEVEL) == 120,
+            // The 9/12 replay scores 120 and must not overwrite the 252 record.
+            require(restored.getHighScore(TOPIC, LEVEL) == 252,
                     "Lower score overwrote previous best");
 
             require(restored.getXp() == beforeReplay,
