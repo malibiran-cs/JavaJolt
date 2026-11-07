@@ -3,6 +3,7 @@ package edu.batstateu.javajolt.service;
 import java.util.List;
 
 import edu.batstateu.javajolt.Question;
+import edu.batstateu.javajolt.data.EnemyRoster;
 import edu.batstateu.javajolt.entity.LessonPage;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Difficulty;
@@ -12,8 +13,6 @@ import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.ui.GameUI;
 
 public class LessonRunnerService {
-    // TODO(gameplay balance): Revisit damage and survival pressure when enemy attacks/status effects are designed.
-    private static final int DAMAGE_PER_MISTAKE = 2;
     private static final int POINTS_PER_CORRECT = 10;
     private static final int PASS_PERCENT = 70;
     // XP tuning (fixed for now, but kept in methods so they can scale by difficulty later)
@@ -23,11 +22,14 @@ public class LessonRunnerService {
 
     private final QuestionService questionService;
     private final LessonService lessonService;
+    private final EnemyRoster enemyRoster;
     private final GameUI ui;
 
-    public LessonRunnerService(QuestionService questionService, LessonService lessonService, GameUI ui) {
+    public LessonRunnerService(QuestionService questionService, LessonService lessonService,
+            EnemyRoster enemyRoster, GameUI ui) {
         this.questionService = questionService;
         this.lessonService = lessonService;
+        this.enemyRoster = enemyRoster;
         this.ui = ui;
     }
 
@@ -45,10 +47,11 @@ public class LessonRunnerService {
     }
 
     // Single start-of-quiz home: questions through QuestionService, the session,
-    // the level-derived max HP, and a full HP restore (brief Phase 2).
+    // the level-derived max HP, the topic's enemy, and a full HP restore (brief Phase 2/3).
     public GameSession startSession(Player player, Topic topic, Difficulty difficulty) {
         List<Question> questions = questionService.selectQuestions(topic, difficulty);
         GameSession session = new GameSession(player, topic, difficulty, questions);
+        session.setEnemy(enemyRoster.getEnemy(topic, difficulty));
         player.setMaxHp(LevelRewardService.maxHpForLevel(LevelService.calculateLevel(player.getXp())));
         player.restoreFullHp();
         return session;
@@ -83,13 +86,15 @@ public class LessonRunnerService {
 
             return true;
         }
-        player.takeDamage(DAMAGE_PER_MISTAKE);
+        // The enemy resolves first (pre-answer counter); the session counter is
+        // updated after, by recordMistake.
+        int hpBefore = player.getHp();
+        player.takeDamage(session.getEnemy().resolveMistake(session));
+        session.setLastDamage(hpBefore - player.getHp());
         session.recordMistake();
         return false;
     }
 
-    // TODO(gameplay balance): Keep HP as a meaningful survival condition alongside accuracy.
-    // Current damage may not defeat a player before the 70% accuracy rule already makes the run fail.
     public boolean hasPassed(GameSession session) {
         return session.getPlayer().isAlive()
                 && session.getAccuracyPercent() >= PASS_PERCENT;

@@ -11,9 +11,12 @@ public class GameSession {
     private Topic topic;
     private Difficulty difficulty;
     private List<Question> questions;
+    private Enemy enemy;      // the quiz opponent; supplied by startSession
     private int currentQuestionIndex;
     private int correctCount;
     private int mistakeCount;
+    private int consecutiveMistakes; // uncorrected streak; reset by every correct answer
+    private int lastDamage; // actual HP cost of the most recent mistake (after Shield, once Phase 5 exists)
     private int scoreEarned;
     private int provisionalXp; // first-clear XP earned so far; commits at settlement
     private boolean settled;   // end-of-quiz settlement already ran for this attempt
@@ -29,11 +32,14 @@ public class GameSession {
     // State Updaters
     public void recordCorrect(int points) {
         correctCount++;
+        consecutiveMistakes = 0;
         scoreEarned += points;
     }
 
+    // Runs once per mistake, after its damage was already applied.
     public void recordMistake() {
         mistakeCount++;
+        consecutiveMistakes++;
     }
 
     public void addProvisionalXp(int amount) {
@@ -45,17 +51,26 @@ public class GameSession {
         settled = true;
     }
 
-    // Percentage
+    // Percentage over the questions that were actually answered (0 when none).
     public int getAccuracyPercent() {
-        if (questions.isEmpty()) {
+        int answered = getAnsweredCount();
+        if (answered == 0) {
             return 0;
         }
-        return correctCount * 100 / questions.size();
+        return correctCount * 100 / answered;
     }
 
     // GETTERS AND SETTERS
     public Player getPlayer() {
         return player;
+    }
+
+    public Enemy getEnemy() {
+        return enemy;
+    }
+
+    public void setEnemy(Enemy enemy) {
+        this.enemy = enemy;
     }
 
     public void setPlayer(Player player) {
@@ -108,6 +123,22 @@ public class GameSession {
 
     public int getProvisionalXp() {
         return provisionalXp;
+    }
+
+    public int getConsecutiveMistakes() {
+        return consecutiveMistakes;
+    }
+
+    public int getAnsweredCount() {
+        return correctCount + mistakeCount;
+    }
+
+    public int getLastDamage() {
+        return lastDamage;
+    }
+
+    public void setLastDamage(int lastDamage) {
+        this.lastDamage = lastDamage;
     }
 
     public boolean isSettled() {

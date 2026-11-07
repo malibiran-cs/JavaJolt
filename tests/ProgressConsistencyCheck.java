@@ -29,6 +29,7 @@ public class ProgressConsistencyCheck {
         LessonRunnerService runner = new LessonRunnerService(
                 new QuestionService(new QuestionBank()),
                 new LessonService(),
+                new edu.batstateu.javajolt.data.EnemyRoster(),
                 new GameUI()
         );
 
@@ -200,14 +201,26 @@ public class ProgressConsistencyCheck {
                 questions
         );
 
+        session.setEnemy(new edu.batstateu.javajolt.data.EnemyRoster().getEnemy(TOPIC, LEVEL));
+
+        // Wrong answers alternate between correct ones so every mistake costs
+        // base damage only (isolated). Escalated chains of three mistakes defeat
+        // any band, so clustered mistakes would turn these accuracy scenarios
+        // into HP-defeat scenarios instead.
+        int wrongCount = questions.size() - correctCount;
+
         for (int i = 0;
                 i < questions.size() && player.isAlive();
                 i++) {
 
+            boolean wrong = wrongCount > 0
+                    && i < wrongCount * 2
+                    && i % 2 == 1;
+
             runner.submitAnswer(
                     session,
                     questions.get(i),
-                    i < correctCount ? "yes" : "no"
+                    wrong ? "no" : "yes"
             );
         }
 

@@ -12,6 +12,7 @@ import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 import javax.swing.SwingUtilities;
 
+import edu.batstateu.javajolt.data.EnemyRoster;
 import edu.batstateu.javajolt.data.QuestionBank;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Difficulty;
@@ -98,7 +99,11 @@ public class StagePreview {
 
         questionService = new QuestionService(new QuestionBank());
         lessonRunnerService =
-                new LessonRunnerService(questionService, new LessonService(), new GameUI());
+                new LessonRunnerService(
+                        questionService,
+                        new LessonService(),
+                        new EnemyRoster(),
+                        new GameUI());
 
         sandboxSaveService =
                 PreviewSandbox.createFor(seedPlayer(chosen, chosenXp(chosen)), chosen);
