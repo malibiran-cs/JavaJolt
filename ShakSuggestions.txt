@@ -1,0 +1,6 @@
+UI
+
+- In code type questions, show both the user's output and the expected output right after proceeding to question results,
+  so that it becomes clearer to user what happened
+- (More of a polishing feature) Give several java keywords/features further editor convenience, example is some are already colored,
+  but some like String, System.out.print, etc. are not yet, this could be optional too
