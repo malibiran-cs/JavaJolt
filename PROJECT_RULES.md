@@ -11,26 +11,28 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
 - **Stack:** Plain Java SE. Modern features are already in use (records, switch expressions, text blocks, `Stream.toList()`). No build tool, no external libraries, no frameworks. Do not add any. (This is why saves use `java.util.Properties` instead of JSON.)
 - **Two front-ends:** The console (`ui/GameUI`) currently drives the game loop through `GameService`. The Swing UI (`ui/swing`) is being built in parallel and is opened by a callback once the player is ready. The Swing screens are still mostly visual; the functionality is being wired in.
 - **Game flow:** Topics unlock one after another (enum order) within a difficulty. Completing every topic of a difficulty moves the player to the next one.
-- **State:** Persisted: name, XP, difficulty, completed topics. Session only: HP, score.
+- **State:** Persisted: name, XP, difficulty, completed topics, cumulative score, high scores. One quiz attempt: HP (max HP derived per quiz from level) and the session's provisional score/XP, which commit only once at end-of-quiz settlement.
 - **Root package:** `edu.batstateu.javajolt`
 
 ### Where things live
 
 - `GameApplication`: composition root. The only place that builds and wires the main objects and catches top-level errors.
-- `game/`: `GameService` (orchestrates the flow), `GameSession` (state of one lesson run).
+- `game/`: `GameService` (orchestrates the flow), `GameSession` (state of one lesson run), `Enemy` (one quiz opponent; damage grows with max HP and consecutive mistakes).
 - `service/`: one-purpose logic classes.
   - `QuestionService`: select and check questions.
-  - `LessonRunnerService`: play and study rules (XP, damage, pass mark).
+  - `LessonRunnerService`: play and study rules (XP, enemy damage, pass mark) and the end-of-quiz settlement.
   - `LessonService`: load textbook pages.
   - `SaveService`: the only class that reads or writes the save file.
   - `PlayerProgressService`: completed topics and unlocking.
   - `LevelService`: XP to level.
+  - `LevelRewardService`: level-based quizzes rewards (max HP per level).
   - `CodeQuestionService`: compile and run the player's code.
 - `entity/`: data holders that guard their own state (`Player`, `SaveData`, `LessonPage`).
 - `Question` and `types/`: abstract `Question` and its subclasses (`MultipleChoiceQuestion`, `IdentificationQuestion`, `CodeQuestion`).
-- `data/`: question content (`<Topic>Questions`), registered in `QuestionBank`. Lesson text is in the project-root `data/lessons/`.
+- `data/`: question content (`<Topic>Questions`), registered in `QuestionBank`; `EnemyRoster` maps each topic/difficulty pair to its enemy. Lesson text is in the project-root `data/lessons/`.
 - `enums/`: `Topic`, `Difficulty`, `InputMode`.
 - `exception/`: domain exceptions.
+- `preview/`: development-only launchers and checks (`StagePreview`, later `BalanceReport` and `MechanicsCheck`). They build their own wiring like a composition root and must never read or write the real `saves/` folder (throwaway temp save location instead).
 - `ui/`: console UI. `ui/swing/`: `MainWindow`, `ScreenId`, `Theme`, `UiAssets`, `NinePatch`, `screen/`, `component/`.
 
 ---
@@ -128,4 +130,4 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
 - `Question.display()` builds console text inside the model (marked temporary).
 - `GameService.run()` is longer than pure orchestration should be. The replay and next-action logic is marked for extraction.
 - `MainMenuScreen` calls static `LevelService` directly. This is acceptable for pure math, but prefer passing the level in.
-- `MainWindow` hardcodes `Difficulty.BEGINNER` for topic selection and uses a placeholder dialog. `SwingPreview` is a temporary launcher.
+- `MainWindow` hardcodes `Difficulty.BEGINNER` for topic selection and uses a placeholder dialog.
