@@ -131,7 +131,7 @@ public class ResultsScreen extends Screen {
         body.add(Box.createVerticalStrut(Theme.GAP_M));
 
         // =====================================
-        // QUIZ SCORE AND PERSONAL BEST
+        // QUIZ SCORE, PERSONAL BEST AND BEST STREAK
         // =====================================
 
         int quizScore = session.getScoreEarned();
@@ -141,8 +141,10 @@ public class ResultsScreen extends Screen {
                 session.getDifficulty()
         );
 
+        int bestStreak = session.getBestStreak();
+
         JPanel scoreStats = new JPanel(
-                new GridLayout(1, 2, Theme.GAP_M, 0)
+                new GridLayout(1, 3, Theme.GAP_M, 0)
         );
 
         scoreStats.setOpaque(false);
@@ -157,6 +159,12 @@ public class ResultsScreen extends Screen {
         scoreStats.add(createStatCard(
                 "PERSONAL BEST",
                 String.valueOf(personalBest)
+        ));
+
+        // Highest consecutive-correct run of this attempt
+        scoreStats.add(createStatCard(
+                "BEST STREAK",
+                String.valueOf(bestStreak)
         ));
 
         body.add(scoreStats);

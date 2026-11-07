@@ -2,5 +2,9 @@ UI
 
 - In code type questions, show both the user's output and the expected output right after proceeding to question results,
   so that it becomes clearer to user what happened
+- Although the difficulties are shown more clearly in UI now, there is no clear indication for the player, which difficulty are
+  they playing in when starting a quiz (test and try to see this to understand more), it should also be clear to the player that
+  the difficulties are intentionally unselectable until ENDGAME (perhaps a hover function where some text appears when hovering over
+  difficulties in select lesson menu?)
 - (More of a polishing feature) Give several java keywords/features further editor convenience, example is some are already colored,
   but some like String, System.out.print, etc. are not yet, this could be optional too

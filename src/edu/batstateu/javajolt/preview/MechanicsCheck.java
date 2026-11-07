@@ -3,23 +3,28 @@ package edu.batstateu.javajolt.preview;
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.data.EnemyRoster;
 import edu.batstateu.javajolt.entity.Player;
+import edu.batstateu.javajolt.entity.PowerUpResult;
 import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.game.Enemy;
 import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.service.LessonRunnerService;
 import edu.batstateu.javajolt.service.LevelRewardService;
 import edu.batstateu.javajolt.service.LevelService;
+import edu.batstateu.javajolt.service.PowerUpService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.service.ScoreService;
+import edu.batstateu.javajolt.types.IdentificationQuestion;
+import edu.batstateu.javajolt.types.MultipleChoiceQuestion;
 
 import java.util.ArrayList;
 import java.util.List;
 
-// Dev tool: in-memory checks for Phase 2-4 mechanics - D1 level boundaries,
+// Dev tool: in-memory checks for Phase 2-5 mechanics - D1 level boundaries,
 // D3 max HP bands, end-of-quiz settlement rules, the Phase 3 enemy damage
-// model (lethality, survivability, independent defeat categories), and Phase 4
-// streak scoring. Everything
+// model (lethality, survivability, independent defeat categories), Phase 4
+// streak scoring, and Phase 5 power-ups. Everything
 // runs on fresh Player objects in memory; no save path is ever opened.
 public class MechanicsCheck {
 
@@ -41,6 +46,7 @@ public class MechanicsCheck {
             new LessonRunnerService(questionService, null,
                     new EnemyRoster(), new ScoreService(), null);
     private static final EnemyRoster roster = new EnemyRoster();
+    private static final PowerUpService powerUps = new PowerUpService();
 
     private static int passed = 0;
     private static int failed = 0;
@@ -58,6 +64,7 @@ public class MechanicsCheck {
         checkPassSettlesOnce();
         checkReplayEarnsNothing();
         checkStreakScoring();
+        checkPowerUps();
         checkFailedAttemptEarnsNoXp();
         checkAbandonmentBanksNothing();
         checkDeathBeforeFinish();
@@ -171,6 +178,155 @@ public class MechanicsCheck {
         check("streak: 12-correct run = 252 points, best streak 12",
                 fullSession.getScoreEarned() == FULL_RUN_STREAK_SCORE
                         && fullSession.getBestStreak() == 12);
+    }
+
+    // Phase 5 power-ups: fixed unlock levels, one use of each unlocked
+    // power-up per quiz, Hint only ever removes a wrong choice (never the
+    // correct one, verified over 200 runs; non-multiple-choice use is not
+    // consumed), Shield zeroes the next mistake without stopping the
+    // escalation chain, Point Boost survives a mistake and boosts only the
+    // next correct answer, and Time Stop stays locked until Phase 7.
+    private static void checkPowerUps() {
+        // The level curve maps XP/50 to level, so the probe XP values are exact.
+        Player level4 = new Player("Check", 200);
+        for (PowerUp powerUp : PowerUp.values()) {
+            check("power-ups: level 4 does not unlock " + powerUp.getLabel(),
+                    !powerUps.isUnlocked(level4, powerUp));
+        }
+        Player level5 = new Player("Check", 250);
+        check("power-ups: level 5 unlocks Hint", powerUps.isUnlocked(level5, PowerUp.HINT));
+        check("power-ups: level 5 does not unlock Shield/Time Stop/Point Boost",
+                !powerUps.isUnlocked(level5, PowerUp.SHIELD)
+                        && !powerUps.isUnlocked(level5, PowerUp.TIME_STOP)
+                        && !powerUps.isUnlocked(level5, PowerUp.POINT_BOOST));
+        Player level10 = new Player("Check", 500);
+        check("power-ups: level 10 unlocks Hint and Shield, not Time Stop/Point Boost",
+                powerUps.isUnlocked(level10, PowerUp.HINT)
+                        && powerUps.isUnlocked(level10, PowerUp.SHIELD)
+                        && !powerUps.isUnlocked(level10, PowerUp.TIME_STOP)
+                        && !powerUps.isUnlocked(level10, PowerUp.POINT_BOOST));
+        Player level20 = new Player("Check", 1000);
+        for (PowerUp powerUp : PowerUp.values()) {
+            check("power-ups: level 20 unlocks " + powerUp.getLabel(),
+                    powerUps.isUnlocked(level20, powerUp));
+        }
+        check("power-ups: unlockedBetween(2, 5) = [Hint]",
+                powerUps.unlockedBetween(2, 5).equals(List.of(PowerUp.HINT)));
+        check("power-ups: unlockedBetween(5, 10) = [Shield]",
+                powerUps.unlockedBetween(5, 10).equals(List.of(PowerUp.SHIELD)));
+        check("power-ups: unlockedBetween(1, 20) = all four",
+                powerUps.unlockedBetween(1, 20).size() == 4);
+        check("power-ups: unlockedBetween(20, 25) is empty",
+                powerUps.unlockedBetween(20, 25).isEmpty());
+
+        MultipleChoiceQuestion hintable = preparedHintableQuestion();
+
+        // One use of each unlocked power-up per quiz; the second use is rejected.
+        Player master = new Player("Check", 1000); // level 20: everything unlocked
+        GameSession shieldSession = newSession(master);
+        PowerUpResult shieldFirst = powerUps.use(shieldSession, PowerUp.SHIELD, hintable);
+        PowerUpResult shieldSecond = powerUps.use(shieldSession, PowerUp.SHIELD, hintable);
+        check("power-ups: Shield applies once, second use rejected",
+                shieldFirst.applied() && shieldSession.hasUsed(PowerUp.SHIELD)
+                        && !shieldSecond.applied());
+        GameSession boostSession = newSession(master);
+        PowerUpResult boostFirst = powerUps.use(boostSession, PowerUp.POINT_BOOST, hintable);
+        PowerUpResult boostSecond = powerUps.use(boostSession, PowerUp.POINT_BOOST, hintable);
+        check("power-ups: Point Boost applies once, second use rejected",
+                boostFirst.applied() && boostSession.hasUsed(PowerUp.POINT_BOOST)
+                        && !boostSecond.applied());
+        GameSession hintOnceSession = newSession(master);
+        PowerUpResult hintFirst = powerUps.use(hintOnceSession, PowerUp.HINT, hintable);
+        PowerUpResult hintSecond = powerUps.use(hintOnceSession, PowerUp.HINT, hintable);
+        check("power-ups: Hint applies once, second use rejected",
+                hintFirst.applied() && hintOnceSession.hasUsed(PowerUp.HINT)
+                        && !hintSecond.applied());
+
+        // 200 Hint runs on a shuffled 4-choice question: always exactly one
+        // removed choice, never the correct one.
+        boolean allRunsOk = true;
+        for (int i = 0; i < 200; i++) {
+            GameSession hintSession = newSession(master);
+            PowerUpResult result = powerUps.use(hintSession, PowerUp.HINT, hintable);
+            if (!result.applied()
+                    || result.removedChoices().size() != 1
+                    || isCorrectChoice(result.removedChoices().get(0), hintable.getAnswer())) {
+                allRunsOk = false;
+                break;
+            }
+        }
+        check("power-ups: 200 Hint runs - exactly one choice, never the correct one",
+                allRunsOk);
+
+        // Hint on a question without choices is not applied and not consumed.
+        IdentificationQuestion identification = new IdentificationQuestion(
+                998, "Power-ups identification question", Topic.VARIABLES,
+                Difficulty.BEGINNER, "placeholder explanation", List.of("answer"));
+        GameSession idSession = newSession(master);
+        PowerUpResult idResult = powerUps.use(idSession, PowerUp.HINT, identification);
+        check("power-ups: Hint on a non-multiple-choice question is not applied",
+                !idResult.applied() && idResult.removedChoices().isEmpty());
+        check("power-ups: Hint on a non-multiple-choice question is not consumed",
+                !idSession.hasUsed(PowerUp.HINT));
+
+        // Time Stop waits for the Phase 7 timer: unused, not consumed.
+        GameSession stopSession = newSession(master);
+        PowerUpResult stopResult = powerUps.use(stopSession, PowerUp.TIME_STOP, hintable);
+        check("power-ups: Time Stop is not applied until Phase 7",
+                !stopResult.applied() && !stopSession.hasUsed(PowerUp.TIME_STOP));
+
+        // Shield: the shielded mistake deals 0 damage but still counts as a
+        // mistake (chain incremented, correct streak reset); the NEXT
+        // unshielded mistake uses the escalated damage.
+        Player shieldPlayer = new Player("Check", 1000);
+        shieldPlayer.setMaxHp(13); // base 3, Beginner escalation 2
+        shieldPlayer.restoreFullHp();
+        GameSession shieldRun = newSession(shieldPlayer);
+        playCorrect(shieldRun, 2); // build a streak so the reset is observable
+        powerUps.use(shieldRun, PowerUp.SHIELD, hintable);
+        int hpBeforeShield = shieldPlayer.getHp();
+        runner.submitAnswer(shieldRun, shieldRun.getQuestions().get(2), ""); // shielded
+        check("shield: a shielded mistake deals 0 damage",
+                shieldPlayer.getHp() == hpBeforeShield
+                        && shieldRun.getLastDamage() == 0);
+        check("shield: the shielded mistake still counts and resets the streak",
+                shieldRun.getConsecutiveMistakes() == 1
+                        && shieldRun.getCurrentStreak() == 0);
+        runner.submitAnswer(shieldRun, shieldRun.getQuestions().get(3), ""); // unshielded
+        check("shield: the next unshielded mistake uses escalated damage (3 + 1*2 = 5)",
+                shieldRun.getLastDamage() == 5
+                        && shieldPlayer.getHp() == hpBeforeShield - 5);
+
+        // Point Boost: survives a mistake, doubles only the next correct answer.
+        Player boostPlayer = new Player("Check", 1000);
+        GameSession boostRun = newSession(boostPlayer);
+        powerUps.use(boostRun, PowerUp.POINT_BOOST, hintable);
+        playWrong(boostRun, 1); // mistake; the boost must survive
+        int beforeBoost = boostRun.getScoreEarned();
+        runner.submitAnswer(boostRun, boostRun.getQuestions().get(1), "anything");
+        check("boost: the next correct answer after a mistake pays 20 (doubled base)",
+                boostRun.getScoreEarned() - beforeBoost == 20);
+        int beforePlain = boostRun.getScoreEarned();
+        runner.submitAnswer(boostRun, boostRun.getQuestions().get(2), "anything");
+        check("boost: only the next correct answer is boosted (12 afterwards)",
+                boostRun.getScoreEarned() - beforePlain == 12);
+        check("boost: no XP involved",
+                boostPlayer.getXp() == 1000 && boostRun.getProvisionalXp() > 0);
+    }
+
+    // A 4-choice multiple-choice question prepared like the real quiz does
+    // (shuffled choices, updated answer letter).
+    private static MultipleChoiceQuestion preparedHintableQuestion() {
+        MultipleChoiceQuestion question = new MultipleChoiceQuestion(
+                999, "Power-ups check question", Topic.VARIABLES, Difficulty.BEGINNER,
+                "placeholder explanation",
+                List.of("A. one", "B. two", "C. three", "D. four"), "C");
+        question.prepareForLesson();
+        return question;
+    }
+
+    private static boolean isCorrectChoice(String choice, String answerLetter) {
+        return choice.toUpperCase().startsWith(answerLetter.toUpperCase() + ".");
     }
 
     // Enemy counter semantics: wrong increments once, correct resets to 0, and

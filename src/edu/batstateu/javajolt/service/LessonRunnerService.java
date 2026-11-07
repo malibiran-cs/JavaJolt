@@ -76,12 +76,16 @@ public class LessonRunnerService {
     // Records one answer using the same rules for console and Swing callers.
     // Score points come from ScoreService based on the streak that ends with
     // this answer; they accumulate in the session (provisional) and settle only
-    // at settleAttempt, exactly like XP.
+    // at settleAttempt, exactly like XP. Point Boost applies to the next
+    // correct answer only; Shield zeroes the next mistake's damage (the mistake
+    // still counts and still escalates the chain).
     public boolean submitAnswer(GameSession session, Question question, String answer) {
         Player player = session.getPlayer();
         if (questionService.isCorrect(question, answer)) {
-            session.recordCorrect(
-                    scoreService.pointsForCorrect(false, session.getCurrentStreak() + 1));
+            boolean boosted = session.consumePointBoost();
+            int points =
+                    scoreService.pointsForCorrect(boosted, session.getCurrentStreak() + 1);
+            session.recordCorrect(points);
 
             // First-clear XP is provisional until the attempt settles.
             if (!player.isComplete(session.getTopic(), session.getDifficulty())) {
@@ -90,12 +94,15 @@ public class LessonRunnerService {
 
             return true;
         }
-        // The enemy resolves first (pre-answer counter); the session counter is
-        // updated after, by recordMistake.
-        int hpBefore = player.getHp();
-        player.takeDamage(session.getEnemy().resolveMistake(session));
-        session.setLastDamage(hpBefore - player.getHp());
-        session.recordMistake();
+        // The enemy resolves first (pre-answer counter); a shielded mistake
+        // deals 0 damage. recordMistake records the actual damage and
+        // increments the counter either way.
+        int damage = session.getEnemy().resolveMistake(session);
+        if (session.consumeShield()) {
+            damage = 0;
+        }
+        player.takeDamage(damage);
+        session.recordMistake(damage);
         return false;
     }
 

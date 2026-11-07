@@ -19,6 +19,7 @@ import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.service.LessonRunnerService;
 import edu.batstateu.javajolt.service.LessonService;
+import edu.batstateu.javajolt.service.PowerUpService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.service.SaveService;
 import edu.batstateu.javajolt.service.ScoreService;
@@ -48,6 +49,7 @@ public class StagePreview {
     // Shared wiring for every window opened during one preview run.
     private static QuestionService questionService;
     private static LessonRunnerService lessonRunnerService;
+    private static PowerUpService powerUpService;
     private static SaveService sandboxSaveService;
     private static int xpOverride = -1; // -1 = use the difficulty's default XP
     private static MainWindow currentWindow;
@@ -106,6 +108,7 @@ public class StagePreview {
                         new EnemyRoster(),
                         new ScoreService(),
                         new GameUI());
+        powerUpService = new PowerUpService();
 
         sandboxSaveService =
                 PreviewSandbox.createFor(seedPlayer(chosen, chosenXp(chosen)), chosen);
@@ -128,6 +131,7 @@ public class StagePreview {
                 questionService,
                 lessonRunnerService,
                 difficulty,
+                powerUpService,
                 sandboxSaveService
         );
         window.setTitle("JavaJolt" + TITLE_TAG);

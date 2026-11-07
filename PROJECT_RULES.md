@@ -27,11 +27,12 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
   - `LevelService`: XP to level.
   - `LevelRewardService`: level-based quizzes rewards (max HP per level).
   - `ScoreService`: per-answer score points (base, streak growth, later boost multiplier).
+  - `PowerUpService`: power-up unlock and use rules (stateless; one use per power-up per quiz).
   - `CodeQuestionService`: compile and run the player's code.
-- `entity/`: data holders that guard their own state (`Player`, `SaveData`, `LessonPage`).
+- `entity/`: data holders that guard their own state (`Player`, `SaveData`, `LessonPage`, `PowerUpResult`).
 - `Question` and `types/`: abstract `Question` and its subclasses (`MultipleChoiceQuestion`, `IdentificationQuestion`, `CodeQuestion`).
 - `data/`: question content (`<Topic>Questions`), registered in `QuestionBank`; `EnemyRoster` maps each topic/difficulty pair to its enemy. Lesson text is in the project-root `data/lessons/`.
-- `enums/`: `Topic`, `Difficulty`, `InputMode`.
+- `enums/`: `Topic`, `Difficulty`, `InputMode`, `PowerUp` (power-up unlock levels live only here).
 - `exception/`: domain exceptions.
 - `preview/`: development-only launchers and checks (`StagePreview`, later `BalanceReport` and `MechanicsCheck`). They build their own wiring like a composition root and must never read or write the real `saves/` folder (throwaway temp save location instead).
 - `ui/`: console UI. `ui/swing/`: `MainWindow`, `ScreenId`, `Theme`, `UiAssets`, `NinePatch`, `screen/`, `component/`.

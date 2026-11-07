@@ -56,6 +56,32 @@ public class MultipleChoiceQuestion extends Question {
         choices = labeledChoices;
     }
 
+    // One randomly chosen WRONG choice, read from the current (already
+    // shuffled) labels and answer; the correct choice is never offered for
+    // removal, and two or fewer choices leave nothing to hint about.
+    @Override
+    public List<String> getHintChoicesToRemove() {
+        if (choices.size() <= 2) {
+            return List.of();
+        }
+
+        String correctPrefix = answer.trim().toUpperCase() + ".";
+        List<String> wrongChoices = new ArrayList<>();
+        for (String choice : choices) {
+            if (!choice.toUpperCase().startsWith(correctPrefix)) {
+                wrongChoices.add(choice);
+            }
+        }
+
+        if (wrongChoices.isEmpty()) {
+            return List.of();
+        }
+
+        int pick = java.util.concurrent.ThreadLocalRandom.current()
+                .nextInt(wrongChoices.size());
+        return List.of(wrongChoices.get(pick));
+    }
+
     // DISPLAY
     @Override
     public String display() {

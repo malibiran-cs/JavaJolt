@@ -17,6 +17,7 @@ import edu.batstateu.javajolt.service.LessonRunnerService;
 import edu.batstateu.javajolt.service.LessonService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.service.LevelService;
+import edu.batstateu.javajolt.service.PowerUpService;
 import edu.batstateu.javajolt.service.SaveService;
 import edu.batstateu.javajolt.ui.swing.screen.MainMenuScreen;
 import edu.batstateu.javajolt.ui.swing.screen.QuestionScreen;
@@ -47,6 +48,7 @@ public class MainWindow extends JFrame {
     private final LessonRunnerService lessonRunnerService;
     private Difficulty difficulty;
     private final SaveService saveService;
+    private final PowerUpService powerUpService;
     private final MainMenuScreen mainMenuScreen;
     private boolean lessonResultRecorded;
     private final LessonService lessonService = new LessonService();
@@ -64,13 +66,15 @@ public class MainWindow extends JFrame {
             Player player,
             QuestionService questionService,
             LessonRunnerService lessonRunnerService,
-            Difficulty difficulty) {
+            Difficulty difficulty,
+            PowerUpService powerUpService) {
 
         this(
                 player,
                 questionService,
                 lessonRunnerService,
                 difficulty,
+                powerUpService,
                 new SaveService()
         );
     }
@@ -80,12 +84,14 @@ public class MainWindow extends JFrame {
             QuestionService questionService,
             LessonRunnerService lessonRunnerService,
             Difficulty difficulty,
+            PowerUpService powerUpService,
             SaveService saveService) {
         super("JavaJolt");
         this.player = player;
         this.questionService = questionService;
         this.lessonRunnerService = lessonRunnerService;
         this.difficulty = difficulty;
+        this.powerUpService = powerUpService;
         this.saveService = saveService;
         this.welcomeCompleted = saveService.hasSave();
 

@@ -55,6 +55,12 @@ public abstract class Question {
         return List.of();
     }
 
+    // Choices a Hint may remove (one wrong choice); only question types with
+    // selectable wrong choices override this. Default: no hint available.
+    public List<String> getHintChoicesToRemove() {
+        return List.of();
+    }
+
     public String getTemplate() {
         return "";
     }
