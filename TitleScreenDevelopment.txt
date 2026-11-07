@@ -1,0 +1,36 @@
+**JavaJolt Title Screen Development — Reminders**
+
+Please read `PROJECT_RULES.md` first, particularly the Swing UI rules.
+
+**1. Scope of work**
+- Create a new `TitleScreen.java` under `ui/swing/screen/`, extending the existing `Screen` class.
+- Intended navigation:
+  - New player: Title Screen → Welcome Screen → Main Menu
+  - Returning player: Title Screen → Main Menu
+- Focus on the title screen's UI, buttons, and navigation callbacks. Do not modify unrelated screens or gameplay mechanics.
+
+**2. Avoid file conflicts**
+- `MainWindow.java` and `GameApplication.java` are currently involved in ongoing gameplay development. Avoid directly modifying them without coordination.
+- `ScreenId.java` will need a `TITLE` entry, but coordinate this change before integration.
+- Do not touch `Player`, `GameSession`, `LessonRunnerService`, `SaveService`, or other gameplay-related classes.
+- Prefer adding new files rather than restructuring existing ones.
+
+**3. Follow existing UI architecture**
+- Navigation is handled by `MainWindow` using `CardLayout` and `ScreenId`.
+- Screens should only handle UI presentation and callbacks, not directly manage navigation, player data, or save files.
+- Use the existing `Theme`, `UiAssets`, and reusable Swing components for consistency.
+- Keep code simple and readable. Avoid unnecessary dependencies or major structural changes.
+
+**4. Save and player handling**
+- New vs. returning player is determined by the existing save-loading logic in `GameApplication`.
+- Do not implement another save-loading system.
+- Do not create player saves merely from opening the title screen. New players must complete the welcome/name entry first.
+
+**5. Integration and Git**
+- Work on a separate Git branch if possible.
+- For now, build the title screen independently and expose navigation through callbacks.
+- Coordinate changes to shared files before merging.
+- Make a focused commit containing only title-screen-related changes.
+- Report which existing files require modification for integration.
+
+**Important:** The gameplay agent is currently implementing changes in phases. Avoid modifying its working files until integration is coordinated. The title screen should be easy to plug into the existing application without disturbing working gameplay.
