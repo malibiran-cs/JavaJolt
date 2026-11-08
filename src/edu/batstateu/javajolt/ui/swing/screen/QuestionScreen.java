@@ -9,15 +9,6 @@ import javax.swing.JComponent;
 import javax.swing.JProgressBar;
 import javax.swing.KeyStroke;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
-
-import javax.swing.AbstractAction;
-import javax.swing.JComponent;
-import javax.swing.JProgressBar;
-import javax.swing.KeyStroke;
-import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -60,7 +51,7 @@ import javax.swing.SwingConstants;
 
 /** Displays a question and collects its answer; the owner supplies game callbacks. */
 public class QuestionScreen extends Screen {
-        private final JTextPane promptText = new JTextPane();
+    private final JTextPane promptText = new JTextPane();
     private final JLabel progressLabel = new JLabel();
     private final JLabel countdownLabel = createLabel(" ");
     private final JProgressBar questionProgress =
@@ -79,6 +70,7 @@ public class QuestionScreen extends Screen {
     private final RoundedButton topicsButton = new RoundedButton("Choose another topic", ButtonStyle.SECONDARY);
     private final Runnable onTopics;
     private RoundedTextField textField;
+    private final MascotView quizMascot = new MascotView();
     private JavaCodeEditor codeArea;
     private ButtonGroup choiceGroup;
     private List<JRadioButton> choiceButtons = List.of();
@@ -148,13 +140,9 @@ public class QuestionScreen extends Screen {
                 )
         );
 
-        MascotView mascot = new MascotView();
-        mascot.setMood(MascotView.Mood.ONLINE);
+        quizMascot.setMood(MascotView.Mood.ONLINE);
 
-        playerPortrait.add(
-                mascot,
-                BorderLayout.CENTER
-        );
+        playerPortrait.add(quizMascot, BorderLayout.CENTER);
 
 
         JPanel playerStats = new JPanel(new GridLayout(4, 1));
@@ -351,16 +339,17 @@ public class QuestionScreen extends Screen {
         feedbackLabel.setText(message == null || message.isBlank() ? " " : message);
     }
 
-        public void showQuestion(
-                Question question,
-                int number,
-                int total,
-                Player player,
-                int displayXp,
-                int quizScore,
-                int streak,
-                int lastPoints,
-                boolean lastAnswerBoosted) {
+    public void showQuestion(
+            Question question,
+            int number,
+            int total,
+            Player player,
+            int displayXp,
+            int quizScore,
+            int streak,
+            int lastPoints,
+            boolean lastAnswerBoosted) {
+        quizMascot.setMood(MascotView.Mood.THINKING);
         playerNameLabel.setText(player.getName());
         hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());
         // displayXp is provisional quiz XP; it commits to the player only at settlement.
@@ -1015,15 +1004,20 @@ private JPanel createCodeEditor(Question question) {
     }
 
 
-        public void showAnswerResult(
-                boolean correct,
-                String explanation,
-                Player player,
-                int displayXp,
-                int quizScore,
-                int streak,
-                int lastPoints,
-                boolean lastAnswerBoosted) {
+    public void showAnswerResult(
+            boolean correct,
+            String explanation,
+            Player player,
+            int displayXp,
+            int quizScore,
+            int streak,
+            int lastPoints,
+            boolean lastAnswerBoosted) {
+        quizMascot.setMood(
+                correct
+                        ? MascotView.Mood.CHARGED
+                        : MascotView.Mood.LOW_BATTERY
+        );
 
         // Refresh displayed player statistics
         hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());

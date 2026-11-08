@@ -40,7 +40,17 @@ public final class MascotView extends JComponent {
     protected void paintComponent(Graphics graphics) {
         super.paintComponent(graphics);
 
-        BufferedImage image = UiAssets.image("mascot/" + mood.fileName);
+        BufferedImage image;
+
+        try {
+            image = UiAssets.image("mascot/" + mood.fileName);
+        } catch (IllegalStateException missingMood) {
+            if (mood == Mood.ONLINE) {
+                throw missingMood;
+            }
+
+            image = UiAssets.image("mascot/online");
+        }
         int usableWidth = Math.max(1, getWidth() - 16);
         int usableHeight = Math.max(1, getHeight() - 16);
         double scale = Math.min(
