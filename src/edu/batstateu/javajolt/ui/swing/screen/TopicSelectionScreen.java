@@ -143,9 +143,6 @@ public class TopicSelectionScreen extends Screen {
 
         add(scrollPane, BorderLayout.CENTER);
 
-
-        add(topicPanel, BorderLayout.CENTER);
-
         JPanel footer = new JPanel(new BorderLayout());
         footer.setOpaque(false);
 

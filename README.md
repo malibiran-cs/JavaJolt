@@ -37,3 +37,23 @@
 ## Future Improvements
 
 ## Contributors
+
+---
+## Quick Start (Windows)
+
+This source project uses plain Java SE, with no Maven or external libraries.
+Install **JDK 21 or newer**, extract the ZIP, and **open the inner `JavaJolt-main`
+folder** (the one containing `src/` and `data/lessons/`) in VS Code.
+
+- Double-click `RUN_JAVAJOLT.bat` to compile and launch the Swing game.
+- Double-click `RUN_TESTS.bat` to check gameplay, data, and GUI navigation.
+- Or compile and start manually in that directory:
+
+```cmd
+javac -encoding UTF-8 -d out -sourcepath src src\edu\batstateu\javajolt\GameApplication.java
+java -cp out edu.batstateu.javajolt.GameApplication
+```
+
+If Java is not found, verify `java -version` and `javac -version` from the
+VS Code terminal. Open the **inner project directory**, not the ZIP itself.
+See `FIXES_AND_TESTS.md` for the repair details and verification results.

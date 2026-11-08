@@ -24,8 +24,14 @@ public final class UiAssets {
 
     private static final String CLASSPATH_ROOT = "/edu/batstateu/javajolt/ui/swing/assets/";
 
-    // Only used if the images were not copied next to the .class files (plain javac + java).
+    // Plain javac does not copy non-Java files into out/. Also support
+    // opening the parent directory in VS Code (the project is then under JavaJolt/).
+    private static final Path SOURCE_ASSET_PATH = Path.of(
+            "src", "edu", "batstateu", "javajolt", "ui", "swing", "assets");
     private static final List<Path> FALLBACK_ROOTS = List.of(
+            SOURCE_ASSET_PATH,
+            Path.of("JavaJolt").resolve(SOURCE_ASSET_PATH),
+            Path.of("JavaJolt-main").resolve(SOURCE_ASSET_PATH),
             Path.of("assets", "Softline_UI_Kit_Flat_Night", "PNG_2x"),
             Path.of("..", "assets", "Softline_UI_Kit_Flat_Night", "PNG_2x"));
 
