@@ -5,7 +5,7 @@ import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.service.LevelService;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
-import edu.batstateu.javajolt.ui.swing.component.CharacterPlaceholder;
+import edu.batstateu.javajolt.ui.swing.component.MascotView;
 import edu.batstateu.javajolt.ui.swing.component.Divider;
 import edu.batstateu.javajolt.ui.swing.component.RoundedButton;
 import edu.batstateu.javajolt.ui.swing.component.RoundedPanel;
@@ -202,12 +202,27 @@ public class MainMenuScreen extends Screen {
     private JPanel createHeader() {
 
         // PLAYER AVATAR
-        CharacterPlaceholder character =
-                new CharacterPlaceholder();
+
+        // PLAYER AVATAR
+        RoundedPanel character = new RoundedPanel(
+                new BorderLayout(),
+                "panels/panel_inset",
+                13
+        );
 
         character.setPreferredSize(
-                new Dimension(110, 110)
+                new Dimension(136, 170)
         );
+
+        MascotView mascot = new MascotView();
+
+        mascot.setMood(MascotView.Mood.ONLINE);
+
+        character.add(
+                mascot,
+                BorderLayout.CENTER
+        );
+
 
         // PLAYER INFORMATION
         JPanel stats = new JPanel();

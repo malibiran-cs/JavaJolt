@@ -31,7 +31,7 @@ import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
-import edu.batstateu.javajolt.ui.swing.component.CharacterPlaceholder;
+import edu.batstateu.javajolt.ui.swing.component.MascotView;
 import edu.batstateu.javajolt.ui.swing.component.EnemyPortraitView;
 import edu.batstateu.javajolt.ui.swing.component.RoundedButton;
 import edu.batstateu.javajolt.ui.swing.component.RoundedPanel;
@@ -133,8 +133,30 @@ public class QuestionScreen extends Screen {
         battle.setOpaque(false);
         JPanel playerSide = new JPanel(new BorderLayout(0, Theme.GAP_S));
         playerSide.setOpaque(false);
-        CharacterPlaceholder player = new CharacterPlaceholder();
-        player.setPreferredSize(new Dimension(Theme.CHARACTER_SIZE, Theme.CHARACTER_SIZE));
+
+        
+        RoundedPanel playerPortrait = new RoundedPanel(
+                new BorderLayout(),
+                "panels/panel_inset",
+                13
+        );
+
+        playerPortrait.setPreferredSize(
+                new Dimension(
+                        Theme.CHARACTER_SIZE,
+                        Theme.CHARACTER_SIZE
+                )
+        );
+
+        MascotView mascot = new MascotView();
+        mascot.setMood(MascotView.Mood.ONLINE);
+
+        playerPortrait.add(
+                mascot,
+                BorderLayout.CENTER
+        );
+
+
         JPanel playerStats = new JPanel(new GridLayout(4, 1));
         playerStats.setOpaque(false);
         playerStats.add(playerNameLabel);
@@ -142,7 +164,7 @@ public class QuestionScreen extends Screen {
         playerStats.add(xpScoreLabel);
         playerStats.add(streakLabel);
         playerSide.add(playerStats, BorderLayout.NORTH);
-        playerSide.add(player, BorderLayout.CENTER);
+        playerSide.add(playerPortrait, BorderLayout.CENTER);
 
         JPanel question = new JPanel(new BorderLayout(0, Theme.GAP_S));
         question.setOpaque(false);
