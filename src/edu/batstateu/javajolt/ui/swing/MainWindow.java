@@ -1,6 +1,7 @@
 
 package edu.batstateu.javajolt.ui.swing;
 
+import edu.batstateu.javajolt.ui.swing.screen.TitleScreen;
 import edu.batstateu.javajolt.enums.Achievement;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -56,6 +57,7 @@ public class MainWindow extends JFrame {
     private final PowerUpService powerUpService;
     private final AnswerTimerService answerTimerService;
     private static final int COUNTDOWN_TICK_MILLIS = 100;
+    private ScreenId titleStartDestination = ScreenId.WELCOME;
     private Timer countdown;
     private long countdownVersion;
     private long countdownDeadline;
@@ -112,6 +114,17 @@ public class MainWindow extends JFrame {
         this.answerTimerService = answerTimerService;
         this.saveService = saveService;
         this.welcomeCompleted = saveService.hasSave();
+
+
+        container.add(
+                new TitleScreen(
+                        () -> showScreen(titleStartDestination),
+                        this::confirmExit
+                ),
+                ScreenId.TITLE.name()
+        );
+
+
 
         container.add(new WelcomeScreen(name -> {
             player.setName(name);
@@ -787,6 +800,20 @@ private void confirmExit() {
         }
         return notice.toString();
     }
+
+    
+public void setTitleStartDestination(ScreenId destination) {
+
+    if (destination != ScreenId.WELCOME
+            && destination != ScreenId.MAIN_MENU) {
+
+        throw new IllegalArgumentException(
+                "Invalid title destination: " + destination
+        );
+    }
+
+    this.titleStartDestination = destination;
+}
 
 
     public void showScreen(ScreenId id) {

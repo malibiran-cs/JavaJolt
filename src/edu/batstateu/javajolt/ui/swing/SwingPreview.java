@@ -42,7 +42,7 @@ public class SwingPreview {
                     new AnswerTimerService()
             );
 
-            window.showScreen(ScreenId.WELCOME);
+            window.showScreen(ScreenId.TITLE);
             window.setVisible(true);
         });
     }
