@@ -755,6 +755,7 @@ private void confirmExit() {
                 ? ""
                 : session.getEnemy().getName();
         questionScreen.showBattleMeta(
+                session.getTopic(),
                 enemyName,
                 unlocked,
                 disabled,

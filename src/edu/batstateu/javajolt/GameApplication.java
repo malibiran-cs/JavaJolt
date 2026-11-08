@@ -96,11 +96,11 @@ public class GameApplication {
                     saves
             );
 
-            window.showScreen(
-                    hasLoadedSave
-                            ? ScreenId.MAIN_MENU
-                            : ScreenId.WELCOME
+            window.setTitleStartDestination(
+                    hasLoadedSave ? ScreenId.MAIN_MENU : ScreenId.WELCOME
             );
+            // Start with the Title Screen for both new and returning players.
+            window.showScreen(ScreenId.TITLE);
 
             window.setVisible(true);
 

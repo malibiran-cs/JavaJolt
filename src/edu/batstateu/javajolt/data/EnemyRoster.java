@@ -4,9 +4,8 @@ import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.game.Enemy;
 
-// Maps every topic/difficulty pair to its quiz enemy. Variables has the only
-// named roster; every other topic gets a placeholder with the same escalation
-// until the Phase 6 roster expands.
+// Maps all seven topics to their own themed enemy across all difficulties.
+// Damage escalation still depends on difficulty; artwork does not.
 public class EnemyRoster {
 
     // Escalation increments per difficulty, in enum order (Beginner/Intermediate/Advanced).
@@ -17,15 +16,21 @@ public class EnemyRoster {
     public Enemy getEnemy(Topic topic, Difficulty difficulty) {
         int escalation = escalationFor(difficulty);
 
-        if (topic == Topic.VARIABLES) {
-            return switch (difficulty) {
-                case BEGINNER -> new Enemy("Piglet Byte", topic, difficulty, escalation);
-                case INTERMEDIATE -> new Enemy("Boar Byte", topic, difficulty, escalation);
-                case ADVANCED -> new Enemy("Warthog Byte", topic, difficulty, escalation);
-            };
-        }
+        // Same enemy identity and artwork at every difficulty.
+        // Difficulty still controls its underlying damage escalation.
+        return new Enemy(enemyNameFor(topic), topic, difficulty, escalation);
+    }
 
-        return new Enemy(topic.getLabel() + " Bug", topic, difficulty, escalation);
+    private static String enemyNameFor(Topic topic) {
+        return switch (topic) {
+            case VARIABLES -> "Andr0id X";
+            case OPERATORS -> "OpRiot";
+            case DECISIONS -> "Fork Oracle";
+            case LOOPS -> "Loopuin";
+            case ARRAYS -> "Clip Stack";
+            case EXCEPTION_HANDLING -> "Crash Monkey";
+            case OOP -> "Window Warden";
+        };
     }
 
     private static int escalationFor(Difficulty difficulty) {

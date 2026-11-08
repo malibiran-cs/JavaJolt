@@ -26,11 +26,13 @@ import edu.batstateu.javajolt.ui.swing.component.JavaCodeEditor;
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.InputMode;
+import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
 import edu.batstateu.javajolt.ui.swing.component.CharacterPlaceholder;
+import edu.batstateu.javajolt.ui.swing.component.EnemyPortraitView;
 import edu.batstateu.javajolt.ui.swing.component.RoundedButton;
 import edu.batstateu.javajolt.ui.swing.component.RoundedPanel;
 import edu.batstateu.javajolt.ui.swing.component.RoundedTextField;
@@ -86,6 +88,7 @@ public class QuestionScreen extends Screen {
             new EnumMap<>(PowerUp.class);
     private final JPanel powerUpRow = createPowerUpRow();
     private final JLabel enemyNameLabel = createLabel(" ");
+    private final EnemyPortraitView enemyPortrait = new EnemyPortraitView();
     private String currentEnemyName = "";
 
     public QuestionScreen(
@@ -192,11 +195,10 @@ public class QuestionScreen extends Screen {
 
         question.add(promptScroll, BorderLayout.CENTER);
 
-        CharacterPlaceholder enemy = new CharacterPlaceholder();
-        enemy.setPreferredSize(new Dimension(Theme.CHARACTER_SIZE, Theme.CHARACTER_SIZE));
+        enemyPortrait.setPreferredSize(new Dimension(Theme.CHARACTER_SIZE, Theme.CHARACTER_SIZE));
         JPanel enemySide = new JPanel(new BorderLayout());
         enemySide.setOpaque(false);
-        enemySide.add(enemy, BorderLayout.CENTER);
+        enemySide.add(enemyPortrait, BorderLayout.CENTER);
 
         // Enemy name lives under the enemy-side placeholder; invisible until the
         // controller names it, so absent states keep the existing layout height.
@@ -242,12 +244,14 @@ public class QuestionScreen extends Screen {
     // into one disabled set; armed power-ups read "ready" and stay disabled.
     // The row shows only while an unanswered question is active.
     public void showBattleMeta(
+            Topic enemyTopic,
             String enemyName,
             Set<PowerUp> unlocked,
             Set<PowerUp> disabled,
             Set<PowerUp> armed,
             boolean questionActive) {
 
+        enemyPortrait.setTopic(enemyTopic);
         currentEnemyName = enemyName == null ? "" : enemyName;
         enemyNameLabel.setText(currentEnemyName.isBlank() ? " " : currentEnemyName);
         enemyNameLabel.setVisible(!currentEnemyName.isBlank());
