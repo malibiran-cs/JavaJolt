@@ -1176,6 +1176,10 @@ private JPanel createCodeEditor(Question question) {
         submitButton.setEnabled(!checking);
     }
 
+    public void setTopicsButtonEnabled(boolean enabled) {
+        topicsButton.setEnabled(enabled);
+    }
+
     public void showLessonResult(GameSession session, boolean passed) {
         answerContent.removeAll();
         String result = "LESSON " + (passed ? "COMPLETE!" : "OVER")

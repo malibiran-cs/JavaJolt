@@ -11,12 +11,13 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
 - **Stack:** Plain Java SE. Modern features are already in use (records, switch expressions, text blocks, `Stream.toList()`). No build tool, no external libraries, no frameworks. Do not add any. (This is why saves use `java.util.Properties` instead of JSON.)
 - **Two front-ends:** The console (`ui/GameUI`) currently drives the game loop through `GameService`. The Swing UI (`ui/swing`) is being built in parallel and is opened by a callback once the player is ready. The Swing screens are still mostly visual; the functionality is being wired in.
 - **Game flow:** Topics unlock one after another (enum order) within a difficulty. Completing every topic of a difficulty moves the player to the next one.
+- **Tutorial routing:** New players go Title -> Welcome -> tutorial -> menu. Loaded players with tutorialCompleted=false go Title -> tutorial without Welcome; true (including legacy saves) goes Title -> menu. Only confirming the wrap-up marks/saves first completion. Menu replays never set the flag or save; tutorial navigation cannot escape to another screen.
 - **State:** Persisted: name, XP, difficulty, completed topics, cumulative score, high scores, tutorial completion. A new player's tutorial flag starts false; a legacy save missing the key loads true. One quiz attempt: HP (max HP derived per quiz from level) and the session's provisional score/XP, which commit only once at end-of-quiz settlement.
 - **Root package:** `edu.batstateu.javajolt`
 
 ### Where things live
 
-- `GameApplication`: composition root. The only place that builds and wires the main objects and catches top-level errors.
+- `GameApplication`: composition root. The only place that builds and wires the main objects and catches top-level errors; chooses the Title destination from loaded/name state and the tutorial flag. MainWindow owns the transitions.
 - `game/`: `GameService` (orchestrates the flow), `GameSession` (state of one lesson run), `Enemy` (one quiz opponent; damage grows with max HP and consecutive mistakes).
 - `service/`: one-purpose logic classes.
   - `QuestionService`: select and check questions.

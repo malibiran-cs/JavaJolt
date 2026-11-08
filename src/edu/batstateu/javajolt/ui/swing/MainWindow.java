@@ -128,7 +128,7 @@ public class MainWindow extends JFrame {
 
         container.add(
                 new TitleScreen(
-                        () -> showScreen(titleStartDestination),
+                        this::startFromTitle,
                         this::confirmExit
                 ),
                 ScreenId.TITLE.name()
@@ -139,7 +139,8 @@ public class MainWindow extends JFrame {
         container.add(new WelcomeScreen(name -> {
             player.setName(name);
             welcomeCompleted = true;
-            showScreen(ScreenId.MAIN_MENU);
+            if (player.isTutorialCompleted()) showScreen(ScreenId.MAIN_MENU);
+            else startTutorial(false);
         }), ScreenId.WELCOME.name());
 
         mainMenuScreen = new MainMenuScreen(
@@ -148,6 +149,7 @@ public class MainWindow extends JFrame {
                 this::saveWithFeedback,
                 this::showProgress,
                 this::showAchievements,
+                () -> startTutorial(true),
                 this::confirmExit
         );
 
@@ -271,7 +273,7 @@ public class MainWindow extends JFrame {
             Topic topic,
             Difficulty lessonDifficulty) {
 
-        if (tutorialRunning) clearTutorial();
+        if (tutorialRunning) return;
         stopCountdown();
         questionActive = false;
         // Remember XP before the quiz begins
@@ -832,7 +834,8 @@ private void confirmExit() {
 public void setTitleStartDestination(ScreenId destination) {
 
     if (destination != ScreenId.WELCOME
-            && destination != ScreenId.MAIN_MENU) {
+            && destination != ScreenId.MAIN_MENU
+            && destination != ScreenId.QUESTION) {
 
         throw new IllegalArgumentException(
                 "Invalid title destination: " + destination
@@ -843,11 +846,17 @@ public void setTitleStartDestination(ScreenId destination) {
 }
 
 
+    private void startFromTitle() {
+        if (titleStartDestination == ScreenId.QUESTION) startTutorial(false);
+        else showScreen(titleStartDestination);
+    }
+
     public void startTutorial(boolean replay) {
         if (tutorialCoordinator == null) throw new IllegalStateException("Tutorial was not wired for this window.");
         stopCountdown();
         session = tutorialCoordinator.start(replay);
         tutorialRunning = true;
+        questionScreen.setTopicsButtonEnabled(false);
         questionIndex = -1;
         lessonResultRecorded = false;
         questionActive = false;
@@ -863,11 +872,17 @@ public void setTitleStartDestination(ScreenId destination) {
         GameSession tutorialSession = session;
         long nanos = countdown == null ? -1 : Math.max(0, countdownDeadline - System.nanoTime());
         stopCountdown();
-        if (finished) tutorialCoordinator.showWrapUp(this, this::confirmExit);
+        boolean confirmed = false;
+        if (finished) confirmed = tutorialCoordinator.showWrapUp(this, this::confirmExit);
         else tutorialCoordinator.showQuestionSteps(this, questionIndex + 1, this::confirmExit);
         if (session != tutorialSession || !isDisplayable()) return;
         if (finished || !tutorialCoordinator.isActive()) {
+            boolean firstCompletion = confirmed && !tutorialCoordinator.isReplay() && !player.isTutorialCompleted();
             clearTutorial();
+            if (firstCompletion) {
+                player.setTutorialCompleted(true);
+                saveProgress();
+            }
             showScreen(ScreenId.MAIN_MENU);
         } else if (questionActive && session.isQuestionTimerRunning() && nanos >= 0) {
             startCountdown(nanos);
@@ -877,6 +892,7 @@ public void setTitleStartDestination(ScreenId destination) {
     private void clearTutorial() {
         tutorialRunning = false;
         tutorialCoordinator.stop();
+        questionScreen.setTopicsButtonEnabled(true);
         stopCountdown();
         session = null;
         questionIndex = -1;
@@ -887,8 +903,7 @@ public void setTitleStartDestination(ScreenId destination) {
 
     public void showScreen(ScreenId id) {
         if (tutorialRunning && id != ScreenId.QUESTION) {
-            clearTutorial();
-            id = ScreenId.MAIN_MENU;
+            return;
         }
         if (id != ScreenId.QUESTION) {
             stopCountdown();

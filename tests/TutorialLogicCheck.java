@@ -49,6 +49,7 @@ public class TutorialLogicCheck {
 
     public static void main(String[] args) {
         checkRenderedNumbers(args.length > 0 && args[0].equals("--print-script"));
+        checkWrapUps();
         for (boolean firstCorrect : new boolean[] {false, true}) {
             for (boolean secondCorrect : new boolean[] {false, true}) {
                 for (boolean expire : new boolean[] {false, true}) {
@@ -109,7 +110,10 @@ public class TutorialLogicCheck {
                 powerUps.getHealAmount(session.getPlayer().getMaxHp(), session.getDifficulty()));
         expectNumbers(steps.get(10), lessons.lessonCompleteBonus(session.getDifficulty()));
         expectNumbers(steps.get(11));
-        expectNumbers(steps.get(12));
+        expectNumbers(steps.get(12), session.getPlayer().getHp(), 0, 0, 0, lessons.getPassPercent());
+        require(tutorial.getTimeLimitSeconds(1) == Math.min(5,
+                        timer.getTimeLimitSeconds(session.getDifficulty(), session.getQuestions().get(0).getInputMode())),
+                "The demo timer is five seconds without changing real limits");
         require(steps.get(7).body().contains("Beginner has no penalty")
                         && steps.get(7).body().contains("still answer")
                         && steps.get(6).body().contains("checked separately"),
@@ -127,6 +131,31 @@ public class TutorialLogicCheck {
             actual.add(Integer.parseInt(matcher.group()));
         }
         require(actual.equals(expected), "All numeric text reads its rule owner: " + step.title());
+    }
+
+    private static void checkWrapUps() {
+        for (String outcome : List.of("passed", "accuracy", "hp")) {
+            TutorialService tutorial = tutorial();
+            GameSession session = tutorial.getSession();
+            beginQuestion(tutorial, 1);
+            lessons.submitAnswer(session, session.getQuestions().get(0), "A");
+            beginQuestion(tutorial, 2);
+            lessons.submitAnswer(session, session.getQuestions().get(1), outcome.equals("accuracy") ? "A" : "B");
+            if (outcome.equals("hp")) session.getPlayer().takeDamage(session.getPlayer().getHp());
+            TutorialStep step = tutorial.getStepsDue(TutorialTrigger.RESULTS, 0).get(0);
+            require(step.body().endsWith("This was practice, nothing was lost."), "Wrap-up reassurance: " + outcome);
+            if (outcome.equals("passed")) {
+                require(lessons.hasPassed(session) && step.body().contains("You cleared"), "Passed wrap-up uses hasPassed");
+                expectNumbers(step, session.getCorrectCount(), session.getAnsweredCount(), session.getAccuracyPercent(),
+                        lessons.getPassPercent(), session.getPlayer().getHp());
+            } else {
+                require(step.body().contains(outcome.equals("hp") ? "ended in defeat" : "below the"),
+                        "Wrap-up names the real failure reason: " + outcome);
+                expectNumbers(step, session.getPlayer().getHp(), session.getCorrectCount(), session.getAnsweredCount(),
+                        session.getAccuracyPercent(), lessons.getPassPercent());
+            }
+            require(tutorial.getStepsDue(TutorialTrigger.RESULTS, 0).isEmpty(), "One result variant per run");
+        }
     }
 
     private static void checkRun(boolean firstCorrect, boolean secondCorrect, boolean expire, boolean usePowers) {

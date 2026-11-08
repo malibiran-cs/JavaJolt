@@ -106,7 +106,7 @@ public class GameApplication {
             );
 
             window.setTitleStartDestination(
-                    hasLoadedSave ? ScreenId.MAIN_MENU : ScreenId.WELCOME
+                    startDestination(readyPlayer, hasLoadedSave)
             );
             // Start with the Title Screen for both new and returning players.
             window.showScreen(ScreenId.TITLE);
@@ -122,5 +122,10 @@ public class GameApplication {
                 );
             }
         });
+    }
+    // A loaded incomplete player already has a name and must resume the tutorial.
+    public static ScreenId startDestination(Player player, boolean loaded) {
+        if (!loaded) return ScreenId.WELCOME;
+        return player.isTutorialCompleted() ? ScreenId.MAIN_MENU : ScreenId.QUESTION;
     }
 }

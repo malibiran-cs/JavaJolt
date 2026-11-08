@@ -289,14 +289,17 @@ public class SwingTimerFlowCheck {
             require(hasLabel(tutorialPopup(), "Step 13 of 13") && runner.submissions == 2
                             && runner.settlements == 0 && !demo.isSettled(),
                     "full tutorial reaches wrap-up through shared submission without settlement");
+            require(!player.isTutorialCompleted(), "wrap-up must be confirmed before setting completion");
             button(tutorialPopup(), "Got it").doClick();
         });
         await(() -> tutorialPopup() == null && showingButton("Explore Lessons"));
-        require(Arrays.equals(savedBefore, Files.readAllBytes(savePath)), "tutorial walkthrough leaves save bytes unchanged");
+        require(new SaveService(savePath).load().tutorialCompleted(), "confirmed first run saves completion immediately");
         onEdt(() -> require(player.getXp() == 1000 && player.getScore() == 0 && player.getHp() == 0
-                        && !player.isTutorialCompleted() && player.copyHighScores().isEmpty()
+                        && player.isTutorialCompleted() && player.copyHighScores().isEmpty()
                         && player.getProgress().copyCompleted().isEmpty(),
-                "tutorial cannot mutate real progress or mark completion in Phase 4"));
+                "first completion changes only the real tutorial flag"));
+        savedBefore = Files.readAllBytes(savePath);
+        onEdt(() -> player.setTutorialCompleted(false));
 
         SwingUtilities.invokeLater(() -> window.startTutorial(true));
         await(() -> tutorialPopup() != null);
@@ -307,6 +310,7 @@ public class SwingTimerFlowCheck {
         onEdt(() -> require(!abandoned.isQuestionTimedOut() && !abandoned.isSettled() && runner.settlements == 0,
                 "replay exit clears timer and session without a later callback"));
         require(Arrays.equals(savedBefore, Files.readAllBytes(savePath)), "replay exit does not re-save");
+        onEdt(() -> require(!player.isTutorialCompleted(), "replay never sets an incomplete player's flag"));
         onEdt(() -> {
             button(window, "Explore Lessons").doClick();
             startQuiz();
@@ -344,10 +348,13 @@ public class SwingTimerFlowCheck {
                 "replacement run is protected from the old modal stack"));
         GameSession navigated = tutorial.getSession();
         onEdt(() -> window.showScreen(ScreenId.TOPIC_SELECTION));
+        onEdt(() -> require(tutorialPopup() != null && tutorial.getSession() == navigated,
+                "topic navigation cannot escape an active tutorial"));
+        onEdt(() -> button(tutorialPopup(), "Exit tutorial").doClick());
         await(() -> tutorialPopup() == null && showingButton("Explore Lessons"));
         Thread.sleep(1400);
         onEdt(() -> require(!navigated.isQuestionTimedOut() && !navigated.isSettled(),
-                "navigation away dismisses the popup and returns to a clean menu"));
+                "explicit replay exit returns to a clean menu after blocked navigation"));
         SwingUtilities.invokeLater(() -> window.startTutorial(true));
         await(() -> tutorialPopup() != null);
         SwingUtilities.invokeLater(() -> window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING)));

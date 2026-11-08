@@ -191,6 +191,15 @@ public class ProgressConsistencyCheck {
                     "Preview writes must stay isolated from existing save data");
             require(saves.load().tutorialCompleted(), "Legacy reads must preserve their default");
             System.out.println("PASS: Preview flags and isolated sandbox writes");
+            Player newcomer = new Player("New preview", 0);
+            SaveService newPreview = PreviewSandbox.createNewPlayer();
+            require(!newPreview.hasSave() && !newcomer.isTutorialCompleted()
+                            && newcomer.getXp() == 0 && newcomer.getProgress().copyCompleted().isEmpty(),
+                    "New-player sandbox must have no seed save or progress");
+            newPreview.save(newcomer, Difficulty.BEGINNER);
+            require(!newPreview.load().tutorialCompleted() && Files.readString(saveFile).equals(legacyContents),
+                    "New-player sandbox must preserve false and isolate its writes");
+            System.out.println("PASS: Unseeded new-player preview sandbox");
 
             Files.writeString(saveFile, "name=Oldest Player\nxp=0\ndifficulty=BEGINNER\n");
             SaveData oldest = saves.load();

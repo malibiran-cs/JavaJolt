@@ -69,6 +69,7 @@ public class MainMenuScreen extends Screen {
                 Runnable onSave,
                 Runnable onProgress,
                 Runnable onAchievements,
+                Runnable onTutorial,
                 Runnable onExit) {
 
         refreshInternal(player);
@@ -79,6 +80,7 @@ public class MainMenuScreen extends Screen {
                 onSave,
                 onProgress,
                 onAchievements,
+                onTutorial,
                 onExit
         ), BorderLayout.CENTER);
     }
@@ -306,6 +308,7 @@ public class MainMenuScreen extends Screen {
                 Runnable onSave,
                 Runnable onProgress,
                 Runnable onAchievements,
+                Runnable onTutorial,
                 Runnable onExit) {
 
         JPanel body = new JPanel(
@@ -334,6 +337,7 @@ public class MainMenuScreen extends Screen {
                 onSave,
                 onProgress,
                 onAchievements,
+                onTutorial,
                 onExit
         ));
 
@@ -550,19 +554,20 @@ public class MainMenuScreen extends Screen {
                 Runnable onSave,
                 Runnable onProgress,
                 Runnable onAchievements,
+                Runnable onTutorial,
                 Runnable onExit) {
 
     // Main navigation card
     RoundedPanel panel = new RoundedPanel(
-            new BorderLayout(0, Theme.GAP_L)
+            new BorderLayout(0, Theme.GAP_M)
     );
 
     panel.setBorder(
             BorderFactory.createEmptyBorder(
-                    Theme.GAP_L,
-                    Theme.GAP_L,
-                    Theme.GAP_L,
-                    Theme.GAP_L
+                    Theme.GAP_M,
+                    Theme.GAP_M,
+                    Theme.GAP_M,
+                    Theme.GAP_M
             )
     );
 
@@ -619,11 +624,21 @@ public class MainMenuScreen extends Screen {
                     ButtonStyle.SECONDARY
             );
 
+    RoundedButton tutorialButton = new RoundedButton("Tutorial", ButtonStyle.SECONDARY);
+    tutorialButton.addActionListener(event -> onTutorial.run());
+
     RoundedButton exitButton =
             new RoundedButton(
                     "Exit Game",
                     ButtonStyle.DANGER
             );
+
+    // Keep the extra action row within the existing menu card using Theme spacing.
+    for (RoundedButton button : new RoundedButton[] {
+            progressButton, saveButton, achievementsButton, tutorialButton, exitButton}) {
+        button.setBorder(BorderFactory.createEmptyBorder(
+                Theme.GAP_S, Theme.GAP_L, Theme.GAP_S, Theme.GAP_L));
+    }
 
     // Preserve existing button functionality
     lessonsButton.addActionListener(
@@ -648,12 +663,12 @@ public class MainMenuScreen extends Screen {
 
     // Main button
     JPanel buttons = new JPanel(
-            new BorderLayout(0, Theme.GAP_M)
+            new BorderLayout(0, Theme.GAP_S)
     );
     buttons.setOpaque(false);
 
     lessonsButton.setPreferredSize(
-            new Dimension(320, 65)
+            new Dimension(320, lessonsButton.getPreferredSize().height)
     );
 
     buttons.add(lessonsButton, BorderLayout.NORTH);
@@ -667,9 +682,10 @@ public class MainMenuScreen extends Screen {
     secondaryButtons.add(progressButton);
     secondaryButtons.add(saveButton);
     secondaryButtons.add(achievementsButton);
-    secondaryButtons.add(exitButton);
+    secondaryButtons.add(tutorialButton);
 
     buttons.add(secondaryButtons, BorderLayout.CENTER);
+    buttons.add(exitButton, BorderLayout.SOUTH);
 
     JPanel holder = new JPanel(new GridBagLayout());
     holder.setOpaque(false);

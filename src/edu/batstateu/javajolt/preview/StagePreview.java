@@ -34,7 +34,7 @@ import edu.batstateu.javajolt.ui.swing.TutorialCoordinator;
 /*
  * Development launcher (Phase 1): previews any difficulty and topic without
  * real progression.
- * Usage: StagePreview <beginner|intermediate|advanced|all> [--xp=N]
+ * Usage: StagePreview <beginner|intermediate|advanced|all> [--xp=N], or StagePreview newplayer
  * Unlock probes: --xp=750 gives level 15 (Heal); --xp=1000 gives level 20 (Time Stop).
  * Run from the project root so data/lessons and saves stay relative paths.
  * All saving goes to a throwaway temp directory; the real saves/ folder is
@@ -49,7 +49,7 @@ public class StagePreview {
     private static final String TITLE_TAG = "  [PREVIEW - not saved] ";
     private static final String PLAYER_NAME = "Preview";
     private static final String USAGE =
-            "Usage: StagePreview <beginner|intermediate|advanced|all> [--xp=N]";
+            "Usage: StagePreview <beginner|intermediate|advanced|all> [--xp=N], or StagePreview newplayer";
 
     // Shared wiring for every window opened during one preview run.
     private static QuestionService questionService;
@@ -68,13 +68,17 @@ public class StagePreview {
 
         Difficulty fixedMode = null;
         boolean allMode = false;
+        boolean newPlayerMode = "newplayer".equalsIgnoreCase(args[0]);
         switch (args[0].toLowerCase()) {
             case "beginner" -> fixedMode = Difficulty.BEGINNER;
             case "intermediate" -> fixedMode = Difficulty.INTERMEDIATE;
             case "advanced" -> fixedMode = Difficulty.ADVANCED;
             case "all" -> allMode = true;
+            case "newplayer" -> fixedMode = Difficulty.BEGINNER;
             default -> printUsageAndExit();
         }
+
+        if (newPlayerMode && args.length != 1) printUsageAndExit();
 
         int override = -1;
         for (int i = 1; i < args.length; i++) {
@@ -92,11 +96,11 @@ public class StagePreview {
         final Difficulty startMode = fixedMode;
         final boolean all = allMode;
         final int xp = override;
-        SwingUtilities.invokeLater(() -> start(startMode, all, xp));
+        SwingUtilities.invokeLater(() -> start(startMode, all, xp, newPlayerMode));
     }
 
     // Builds the shared services, picks the starting difficulty, and opens the first preview window.
-    private static void start(Difficulty fixedMode, boolean allMode, int override) {
+    private static void start(Difficulty fixedMode, boolean allMode, int override, boolean newPlayerMode) {
         xpOverride = override;
 
         Difficulty chosen = fixedMode;
@@ -121,9 +125,10 @@ public class StagePreview {
         tutorialContent = new TutorialContent(lessonRunnerService, scores, answerTimerService, powerUpService);
 
         sandboxSaveService =
-                PreviewSandbox.createFor(seedPlayer(chosen, chosenXp(chosen)), chosen);
+                newPlayerMode ? PreviewSandbox.createNewPlayer()
+                        : PreviewSandbox.createFor(seedPlayer(chosen, chosenXp(chosen)), chosen);
 
-        openWindow(chosen);
+        openWindow(chosen, newPlayerMode);
         if (allMode) {
             showDifficultySwitcher();
         }
@@ -131,11 +136,15 @@ public class StagePreview {
 
     // Opens a fresh, fully seeded preview window; replaces any previously opened one.
     private static void openWindow(Difficulty difficulty) {
+        openWindow(difficulty, false);
+    }
+
+    private static void openWindow(Difficulty difficulty, boolean newPlayerMode) {
         if (currentWindow != null) {
             currentWindow.dispose();
         }
 
-        Player player = seedPlayer(difficulty, chosenXp(difficulty));
+        Player player = newPlayerMode ? new Player(PLAYER_NAME, 0) : seedPlayer(difficulty, chosenXp(difficulty));
         MainWindow window = new MainWindow(
                 player,
                 questionService,
@@ -148,7 +157,7 @@ public class StagePreview {
                         answerTimerService, powerUpService))
         );
         window.setTitle("JavaJolt" + TITLE_TAG);
-        window.showScreen(ScreenId.MAIN_MENU);
+        window.showScreen(newPlayerMode ? ScreenId.TITLE : ScreenId.MAIN_MENU);
         window.setVisible(true);
         System.out.println("StagePreview: " + difficulty.getLabel()
                 + " (XP " + player.getXp() + "), saving into the preview sandbox only");

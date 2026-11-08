@@ -21,7 +21,7 @@ public class TutorialService {
     // The sample uses the real Variables opponent for the demo difficulty.
     private static final Topic DEMO_TOPIC = Topic.VARIABLES;
     // Only the timer-demo question uses this shortened limit.
-    private static final int DEMO_TIMER_SECONDS = 3;
+    private static final int DEMO_TIMER_SECONDS = 5;
 
     private final TutorialContent content;
     private final LessonRunnerService lessons;
@@ -67,7 +67,7 @@ public class TutorialService {
         for (int i = 0; i < steps.size(); i++) {
             TutorialStep step = steps.get(i);
             if (step.trigger() == trigger && step.questionIndex() == questionIndex && shownSteps.add(i)) {
-                due.add(step);
+                due.add(trigger == TutorialTrigger.RESULTS ? content.createResultsStep(session) : step);
             }
         }
         return List.copyOf(due);

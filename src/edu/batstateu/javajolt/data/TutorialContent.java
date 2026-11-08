@@ -78,8 +78,28 @@ public class TutorialContent {
                         "XP and levels", xp(session)),
                 new TutorialStep(TutorialTrigger.BEFORE_QUESTION, HEAL_QUESTION_INDEX,
                         "Where to go next", progression()),
-                new TutorialStep(TutorialTrigger.RESULTS, 0, "You're ready!",
-                        "You're ready to explore JavaJolt. Try a lesson, study its Textbook, and take your time learning."));
+                createResultsStep(session));
+    }
+
+    // Re-rendered when RESULTS is due so the wrap-up explains the finished sample.
+    public TutorialStep createResultsStep(GameSession session) {
+        String accuracy = session.getCorrectCount() + " of " + session.getAnsweredCount()
+                + " correct = " + session.getAccuracyPercent() + "%";
+        String body;
+        if (!session.getPlayer().isAlive()) {
+            body = "Your HP reached " + session.getPlayer().getHp() + ", so the practice quiz ended in defeat. "
+                    + accuracy + "; even reaching the " + lessons.getPassPercent()
+                    + "% needed cannot overcome running out of HP. ";
+        } else if (lessons.hasPassed(session)) {
+            body = "You cleared the practice quiz: " + accuracy + ", meeting the " + lessons.getPassPercent()
+                    + "% needed with " + session.getPlayer().getHp() + " HP remaining. You're ready to try a lesson. ";
+        } else {
+            body = "You finished with " + session.getPlayer().getHp() + " HP, but " + accuracy
+                    + ", below the " + lessons.getPassPercent()
+                    + "% needed. Stay alive and meet the accuracy goal to clear a real quiz. ";
+        }
+        return new TutorialStep(TutorialTrigger.RESULTS, 0, "You're ready!",
+                body + "This was practice, nothing was lost.");
     }
 
     private String goal(GameSession session) {
