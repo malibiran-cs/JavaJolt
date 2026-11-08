@@ -14,6 +14,7 @@ import javax.swing.SwingUtilities;
 
 import edu.batstateu.javajolt.data.EnemyRoster;
 import edu.batstateu.javajolt.data.QuestionBank;
+import edu.batstateu.javajolt.data.TutorialContent;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
@@ -24,9 +25,11 @@ import edu.batstateu.javajolt.service.AnswerTimerService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.service.SaveService;
 import edu.batstateu.javajolt.service.ScoreService;
+import edu.batstateu.javajolt.service.TutorialService;
 import edu.batstateu.javajolt.ui.GameUI;
 import edu.batstateu.javajolt.ui.swing.MainWindow;
 import edu.batstateu.javajolt.ui.swing.ScreenId;
+import edu.batstateu.javajolt.ui.swing.TutorialCoordinator;
 
 /*
  * Development launcher (Phase 1): previews any difficulty and topic without
@@ -54,6 +57,7 @@ public class StagePreview {
     private static PowerUpService powerUpService;
     private static AnswerTimerService answerTimerService;
     private static SaveService sandboxSaveService;
+    private static TutorialContent tutorialContent;
     private static int xpOverride = -1; // -1 = use the difficulty's default XP
     private static MainWindow currentWindow;
 
@@ -104,15 +108,17 @@ public class StagePreview {
         }
 
         questionService = new QuestionService(new QuestionBank());
+        ScoreService scores = new ScoreService();
         lessonRunnerService =
                 new LessonRunnerService(
                         questionService,
                         new LessonService(),
                         new EnemyRoster(),
-                        new ScoreService(),
+                        scores,
                         new GameUI());
         powerUpService = new PowerUpService();
         answerTimerService = new AnswerTimerService();
+        tutorialContent = new TutorialContent(lessonRunnerService, scores, answerTimerService, powerUpService);
 
         sandboxSaveService =
                 PreviewSandbox.createFor(seedPlayer(chosen, chosenXp(chosen)), chosen);
@@ -137,7 +143,9 @@ public class StagePreview {
                 difficulty,
                 powerUpService,
                 answerTimerService,
-                sandboxSaveService
+                sandboxSaveService,
+                new TutorialCoordinator(new TutorialService(tutorialContent, lessonRunnerService,
+                        answerTimerService, powerUpService))
         );
         window.setTitle("JavaJolt" + TITLE_TAG);
         window.showScreen(ScreenId.MAIN_MENU);

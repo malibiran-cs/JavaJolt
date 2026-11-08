@@ -3,7 +3,6 @@ package edu.batstateu.javajolt.service;
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.data.TutorialContent;
 import edu.batstateu.javajolt.entity.Player;
-import edu.batstateu.javajolt.entity.PowerUpResult;
 import edu.batstateu.javajolt.entity.TutorialStep;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.PowerUp;
@@ -31,7 +30,6 @@ public class TutorialService {
     private final Set<Integer> shownSteps = new HashSet<>();
     private GameSession session;
     private List<TutorialStep> steps = List.of();
-    private boolean questionActive;
     private boolean healPrepared;
 
     public TutorialService(TutorialContent content, LessonRunnerService lessons,
@@ -51,7 +49,6 @@ public class TutorialService {
         session = lessons.startSession(demo, DEMO_TOPIC, DEMO_DIFFICULTY,
                 content.createQuestions(DEMO_TOPIC, DEMO_DIFFICULTY));
         shownSteps.clear();
-        questionActive = false;
         healPrepared = false;
         steps = content.createSteps(session, getTimeLimitSeconds(content.getTimerQuestionIndex()));
     }
@@ -62,7 +59,8 @@ public class TutorialService {
             return List.of();
         }
         if (trigger == TutorialTrigger.BEFORE_QUESTION
-                && (!questionActive || questionIndex != session.getCurrentQuestionIndex())) {
+                && (questionIndex != session.getCurrentQuestionIndex()
+                        || session.getAnsweredCount() >= questionIndex || isFinished())) {
             return List.of();
         }
         List<TutorialStep> due = new ArrayList<>();
@@ -75,17 +73,10 @@ public class TutorialService {
         return List.copyOf(due);
     }
 
-    public void beginQuestion(int questionIndex) {
+    // MainWindow advances the shared session; this hook only prepares scripted HP.
+    public void prepareQuestion() {
         requireRun();
-        if (questionActive && questionIndex == session.getCurrentQuestionIndex()) {
-            return;
-        }
-        if (isFinished() || questionIndex != session.getAnsweredCount() + 1) {
-            throw new IllegalStateException("Continue the current tutorial before starting another question.");
-        }
-        session.setCurrentQuestionIndex(questionIndex);
-        questionActive = true;
-        if (questionIndex == content.getHealQuestionIndex() && !healPrepared) {
+        if (session.getCurrentQuestionIndex() == content.getHealQuestionIndex() && !healPrepared) {
             prepareHeal();
         }
     }
@@ -98,36 +89,12 @@ public class TutorialService {
         healPrepared = true;
     }
 
-    public boolean submitAnswer(String answer) {
-        requireActiveQuestion();
-        boolean correct = lessons.submitAnswer(session, currentQuestion(), answer);
-        questionActive = false;
-        return correct;
-    }
-
-    public void applyTimeout() {
-        requireRun();
-        if (questionActive) {
-            timer.applyTimeout(session);
-            if (!session.getPlayer().isAlive()) {
-                questionActive = false;
-            }
-        }
-    }
-
     public boolean canUsePowerUp(PowerUp powerUp) {
         requireRun();
-        return questionActive && session.getCurrentQuestionIndex() >= content.getHealQuestionIndex()
+        return !isFinished() && session.getCurrentQuestionIndex() > session.getAnsweredCount()
+                && session.getCurrentQuestionIndex() >= content.getHealQuestionIndex()
                 && powerUps.canUse(session, powerUp)
                 && powerUps.isApplicable(powerUp, session, currentQuestion());
-    }
-
-    public PowerUpResult usePowerUp(PowerUp powerUp) {
-        requireActiveQuestion();
-        if (session.getCurrentQuestionIndex() < content.getHealQuestionIndex()) {
-            return new PowerUpResult(false, "Power-ups will become available at their practice step.", List.of());
-        }
-        return powerUps.use(session, powerUp, currentQuestion());
     }
 
     public int getTimeLimitSeconds(int questionIndex) {
@@ -165,10 +132,4 @@ public class TutorialService {
         }
     }
 
-    private void requireActiveQuestion() {
-        requireRun();
-        if (!questionActive || !session.getPlayer().isAlive()) {
-            throw new IllegalStateException("There is no active tutorial question.");
-        }
-    }
 }

@@ -162,12 +162,12 @@ public class TutorialLogicCheck {
                 "Future steps cannot be consumed before their moment");
         List<String> seen = new ArrayList<>();
         collect(tutorial, seen, TutorialTrigger.SESSION_START, 0, 5);
-        tutorial.beginQuestion(1);
+        beginQuestion(tutorial, 1);
         collect(tutorial, seen, TutorialTrigger.BEFORE_QUESTION, 1, 3);
         require(tutorial.getTimeLimitSeconds(1) <= timer.getTimeLimitSeconds(demo.getDifficulty(),
                         demo.getQuestions().get(0).getInputMode()) && timer.getTimeoutDamage(demo) > 0,
                 "Only the demo countdown is shortened; timeout is visibly damaging");
-        require(!tutorial.canUsePowerUp(PowerUp.HEAL) && !tutorial.usePowerUp(PowerUp.HEAL).applied()
+        require(!tutorial.canUsePowerUp(PowerUp.HEAL)
                         && !demo.hasUsed(PowerUp.HEAL), "Heal cannot be consumed before its introduction");
         if (expire) {
             checkTimeout(tutorial);
@@ -177,9 +177,9 @@ public class TutorialLogicCheck {
         int hpBefore = demo.getPlayer().getHp();
         int streakBefore = demo.getCurrentStreak();
         int mistakesBefore = demo.getConsecutiveMistakes();
-        tutorial.beginQuestion(2);
+        beginQuestion(tutorial, 2);
         int hpAfterPreparation = demo.getPlayer().getHp();
-        tutorial.beginQuestion(2);
+        beginQuestion(tutorial, 2);
         require(hpAfterPreparation < hpBefore && demo.getPlayer().getHp() == hpAfterPreparation
                         && demo.getCurrentStreak() == streakBefore && demo.getConsecutiveMistakes() == mistakesBefore,
                 "Heal preparation uses damage once without recording an answer or changing counters");
@@ -233,20 +233,15 @@ public class TutorialLogicCheck {
         int damage = correct || demo.isShieldArmed() ? 0 : demo.getEnemy().resolveMistake(demo);
         int points = correct ? scores.pointsForCorrect(demo.getCurrentStreak() + 1) : 0;
         int scoreBefore = demo.getScoreEarned();
-        require(tutorial.submitAnswer(answer) == correct
+        require(lessons.submitAnswer(demo, demo.getQuestions().get(demo.getCurrentQuestionIndex() - 1), answer) == correct
                         && demo.getPlayer().getHp() == Math.max(0, hpBefore - damage)
                         && demo.getScoreEarned() == scoreBefore + points,
                 "Answers use the real enemy damage and scoring path");
-        int hpAfter = demo.getPlayer().getHp();
-        tutorial.applyTimeout();
-        require(demo.getPlayer().getHp() == hpAfter, "No timeout can attack after answering");
-        boolean rejected = false;
-        try {
-            tutorial.submitAnswer(answer);
-        } catch (IllegalStateException e) {
-            rejected = true;
-        }
-        require(rejected, "Duplicate tutorial submission is rejected");
+    }
+
+    private static void beginQuestion(TutorialService tutorial, int index) {
+        tutorial.getSession().setCurrentQuestionIndex(index);
+        tutorial.prepareQuestion();
     }
 
     private static void checkTimeout(TutorialService tutorial) {
@@ -256,8 +251,8 @@ public class TutorialLogicCheck {
         int streak = demo.getCurrentStreak();
         int mistakes = demo.getConsecutiveMistakes();
         int expected = demo.isQuestionTimerFrozen() || demo.isShieldArmed() ? 0 : timer.getTimeoutDamage(demo);
-        tutorial.applyTimeout();
-        tutorial.applyTimeout();
+        timer.applyTimeout(demo);
+        timer.applyTimeout(demo);
         require(demo.getPlayer().getHp() == Math.max(0, hpBefore - expected)
                         && demo.getAnsweredCount() == answered && demo.getCurrentStreak() == streak
                         && demo.getConsecutiveMistakes() == mistakes,
@@ -266,7 +261,7 @@ public class TutorialLogicCheck {
 
     private static void checkPowers(TutorialService tutorial) {
         GameSession demo = tutorial.getSession();
-        PowerUpResult hint = tutorial.usePowerUp(PowerUp.HINT);
+        PowerUpResult hint = powerUps.use(demo, PowerUp.HINT, demo.getQuestions().get(1));
         require(hint.applied() && hint.removedChoices().size() == 1
                         && !demo.getQuestions().get(1).isCorrect(hint.removedChoices().get(0).substring(0, 1)),
                 "Real Hint removes a wrong choice");
@@ -277,14 +272,14 @@ public class TutorialLogicCheck {
         int accuracy = demo.getAccuracyPercent();
         int expected = Math.min(demo.getPlayer().getMaxHp() - before,
                 powerUps.getHealAmount(demo.getPlayer().getMaxHp(), demo.getDifficulty()));
-        require(tutorial.usePowerUp(PowerUp.HEAL).applied() && demo.getPlayer().getHp() == before + expected
+        require(powerUps.use(demo, PowerUp.HEAL, demo.getQuestions().get(1)).applied() && demo.getPlayer().getHp() == before + expected
                         && demo.getCurrentStreak() == streak && demo.getConsecutiveMistakes() == mistakes
                         && demo.getScoreEarned() == score && demo.getAccuracyPercent() == accuracy,
                 "Real Heal restores the described amount without changing score or counters");
-        require(tutorial.usePowerUp(PowerUp.SHIELD).applied() && demo.isShieldArmed(), "Real Shield arms");
-        require(tutorial.usePowerUp(PowerUp.TIME_STOP).applied() && demo.isQuestionTimerFrozen(), "Real Time Stop freezes");
+        require(powerUps.use(demo, PowerUp.SHIELD, demo.getQuestions().get(1)).applied() && demo.isShieldArmed(), "Real Shield arms");
+        require(powerUps.use(demo, PowerUp.TIME_STOP, demo.getQuestions().get(1)).applied() && demo.isQuestionTimerFrozen(), "Real Time Stop freezes");
         for (PowerUp powerUp : PowerUp.values()) {
-            require(!tutorial.canUsePowerUp(powerUp) && !tutorial.usePowerUp(powerUp).applied(),
+            require(!tutorial.canUsePowerUp(powerUp) && !powerUps.use(demo, powerUp, demo.getQuestions().get(1)).applied(),
                     "Power-up cannot be reused: " + powerUp);
         }
     }

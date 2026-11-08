@@ -2,6 +2,7 @@
 package edu.batstateu.javajolt;
 
 import edu.batstateu.javajolt.data.QuestionBank;
+import edu.batstateu.javajolt.data.TutorialContent;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.entity.SaveData;
 import edu.batstateu.javajolt.enums.Difficulty;
@@ -14,11 +15,13 @@ import edu.batstateu.javajolt.service.ScoreService;
 import edu.batstateu.javajolt.service.LessonService;
 import edu.batstateu.javajolt.service.PowerUpService;
 import edu.batstateu.javajolt.service.AnswerTimerService;
+import edu.batstateu.javajolt.service.TutorialService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.service.SaveService;
 import edu.batstateu.javajolt.ui.GameUI;
 import edu.batstateu.javajolt.ui.swing.MainWindow;
 import edu.batstateu.javajolt.ui.swing.ScreenId;
+import edu.batstateu.javajolt.ui.swing.TutorialCoordinator;
 
 import java.util.NoSuchElementException;
 import javax.swing.JOptionPane;
@@ -34,11 +37,15 @@ public class GameApplication {
         SaveService saves = new SaveService();
         GameUI consoleUI = new GameUI();
 
+        ScoreService scores = new ScoreService();
         LessonRunnerService runner =
                 new LessonRunnerService(questions, lessons, new EnemyRoster(),
-                        new ScoreService(), consoleUI);
+                        scores, consoleUI);
         PowerUpService powerUps = new PowerUpService();
         AnswerTimerService answerTimer = new AnswerTimerService();
+        TutorialContent tutorialContent = new TutorialContent(runner, scores, answerTimer, powerUps);
+        TutorialService tutorial = new TutorialService(tutorialContent, runner, answerTimer, powerUps);
+        TutorialCoordinator tutorialCoordinator = new TutorialCoordinator(tutorial);
 
         // Console mode remains available for development.
         if (args.length > 0
@@ -94,7 +101,8 @@ public class GameApplication {
                     difficulty,
                     powerUps,
                     answerTimer,
-                    saves
+                    saves,
+                    tutorialCoordinator
             );
 
             window.setTitleStartDestination(

@@ -63,4 +63,7 @@ public final class Theme {
     public static final int CHOICE_TEXT_WIDTH = 260;
     public static final int CODE_EDITOR_ROWS = 10;
     public static final int CODE_EDITOR_COLUMNS = 70;
+    // Tutorial popup body viewport; long text remains scrollable.
+    public static final int TUTORIAL_BODY_ROWS = 9;
+    public static final int TUTORIAL_BODY_COLUMNS = 56;
 }

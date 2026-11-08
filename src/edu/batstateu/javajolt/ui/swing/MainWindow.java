@@ -56,6 +56,8 @@ public class MainWindow extends JFrame {
     private final SaveService saveService;
     private final PowerUpService powerUpService;
     private final AnswerTimerService answerTimerService;
+    private final TutorialCoordinator tutorialCoordinator;
+    private boolean tutorialRunning;
     private static final int COUNTDOWN_TICK_MILLIS = 100;
     private ScreenId titleStartDestination = ScreenId.WELCOME;
     private Timer countdown;
@@ -105,6 +107,13 @@ public class MainWindow extends JFrame {
             PowerUpService powerUpService,
             AnswerTimerService answerTimerService,
             SaveService saveService) {
+        this(player, questionService, lessonRunnerService, difficulty, powerUpService,
+                answerTimerService, saveService, null);
+    }
+
+    public MainWindow(Player player, QuestionService questionService, LessonRunnerService lessonRunnerService,
+            Difficulty difficulty, PowerUpService powerUpService, AnswerTimerService answerTimerService,
+            SaveService saveService, TutorialCoordinator tutorialCoordinator) {
         super("JavaJolt");
         this.player = player;
         this.questionService = questionService;
@@ -112,6 +121,7 @@ public class MainWindow extends JFrame {
         this.difficulty = difficulty;
         this.powerUpService = powerUpService;
         this.answerTimerService = answerTimerService;
+        this.tutorialCoordinator = tutorialCoordinator;
         this.saveService = saveService;
         this.welcomeCompleted = saveService.hasSave();
 
@@ -261,6 +271,7 @@ public class MainWindow extends JFrame {
             Topic topic,
             Difficulty lessonDifficulty) {
 
+        if (tutorialRunning) clearTutorial();
         stopCountdown();
         questionActive = false;
         // Remember XP before the quiz begins
@@ -378,17 +389,18 @@ private void confirmExit() {
         return;
     }
 
-    if (saveProgress()) {
+    if ((tutorialRunning && tutorialCoordinator.isReplay()) || saveProgress()) {
         dispose();
     }
 }
 
 
     private void submitAnswer(String answer) {
-        if (session == null || !questionActive || !player.isAlive()
+        if (session == null || !questionActive || !session.getPlayer().isAlive() || isTutorialPopupOpen()
                 || questionIndex < 0 || questionIndex >= session.getQuestions().size()) return;
         stopCountdown();
         GameSession answerSession = session;
+        Player quizPlayer = answerSession.getPlayer();
         // No power-up may be used once an answer was submitted: this flag turns
         // off before checking and stays off through the result and transitions.
         questionActive = false;
@@ -410,8 +422,8 @@ private void confirmExit() {
                 questionScreen.showAnswerResult(
                         get(),
                         current.getExplanation(),
-                        player,
-                        player.getXp() + session.getProvisionalXp(),
+                        quizPlayer,
+                        quizPlayer.getXp() + session.getProvisionalXp(),
                         session.getScoreEarned(),
                         session.getCurrentStreak(),
                         session.getLastPoints()
@@ -438,7 +450,7 @@ private void confirmExit() {
 
     private void showNextQuestion() {
         if (session == null || !questionScreen.isVisible() || lessonResultRecorded
-                || (questionActive && player.isAlive())) {
+                || isTutorialPopupOpen() || (questionActive && session.getPlayer().isAlive())) {
             return;
         }
         stopCountdown();
@@ -448,7 +460,13 @@ private void confirmExit() {
 
         // Check whether the lesson is finished
         if (questionIndex >= session.getQuestions().size()
-                || !player.isAlive()) {
+                || !session.getPlayer().isAlive()) {
+
+            if (tutorialRunning) {
+                lessonResultRecorded = true;
+                showTutorialSteps(true);
+                return;
+            }
 
             // Prevent recording rewards twice
             if (lessonResultRecorded) {
@@ -610,6 +628,7 @@ private void confirmExit() {
         session.setCurrentQuestionIndex(
                 questionIndex + 1
         );
+        if (tutorialRunning) tutorialCoordinator.prepareQuestion();
 
         // The new question is active: power-ups may be used again (the
         // controller re-enables them; Hint visuals are per-question, since the
@@ -620,15 +639,17 @@ private void confirmExit() {
                 session.getQuestions().get(questionIndex),
                 questionIndex + 1,
                 session.getQuestions().size(),
-                player,
-                player.getXp() + session.getProvisionalXp(),
+                session.getPlayer(),
+                session.getPlayer().getXp() + session.getProvisionalXp(),
                 session.getScoreEarned(),
                 session.getCurrentStreak(),
                 session.getLastPoints()
         );
         refreshBattleInfo(true);
-        startCountdown(answerTimerService.getTimeLimitSeconds(session.getDifficulty(),
-                session.getQuestions().get(questionIndex).getInputMode()));
+        startCountdown(tutorialRunning ? tutorialCoordinator.getTimeLimitSeconds(questionIndex + 1)
+                : answerTimerService.getTimeLimitSeconds(session.getDifficulty(),
+                        session.getQuestions().get(questionIndex).getInputMode()));
+        if (tutorialRunning) showTutorialSteps(false);
     }
 
     private void restoreQuestionAfterCheckFailure() {
@@ -640,9 +661,13 @@ private void confirmExit() {
     }
 
     private void startCountdown(int seconds) {
+        startCountdown(TimeUnit.SECONDS.toNanos(seconds));
+    }
+
+    private void startCountdown(long nanos) {
         stopCountdown();
-        remainingSeconds = seconds;
-        countdownDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(remainingSeconds);
+        remainingSeconds = (int) ((nanos + TimeUnit.SECONDS.toNanos(1) - 1) / TimeUnit.SECONDS.toNanos(1));
+        countdownDeadline = System.nanoTime() + nanos;
         questionScreen.showCountdown(remainingSeconds, false);
         long version = countdownVersion;
         GameSession timedSession = session;
@@ -673,21 +698,22 @@ private void confirmExit() {
     }
 
     private void handleTimeout() {
-        if (!questionActive || session == null) {
+        if (!questionActive || session == null || isTutorialPopupOpen()) {
             return;
         }
         answerTimerService.applyTimeout(session);
-        if (!player.isAlive()) {
+        if (!session.getPlayer().isAlive()) {
             // Reuse the existing completion path without recording an answer.
             showNextQuestion();
             return;
         }
-        questionScreen.showTimeout(player);
+        questionScreen.showTimeout(session.getPlayer());
         refreshBattleInfo(true);
     }
 
     @Override
     public void dispose() {
+        if (tutorialRunning) clearTutorial();
         stopCountdown();
         questionActive = false;
         super.dispose();
@@ -700,7 +726,8 @@ private void confirmExit() {
         if (session == null
                 || questionIndex < 0
                 || questionIndex >= session.getQuestions().size()
-                || !questionActive) {
+                || !questionActive || isTutorialPopupOpen()
+                || (tutorialRunning && !tutorialCoordinator.canUsePowerUp(powerUp))) {
             return;
         }
 
@@ -714,7 +741,7 @@ private void confirmExit() {
             questionScreen.showCountdown(remainingSeconds, true);
         }
         if (result.applied() && powerUp == PowerUp.HEAL) {
-            questionScreen.showHp(player);
+            questionScreen.showHp(session.getPlayer());
         }
         if (result.applied() && !result.removedChoices().isEmpty()) {
             questionScreen.applyHintRemovedChoices(result.removedChoices());
@@ -737,11 +764,12 @@ private void confirmExit() {
                 : null;
 
         for (PowerUp powerUp : PowerUp.values()) {
-            if (powerUpService.isUnlocked(player, powerUp)) {
+            if (powerUpService.isUnlocked(session.getPlayer(), powerUp)) {
                 unlocked.add(powerUp);
             }
             if (session.hasUsed(powerUp)
-                    || !powerUpService.isApplicable(powerUp, session, current)) {
+                    || !powerUpService.isApplicable(powerUp, session, current)
+                    || (tutorialRunning && !tutorialCoordinator.canUsePowerUp(powerUp))) {
                 disabled.add(powerUp);
             }
             if (powerUp == PowerUp.SHIELD && session.isShieldArmed()) {
@@ -815,7 +843,53 @@ public void setTitleStartDestination(ScreenId destination) {
 }
 
 
+    public void startTutorial(boolean replay) {
+        if (tutorialCoordinator == null) throw new IllegalStateException("Tutorial was not wired for this window.");
+        stopCountdown();
+        session = tutorialCoordinator.start(replay);
+        tutorialRunning = true;
+        questionIndex = -1;
+        lessonResultRecorded = false;
+        questionActive = false;
+        showScreen(ScreenId.QUESTION);
+        showNextQuestion();
+    }
+
+    private boolean isTutorialPopupOpen() {
+        return tutorialCoordinator != null && tutorialCoordinator.isPopupOpen();
+    }
+
+    private void showTutorialSteps(boolean finished) {
+        GameSession tutorialSession = session;
+        long nanos = countdown == null ? -1 : Math.max(0, countdownDeadline - System.nanoTime());
+        stopCountdown();
+        if (finished) tutorialCoordinator.showWrapUp(this, this::confirmExit);
+        else tutorialCoordinator.showQuestionSteps(this, questionIndex + 1, this::confirmExit);
+        if (session != tutorialSession || !isDisplayable()) return;
+        if (finished || !tutorialCoordinator.isActive()) {
+            clearTutorial();
+            showScreen(ScreenId.MAIN_MENU);
+        } else if (questionActive && session.isQuestionTimerRunning() && nanos >= 0) {
+            startCountdown(nanos);
+        }
+    }
+
+    private void clearTutorial() {
+        tutorialRunning = false;
+        tutorialCoordinator.stop();
+        stopCountdown();
+        session = null;
+        questionIndex = -1;
+        questionActive = false;
+        remainingSeconds = 0;
+        lessonResultRecorded = false;
+    }
+
     public void showScreen(ScreenId id) {
+        if (tutorialRunning && id != ScreenId.QUESTION) {
+            clearTutorial();
+            id = ScreenId.MAIN_MENU;
+        }
         if (id != ScreenId.QUESTION) {
             stopCountdown();
             questionActive = false;
