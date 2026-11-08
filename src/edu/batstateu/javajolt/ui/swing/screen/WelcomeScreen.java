@@ -3,7 +3,7 @@ package edu.batstateu.javajolt.ui.swing.screen;
 
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
-import edu.batstateu.javajolt.ui.swing.component.CharacterPlaceholder;
+import edu.batstateu.javajolt.ui.swing.component.MascotView;
 import edu.batstateu.javajolt.ui.swing.component.RoundedButton;
 import edu.batstateu.javajolt.ui.swing.component.RoundedPanel;
 import edu.batstateu.javajolt.ui.swing.component.RoundedTextField;
@@ -105,8 +105,8 @@ private RoundedPanel createMascotPanel() {
 
     mascotHolder.setOpaque(false);
 
-    CharacterPlaceholder mascot =
-        new CharacterPlaceholder();
+    MascotView mascot = new MascotView();
+    mascot.setMood(MascotView.Mood.ONLINE);
 
     mascot.setPreferredSize(
         new Dimension(230, 260)
