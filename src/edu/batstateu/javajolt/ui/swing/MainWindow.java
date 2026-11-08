@@ -414,8 +414,7 @@ private void confirmExit() {
                         player.getXp() + session.getProvisionalXp(),
                         session.getScoreEarned(),
                         session.getCurrentStreak(),
-                        session.getLastPoints(),
-                        session.isLastAnswerBoosted()
+                        session.getLastPoints()
                 );
                 refreshBattleInfo(false);
                 } catch (InterruptedException e) {
@@ -625,8 +624,7 @@ private void confirmExit() {
                 player.getXp() + session.getProvisionalXp(),
                 session.getScoreEarned(),
                 session.getCurrentStreak(),
-                session.getLastPoints(),
-                session.isLastAnswerBoosted()
+                session.getLastPoints()
         );
         refreshBattleInfo(true);
         startCountdown(answerTimerService.getTimeLimitSeconds(session.getDifficulty(),
@@ -715,6 +713,9 @@ private void confirmExit() {
             stopCountdown();
             questionScreen.showCountdown(remainingSeconds, true);
         }
+        if (result.applied() && powerUp == PowerUp.HEAL) {
+            questionScreen.showHp(player);
+        }
         if (result.applied() && !result.removedChoices().isEmpty()) {
             questionScreen.applyHintRemovedChoices(result.removedChoices());
         }
@@ -744,9 +745,6 @@ private void confirmExit() {
                 disabled.add(powerUp);
             }
             if (powerUp == PowerUp.SHIELD && session.isShieldArmed()) {
-                armed.add(powerUp);
-            }
-            if (powerUp == PowerUp.POINT_BOOST && session.isPointBoostArmed()) {
                 armed.add(powerUp);
             }
         }

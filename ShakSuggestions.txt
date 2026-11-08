@@ -8,3 +8,6 @@ UI
   difficulties in select lesson menu?)
 - (More of a polishing feature) Give several java keywords/features further editor convenience, example is some are already colored,
   but some like String, System.out.print, etc. are not yet, this could be optional too
+
+MECHANICS
+- Replace point boost with a more meaningful powerup like heal

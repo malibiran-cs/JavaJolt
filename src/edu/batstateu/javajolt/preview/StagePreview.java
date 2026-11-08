@@ -32,6 +32,7 @@ import edu.batstateu.javajolt.ui.swing.ScreenId;
  * Development launcher (Phase 1): previews any difficulty and topic without
  * real progression.
  * Usage: StagePreview <beginner|intermediate|advanced|all> [--xp=N]
+ * Unlock probes: --xp=750 gives level 15 (Heal); --xp=1000 gives level 20 (Time Stop).
  * Run from the project root so data/lessons and saves stay relative paths.
  * All saving goes to a throwaway temp directory; the real saves/ folder is
  * never read or written. For "all", a chooser picks the starting difficulty
@@ -152,6 +153,7 @@ public class StagePreview {
     // topic would flip the difficulty calculator to the next stage, so it stays open.
     private static Player seedPlayer(Difficulty difficulty, int xp) {
         Player player = new Player(PLAYER_NAME, xp);
+        player.setTutorialCompleted(true);
 
         for (Difficulty earlier : Difficulty.values()) {
             if (earlier == difficulty) {

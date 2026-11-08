@@ -67,6 +67,7 @@ public class MechanicsCheck {
         checkReplayEarnsNothing();
         checkStreakScoring();
         checkPowerUps();
+        checkHeal();
         checkAnswerTimer();
         checkFailedAttemptEarnsNoXp();
         checkAbandonmentBanksNothing();
@@ -126,20 +127,13 @@ public class MechanicsCheck {
     }
 
     // Streak scoring (Phase 4): consecutive correct answers pay 10/12/14/16...,
-    // a mistake resets the streak and the next award to the base, the boost
-    // multiplier stays pure ScoreService math, and the session records both the
+    // a mistake resets the streak and the next award to the base, and the session records the
     // running/best streak and the points of the most recent answer (UI feedback).
     private static void checkStreakScoring() {
         ScoreService scoreService = new ScoreService();
 
-        // Phase 5 boost math, already fixed: base 10 * 2, streak steps unchanged
-        // - streak 3 boosted is 24 (20 + 2 + 2), never 28 or 40.
-        check("score: pointsForCorrect(false, 3) = 14",
-                scoreService.pointsForCorrect(false, 3) == 14);
-        check("score: pointsForCorrect(true, 1) = 20 (boosted base)",
-                scoreService.pointsForCorrect(true, 1) == 20);
-        check("score: pointsForCorrect(true, 3) = 24, not 28 or 40",
-                scoreService.pointsForCorrect(true, 3) == 24);
+        check("score: streak 1 = 10", scoreService.pointsForCorrect(1) == 10);
+        check("score: streak 3 = 14", scoreService.pointsForCorrect(3) == 14);
 
         Player player = new Player("Check", 0);
         GameSession session = newSession(player);
@@ -187,8 +181,7 @@ public class MechanicsCheck {
     // power-up per quiz, Hint only ever removes a wrong choice (never the
     // correct one, verified over 200 runs; non-multiple-choice use is not
     // consumed), Shield zeroes the next mistake without stopping the
-    // escalation chain, Point Boost survives a mistake and boosts only the
-    // next correct answer, and Time Stop freezes the current question.
+    // escalation chain, Heal restores HP, and Time Stop freezes the current question.
     private static void checkPowerUps() {
         // The level curve maps XP/50 to level, so the probe XP values are exact.
         Player level4 = new Player("Check", 200);
@@ -198,16 +191,25 @@ public class MechanicsCheck {
         }
         Player level5 = new Player("Check", 250);
         check("power-ups: level 5 unlocks Hint", powerUps.isUnlocked(level5, PowerUp.HINT));
-        check("power-ups: level 5 does not unlock Shield/Time Stop/Point Boost",
+        check("power-ups: level 5 does not unlock Shield/Heal/Time Stop",
                 !powerUps.isUnlocked(level5, PowerUp.SHIELD)
                         && !powerUps.isUnlocked(level5, PowerUp.TIME_STOP)
-                        && !powerUps.isUnlocked(level5, PowerUp.POINT_BOOST));
+                        && !powerUps.isUnlocked(level5, PowerUp.HEAL));
         Player level10 = new Player("Check", 500);
-        check("power-ups: level 10 unlocks Hint and Shield, not Time Stop/Point Boost",
+        check("power-ups: level 10 unlocks Hint and Shield, not Heal/Time Stop",
                 powerUps.isUnlocked(level10, PowerUp.HINT)
                         && powerUps.isUnlocked(level10, PowerUp.SHIELD)
                         && !powerUps.isUnlocked(level10, PowerUp.TIME_STOP)
-                        && !powerUps.isUnlocked(level10, PowerUp.POINT_BOOST));
+                        && !powerUps.isUnlocked(level10, PowerUp.HEAL));
+        check("power-ups: enum order and exact levels are Hint 5 / Shield 10 / Heal 15 / Time Stop 20",
+                List.of(PowerUp.values()).equals(List.of(
+                        PowerUp.HINT, PowerUp.SHIELD, PowerUp.HEAL, PowerUp.TIME_STOP))
+                        && PowerUp.HINT.getUnlockLevel() == 5 && PowerUp.SHIELD.getUnlockLevel() == 10
+                        && PowerUp.HEAL.getUnlockLevel() == 15 && PowerUp.TIME_STOP.getUnlockLevel() == 20);
+        Player level15 = new Player("Check", 750);
+        check("power-ups: level 15 unlocks Heal, not Time Stop",
+                powerUps.isUnlocked(level15, PowerUp.HEAL)
+                        && !powerUps.isUnlocked(level15, PowerUp.TIME_STOP));
         Player level20 = new Player("Check", 1000);
         for (PowerUp powerUp : PowerUp.values()) {
             check("power-ups: level 20 unlocks " + powerUp.getLabel(),
@@ -217,6 +219,10 @@ public class MechanicsCheck {
                 powerUps.unlockedBetween(2, 5).equals(List.of(PowerUp.HINT)));
         check("power-ups: unlockedBetween(5, 10) = [Shield]",
                 powerUps.unlockedBetween(5, 10).equals(List.of(PowerUp.SHIELD)));
+        check("power-ups: unlockedBetween(10, 15) = [Heal]",
+                powerUps.unlockedBetween(10, 15).equals(List.of(PowerUp.HEAL)));
+        check("power-ups: unlockedBetween(15, 20) = [Time Stop]",
+                powerUps.unlockedBetween(15, 20).equals(List.of(PowerUp.TIME_STOP)));
         check("power-ups: unlockedBetween(1, 20) = all four",
                 powerUps.unlockedBetween(1, 20).size() == 4);
         check("power-ups: unlockedBetween(20, 25) is empty",
@@ -232,12 +238,6 @@ public class MechanicsCheck {
         check("power-ups: Shield applies once, second use rejected",
                 shieldFirst.applied() && shieldSession.hasUsed(PowerUp.SHIELD)
                         && !shieldSecond.applied());
-        GameSession boostSession = newSession(master);
-        PowerUpResult boostFirst = powerUps.use(boostSession, PowerUp.POINT_BOOST, hintable);
-        PowerUpResult boostSecond = powerUps.use(boostSession, PowerUp.POINT_BOOST, hintable);
-        check("power-ups: Point Boost applies once, second use rejected",
-                boostFirst.applied() && boostSession.hasUsed(PowerUp.POINT_BOOST)
-                        && !boostSecond.applied());
         GameSession hintOnceSession = newSession(master);
         PowerUpResult hintFirst = powerUps.use(hintOnceSession, PowerUp.HINT, hintable);
         PowerUpResult hintSecond = powerUps.use(hintOnceSession, PowerUp.HINT, hintable);
@@ -302,23 +302,6 @@ public class MechanicsCheck {
                 shieldRun.getLastDamage() == 5
                         && shieldPlayer.getHp() == hpBeforeShield - 5);
 
-        // Point Boost: survives a mistake, doubles only the next correct answer.
-        Player boostPlayer = new Player("Check", 1000);
-        GameSession boostRun = newSession(boostPlayer);
-        powerUps.use(boostRun, PowerUp.POINT_BOOST, hintable);
-        playWrong(boostRun, 1); // mistake; the boost must survive
-        int beforeBoost = boostRun.getScoreEarned();
-        runner.submitAnswer(boostRun, boostRun.getQuestions().get(1), "anything");
-        check("boost: the next correct answer after a mistake pays 20 (doubled base)",
-                boostRun.getScoreEarned() - beforeBoost == 20);
-        boolean flaggedAfterBoost = boostRun.isLastAnswerBoosted();
-        int beforePlain = boostRun.getScoreEarned();
-        runner.submitAnswer(boostRun, boostRun.getQuestions().get(2), "anything");
-        check("boost: only the next correct answer is boosted (12 afterwards)",
-                boostRun.getScoreEarned() - beforePlain == 12);
-        check("boost: no XP involved",
-                boostPlayer.getXp() == 1000 && boostRun.getProvisionalXp() > 0);
-
         // Phase 6 supportsHint: the button-state hook, no random pick involved
         // (the randomness stays inside getHintChoicesToRemove).
         check("hint: a 4-choice multiple-choice question supports a hint",
@@ -338,18 +321,111 @@ public class MechanicsCheck {
                 powerUps.isApplicable(PowerUp.HINT, probeSession, hintable));
         check("applicable: Hint does not apply to an identification question",
                 !powerUps.isApplicable(PowerUp.HINT, probeSession, identification));
-        check("applicable: Shield and Point Boost apply to any current question",
-                powerUps.isApplicable(PowerUp.SHIELD, probeSession, identification)
-                        && powerUps.isApplicable(PowerUp.POINT_BOOST, probeSession, hintable));
+        check("applicable: Shield applies to any current question",
+                powerUps.isApplicable(PowerUp.SHIELD, probeSession, identification));
         probeSession.setCurrentQuestionIndex(1);
         check("applicable: Time Stop applies to a running question timer",
                 powerUps.isApplicable(PowerUp.TIME_STOP, probeSession, hintable));
 
-        // Phase 6 display flag: which answer Point Boost actually produced.
-        check("boost: the boosted answer is flagged for display",
-                flaggedAfterBoost);
-        check("boost: the plain answer clears the boost flag for display",
-                !boostRun.isLastAnswerBoosted());
+    }
+
+    private static void checkHeal() {
+        for (PowerUp powerUp : PowerUp.values()) {
+            Player below = new Player("Check", (int) LevelService.totalXpForLevel(powerUp.getUnlockLevel()) - 1);
+            Player at = new Player("Check", (int) LevelService.totalXpForLevel(powerUp.getUnlockLevel()));
+            check("power-ups: exact unlock boundary for " + powerUp.getLabel(),
+                    !powerUps.isUnlocked(below, powerUp) && powerUps.isUnlocked(at, powerUp));
+        }
+
+        int[][] expectedAmounts = {{2, 3}, {3, 5}, {5, 7}};
+        int[] maxHpValues = {10, 15};
+        int[] expectedPercents = {20, 35, 50};
+        for (Difficulty difficulty : Difficulty.values()) {
+            check("heal: percentage " + difficulty,
+                    powerUps.getHealPercent(difficulty) == expectedPercents[difficulty.ordinal()]);
+            check("heal: minimum recovery is 1 HP " + difficulty,
+                    powerUps.getHealAmount(1, difficulty) == 1);
+            for (int i = 0; i < maxHpValues.length; i++) {
+                int maxHp = maxHpValues[i];
+                int expected = expectedAmounts[difficulty.ordinal()][i];
+                GameSession run = timerSession(difficulty, maxHp);
+                Player player = run.getPlayer();
+                Question current = run.getQuestions().get(0);
+                check("heal: full HP is not applicable " + difficulty + " HP " + maxHp,
+                        !powerUps.isApplicable(PowerUp.HEAL, run, current));
+                PowerUpResult full = powerUps.use(run, PowerUp.HEAL, current);
+                check("heal: full HP rejected with message, unconsumed " + difficulty + " HP " + maxHp,
+                        !full.applied() && !full.message().isBlank()
+                                && !run.hasUsed(PowerUp.HEAL) && player.getHp() == maxHp);
+
+                player.takeDamage(maxHp - 1);
+                PowerUpResult healed = powerUps.use(run, PowerUp.HEAL, current);
+                check("heal: integer recovery and notice " + difficulty + " HP " + maxHp,
+                        powerUps.getHealAmount(maxHp, difficulty) == expected
+                                && healed.applied() && player.getHp() == 1 + expected
+                                && healed.message().equals("Heal restored " + expected + " HP.")
+                                && run.hasUsed(PowerUp.HEAL));
+                int hpAfter = player.getHp();
+                check("heal: second use rejected while injured " + difficulty + " HP " + maxHp,
+                        !powerUps.use(run, PowerUp.HEAL, current).applied() && player.getHp() == hpAfter);
+
+                GameSession capped = timerSession(difficulty, maxHp);
+                capped.getPlayer().takeDamage(1);
+                PowerUpResult cappedResult = powerUps.use(capped, PowerUp.HEAL, current);
+                check("heal: capped recovery reports actual HP restored " + difficulty + " HP " + maxHp,
+                        cappedResult.applied() && capped.getPlayer().getHp() == maxHp
+                                && cappedResult.message().equals("Heal restored 1 HP."));
+            }
+        }
+
+        Player locked = new Player("Check", (int) LevelService.totalXpForLevel(15) - 1);
+        GameSession lockedRun = newSession(locked);
+        locked.takeDamage(5);
+        check("heal: locked below level 15 and unconsumed",
+                !powerUps.use(lockedRun, PowerUp.HEAL, lockedRun.getQuestions().get(0)).applied()
+                        && !lockedRun.hasUsed(PowerUp.HEAL) && locked.getHp() == 5);
+
+        // Exercise both a live correct streak and a live mistake chain.
+        for (boolean afterMistake : new boolean[] {false, true}) {
+            GameSession run = timerSession(Difficulty.INTERMEDIATE, 15);
+            playCorrect(run, 2);
+            if (afterMistake) {
+                playWrong(run, 1);
+            } else {
+                run.getPlayer().takeDamage(5);
+            }
+            powerUps.use(run, PowerUp.SHIELD, run.getQuestions().get(0));
+            int score = run.getScoreEarned();
+            int xp = run.getProvisionalXp();
+            int streak = run.getCurrentStreak();
+            int chain = run.getConsecutiveMistakes();
+            int accuracy = run.getAccuracyPercent();
+            int answered = run.getAnsweredCount();
+            int lastPoints = run.getLastPoints();
+            int lastDamage = run.getLastDamage();
+            PowerUpResult result = powerUps.use(run, PowerUp.HEAL, run.getQuestions().get(0));
+            check("heal: only HP and usage change, after mistake = " + afterMistake,
+                    result.applied() && run.getScoreEarned() == score && run.getProvisionalXp() == xp
+                            && run.getCurrentStreak() == streak && run.getBestStreak() == 2
+                            && run.getConsecutiveMistakes() == chain && run.getAccuracyPercent() == accuracy
+                            && run.getAnsweredCount() == answered && run.getLastPoints() == lastPoints
+                            && run.getLastDamage() == lastDamage && run.isShieldArmed()
+                            && run.getPlayer().getXp() == 1000 && run.getPlayer().getScore() == 0
+                            && run.getPlayer().getProgress().copyCompleted().isEmpty()
+                            && run.getPlayer().copyHighScores().isEmpty());
+            runner.submitAnswer(run, run.getQuestions().get(0), "anything");
+            check("heal: subsequent scoring follows the same streak, after mistake = " + afterMistake,
+                    run.getLastPoints() == (afterMistake ? 10 : 14));
+        }
+        GameSession previous = timerSession(Difficulty.INTERMEDIATE, 15);
+        Player returning = previous.getPlayer();
+        returning.takeDamage(5);
+        powerUps.use(previous, PowerUp.HEAL, previous.getQuestions().get(0));
+        GameSession fresh = newSession(returning);
+        returning.takeDamage(5);
+        check("heal: a new quiz restores availability",
+                previous.hasUsed(PowerUp.HEAL) && !fresh.hasUsed(PowerUp.HEAL)
+                        && powerUps.use(fresh, PowerUp.HEAL, fresh.getQuestions().get(0)).applied());
     }
 
     private static void checkAnswerTimer() {
@@ -400,18 +476,17 @@ public class MechanicsCheck {
         playCorrect(streak, 2);
         int score = streak.getScoreEarned();
         int xp = streak.getProvisionalXp();
-        powerUps.use(streak, PowerUp.POINT_BOOST, streak.getQuestions().get(0));
         timer.applyTimeout(streak);
-        check("timer: correct streak, accuracy, score, XP, and Boost preserved",
+        check("timer: correct streak, accuracy, score, and XP preserved",
                 streak.getCurrentStreak() == 2 && streak.getBestStreak() == 2
                         && streak.getAnsweredCount() == 2 && streak.getMistakeCount() == 0
                         && streak.getAccuracyPercent() == 100 && streak.getConsecutiveMistakes() == 0
                         && streak.getScoreEarned() == score && streak.getProvisionalXp() == xp
-                        && streak.isPointBoostArmed() && streak.getLastPoints() == 12);
+                        && streak.getLastPoints() == 12);
         runner.submitAnswer(streak, streak.getQuestions().get(0), "anything");
-        check("timer: correct answer after expiry still earns boosted streak points",
+        check("timer: correct answer after expiry still earns streak points",
                 streak.getAnsweredCount() == 3 && streak.getCurrentStreak() == 3
-                        && streak.getLastPoints() == 24);
+                        && streak.getLastPoints() == 14);
         GameSession frozen = timerSession(Difficulty.ADVANCED, 15);
         powerUps.use(frozen, PowerUp.SHIELD, frozen.getQuestions().get(0));
         PowerUpResult stop = powerUps.use(frozen, PowerUp.TIME_STOP, frozen.getQuestions().get(0));

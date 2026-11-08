@@ -10,6 +10,7 @@ public record SaveData(String name, int xp, Difficulty difficulty, int score,
         // Stored as structured data here; SaveService handles string encoding.
         Map<Topic, Set<Difficulty>> completedTopics,
         // Best quiz score for each Topic -> Difficulty pair.
-        Map<Topic, Map<Difficulty, Integer>> highScores) {
+        Map<Topic, Map<Difficulty, Integer>> highScores,
+        boolean tutorialCompleted) {
 
 }

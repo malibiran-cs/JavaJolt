@@ -76,16 +76,14 @@ public class LessonRunnerService {
     // Records one answer using the same rules for console and Swing callers.
     // Score points come from ScoreService based on the streak that ends with
     // this answer; they accumulate in the session (provisional) and settle only
-    // at settleAttempt, exactly like XP. Point Boost applies to the next
-    // correct answer only; Shield zeroes the next mistake's damage (the mistake
-    // still counts and still escalates the chain).
+    // at settleAttempt, exactly like XP. Shield zeroes the next mistake's damage;
+    // the mistake still counts and still escalates the chain.
     public boolean submitAnswer(GameSession session, Question question, String answer) {
         Player player = session.getPlayer();
         if (questionService.isCorrect(question, answer)) {
-            boolean boosted = session.consumePointBoost();
             int points =
-                    scoreService.pointsForCorrect(boosted, session.getCurrentStreak() + 1);
-            session.recordCorrect(points, boosted);
+                    scoreService.pointsForCorrect(session.getCurrentStreak() + 1);
+            session.recordCorrect(points);
 
             // First-clear XP is provisional until the attempt settles.
             if (!player.isComplete(session.getTopic(), session.getDifficulty())) {

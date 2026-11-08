@@ -41,6 +41,7 @@ public class SwingTimerFlowCheck {
         try {
             open(Difficulty.ADVANCED);
             onEdt(() -> {
+                require(!button(window, "Heal").isEnabled(), "Heal disabled at full HP");
                 JRadioButton choice = (JRadioButton) button(window, "A. answer");
                 choice.doClick();
             });
@@ -142,6 +143,23 @@ public class SwingTimerFlowCheck {
             await(() -> runner.last.isQuestionTimedOut());
             onEdt(() -> require(player.getHp() == 15 && runner.last.isShieldArmed(),
                     "Beginner expiry preserves Shield"));
+            onEdt(() -> window.dispose());
+
+            open(Difficulty.INTERMEDIATE);
+            onEdt(() -> button(window, "A. answer").doClick());
+            await(() -> runner.last.isQuestionTimedOut());
+            onEdt(() -> {
+                require(player.getHp() == 14 && button(window, "Heal").isEnabled(),
+                        "Heal becomes available after timeout damage");
+                button(window, "Heal").doClick();
+                require(player.getHp() == 15 && hasLabel(window, "HP: 15/15")
+                                && hasLabel(window, "Heal restored 1 HP."),
+                        "Heal refreshes HP and reports capped recovery");
+                require(((JRadioButton) button(window, "A. answer")).isSelected()
+                                && button(window, "Submit answer").isEnabled(),
+                        "Heal preserves answer input and submission");
+                require(!button(window, "Heal").isEnabled(), "Heal disabled after use");
+            });
             System.out.println("ALL SWING TIMER FLOW CHECKS PASSED (" + checks + ")");
         } finally {
             onEdt(() -> {

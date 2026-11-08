@@ -70,6 +70,7 @@ public class GameApplication {
                 player.setScore(data.score());
                 player.restoreProgress(data.completedTopics());
                 player.restoreHighScores(data.highScores());
+                player.setTutorialCompleted(data.tutorialCompleted());
                 loaded = true;
 
             } catch (SaveFileException e) {

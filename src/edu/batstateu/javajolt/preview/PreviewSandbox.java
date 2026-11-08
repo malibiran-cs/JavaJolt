@@ -35,6 +35,7 @@ public final class PreviewSandbox {
         saveFile.toFile().deleteOnExit();
 
         SaveService saveService = new SaveService(saveFile);
+        player.setTutorialCompleted(true);
         try {
             saveService.save(player, difficulty);
         } catch (SaveFileException e) {

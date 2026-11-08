@@ -11,7 +11,7 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
 - **Stack:** Plain Java SE. Modern features are already in use (records, switch expressions, text blocks, `Stream.toList()`). No build tool, no external libraries, no frameworks. Do not add any. (This is why saves use `java.util.Properties` instead of JSON.)
 - **Two front-ends:** The console (`ui/GameUI`) currently drives the game loop through `GameService`. The Swing UI (`ui/swing`) is being built in parallel and is opened by a callback once the player is ready. The Swing screens are still mostly visual; the functionality is being wired in.
 - **Game flow:** Topics unlock one after another (enum order) within a difficulty. Completing every topic of a difficulty moves the player to the next one.
-- **State:** Persisted: name, XP, difficulty, completed topics, cumulative score, high scores. One quiz attempt: HP (max HP derived per quiz from level) and the session's provisional score/XP, which commit only once at end-of-quiz settlement.
+- **State:** Persisted: name, XP, difficulty, completed topics, cumulative score, high scores, tutorial completion. A new player's tutorial flag starts false; a legacy save missing the key loads true. One quiz attempt: HP (max HP derived per quiz from level) and the session's provisional score/XP, which commit only once at end-of-quiz settlement.
 - **Root package:** `edu.batstateu.javajolt`
 
 ### Where things live
@@ -26,8 +26,8 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
   - `PlayerProgressService`: completed topics and unlocking.
   - `LevelService`: XP to level.
   - `LevelRewardService`: level-based quizzes rewards (max HP per level).
-  - `ScoreService`: per-answer score points (base, streak growth, later boost multiplier).
-  - `PowerUpService`: power-up unlock and use rules (stateless; one use per power-up per quiz).
+  - `ScoreService`: per-answer score points (base and correct-streak growth).
+  - `PowerUpService`: power-up unlock and use rules, including difficulty-based Heal amounts (stateless; one use per power-up per quiz).
   - `AnswerTimerService`: per-input-mode time limits and once-per-question timeout attacks; Swing owns the countdown lifecycle.
   - `CodeQuestionService`: compile and run the player's code.
 - `entity/`: data holders that guard their own state (`Player`, `SaveData`, `LessonPage`, `PowerUpResult`).

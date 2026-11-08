@@ -5,6 +5,7 @@ import edu.batstateu.javajolt.data.EnemyRoster;
 import edu.batstateu.javajolt.data.QuestionBank;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.preview.PreviewSandbox;
 import edu.batstateu.javajolt.service.AnswerTimerService;
 import edu.batstateu.javajolt.service.LessonRunnerService;
 import edu.batstateu.javajolt.service.LessonService;
@@ -33,13 +34,15 @@ public class SwingPreview {
                             new GameUI()
                     );
 
+            Player player = new Player("Preview", 0);
             MainWindow window = new MainWindow(
-                    new Player("Preview", 0),
+                    player,
                     questions,
                     runner,
                     Difficulty.BEGINNER,
                     new PowerUpService(),
-                    new AnswerTimerService()
+                    new AnswerTimerService(),
+                    PreviewSandbox.createFor(player, Difficulty.BEGINNER)
             );
 
             window.showScreen(ScreenId.TITLE);

@@ -27,10 +27,8 @@ public class GameSession {
     private boolean settled;   // end-of-quiz settlement already ran for this attempt
     private final EnumSet<PowerUp> usedPowerUps = EnumSet.noneOf(PowerUp.class); // per-quiz usage; resets with the session
     private boolean shieldArmed;     // set by Shield; consumed by the next damaging attack
-    private boolean pointBoostArmed; // set by Point Boost; consumed by the next correct answer
     private boolean questionTimedOut;
     private boolean questionTimerFrozen;
-    private boolean lastAnswerBoosted; // whether Point Boost produced the most recent correct answer
 
     // Constructor
     public GameSession(Player player, Topic topic, Difficulty difficulty, List<Question> questions) {
@@ -42,12 +40,6 @@ public class GameSession {
 
     // State Updaters
     public void recordCorrect(int points) {
-        recordCorrect(points, false);
-    }
-
-    // Full form: records the points and whether Point Boost produced them
-    // (display-only information for the streak label).
-    public void recordCorrect(int points, boolean boosted) {
         correctCount++;
         consecutiveMistakes = 0;
         currentStreak++;
@@ -56,7 +48,6 @@ public class GameSession {
         }
         scoreEarned += points;
         lastPoints = points;
-        lastAnswerBoosted = boosted;
     }
 
     // Runs once per mistake, after its damage was already applied. Records the
@@ -67,7 +58,6 @@ public class GameSession {
         currentStreak = 0;
         lastPoints = 0;
         lastDamage = damage;
-        lastAnswerBoosted = false;
     }
 
     // POWER-UPS (one use of each unlocked power-up per quiz; a new session resets all)
@@ -99,22 +89,6 @@ public class GameSession {
     public boolean consumeShield() {
         boolean armed = shieldArmed;
         shieldArmed = false;
-        return armed;
-    }
-
-    public void armPointBoost() {
-        pointBoostArmed = true;
-    }
-
-    // Read-only armed probe for display; consumption stays in consumePointBoost.
-    public boolean isPointBoostArmed() {
-        return pointBoostArmed;
-    }
-
-    // Returns whether a boost was armed, and clears it either way.
-    public boolean consumePointBoost() {
-        boolean armed = pointBoostArmed;
-        pointBoostArmed = false;
         return armed;
     }
 
@@ -252,11 +226,6 @@ public class GameSession {
 
     public int getLastPoints() {
         return lastPoints;
-    }
-
-    // Whether Point Boost doubled the most recent correct answer (0 on a mistake).
-    public boolean isLastAnswerBoosted() {
-        return lastAnswerBoosted;
     }
 
     public boolean isSettled() {
