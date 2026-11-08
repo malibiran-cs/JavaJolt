@@ -29,7 +29,7 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
   - `ScoreService`: per-answer score points (base and correct-streak growth).
   - `PowerUpService`: power-up unlock and use rules, including difficulty-based Heal amounts (stateless; one use per power-up per quiz).
   - `AnswerTimerService`: per-input-mode time limits and once-per-question timeout attacks; Swing owns the countdown lifecycle.
-  - `TutorialService`: the single throwaway tutorial run and once-per-run step tracking; delegates to real rules and never saves or settles rewards.
+  - `TutorialService`: creates the single throwaway tutorial session, tracks popup timing, gates power-ups and prepares Heal; MainWindow reuses its normal quiz paths and never settles the tutorial.
   - `CodeQuestionService`: compile and run the player's code.
 - `entity/`: data holders that guard their own state (`Player`, `SaveData`, `LessonPage`, `PowerUpResult`, `TutorialStep`).
 - `Question` and `types/`: abstract `Question` and its subclasses (`MultipleChoiceQuestion`, `IdentificationQuestion`, `CodeQuestion`).
@@ -37,7 +37,7 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
 - `enums/`: `Topic`, `Difficulty`, `InputMode`, `PowerUp` (power-up unlock levels live only here), `TutorialTrigger` (session start, before question, results).
 - `exception/`: domain exceptions.
 - `preview/`: development-only launchers and checks (`StagePreview`, later `BalanceReport` and `MechanicsCheck`). They build their own wiring like a composition root and must never read or write the real `saves/` folder (throwaway temp save location instead).
-- `ui/`: console UI. `ui/swing/`: `MainWindow`, `ScreenId`, `Theme`, `UiAssets`, `NinePatch`, `screen/`, `component/`.
+- `ui/`: console UI. `ui/swing/`: `MainWindow` (shared quiz loop/countdown), `TutorialCoordinator` (modal step presentation), `ScreenId`, `Theme`, `UiAssets`, `NinePatch`, `screen/`, `component/` (including `TutorialPopup`).
 
 ---
 
