@@ -1,5 +1,6 @@
 package edu.batstateu.javajolt.entity;
 
+import java.util.EnumSet;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,9 @@ public class Player {
     private final Map<Topic, EnumMap<Difficulty, Integer>> highScores =
             new EnumMap<>(Topic.class);
     private PlayerProgressService progress = new PlayerProgressService();
+
+    private final Map<Topic, EnumSet<Difficulty>> rewardedTextbooks =
+        new EnumMap<>(Topic.class);
 
     public Player(String name, int xp) {
         this.name = name;
@@ -127,6 +131,63 @@ public class Player {
     public void restoreProgress(Map<Topic, ? extends Set<Difficulty>> data) {
         progress.restore(data);
     }
+
+    
+    // Check whether a textbook's XP reward was claimed.
+    public boolean hasTextbookReward(
+            Topic topic,
+            Difficulty difficulty) {
+
+        return rewardedTextbooks.containsKey(topic)
+                && rewardedTextbooks.get(topic).contains(difficulty);
+    }
+
+    // Mark a textbook reward as claimed.
+    // Returns false when it was already claimed.
+    public boolean markTextbookReward(
+            Topic topic,
+            Difficulty difficulty) {
+
+        return rewardedTextbooks
+                .computeIfAbsent(
+                        topic,
+                        key -> EnumSet.noneOf(Difficulty.class)
+                )
+                .add(difficulty);
+    }
+
+    // Create a detached copy for saving.
+    public Map<Topic, EnumSet<Difficulty>> copyTextbookRewards() {
+
+        Map<Topic, EnumSet<Difficulty>> copy =
+                new EnumMap<>(Topic.class);
+
+        rewardedTextbooks.forEach((topic, difficulties) ->
+                copy.put(topic, EnumSet.copyOf(difficulties))
+        );
+
+        return copy;
+    }
+
+    // Restore textbook rewards from saved data.
+    public void restoreTextbookRewards(
+            Map<Topic, ? extends Set<Difficulty>> saved) {
+
+        rewardedTextbooks.clear();
+
+        saved.forEach((topic, difficulties) -> {
+
+            if (difficulties != null && !difficulties.isEmpty()) {
+
+                rewardedTextbooks.put(
+                        topic,
+                        EnumSet.copyOf(difficulties)
+                );
+            }
+        });
+    }
+
+
     // GETTERS AND SETTERS
     public String getName() {
         return name;
