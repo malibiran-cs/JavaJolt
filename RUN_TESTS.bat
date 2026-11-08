@@ -11,7 +11,7 @@ if errorlevel 1 (
 
 if not exist out mkdir out
 echo Compiling JavaJolt and its tests...
-javac -encoding UTF-8 -d out -sourcepath src src\edu\batstateu\javajolt\GameApplication.java src\edu\batstateu\javajolt\preview\MechanicsCheck.java tests\ProgressConsistencyCheck.java tests\ContentCoverageCheck.java tests\SwingTimerFlowCheck.java tests\SwingNavigationSmokeCheck.java
+javac -encoding UTF-8 -d out -sourcepath src src\edu\batstateu\javajolt\GameApplication.java src\edu\batstateu\javajolt\preview\MechanicsCheck.java tests\ProgressConsistencyCheck.java tests\ContentCoverageCheck.java tests\SwingTimerFlowCheck.java tests\SwingNavigationSmokeCheck.java tests\EnemyArtworkIntegrationCheck.java
 if errorlevel 1 goto failed
 
 echo.
@@ -40,6 +40,10 @@ java -cp out SwingTimerFlowCheck
 if errorlevel 1 goto failed
 
 echo.
+echo ==== Enemy artwork integration ==== 
+java -cp out EnemyArtworkIntegrationCheck
+if errorlevel 1 goto failed
+
 echo ALL JAVAJOLT TEST SUITES PASSED
 pause
 exit /b 0
