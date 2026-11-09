@@ -341,14 +341,16 @@ private void saveWithFeedback() {
 }
 
 private void showProgress() {
-    StringBuilder message = new StringBuilder()
-            .append("Player: ").append(player.getName())
-            .append("\nXP: ").append(player.getXp())
-            .append("\nLevel: ")
-            .append(LevelService.calculateLevel(player.getXp()))
-            .append("\nCurrent difficulty: ")
-            .append(difficulty.getLabel())
-            .append("\n\nCompleted topics:\n");
+  StringBuilder message = new StringBuilder()
+        .append("<html><b>Player:</b> <span style='font-weight:normal'>")
+        .append(player.getName())
+        .append("</span><br><b>XP:</b> <span style='font-weight:normal'>")
+        .append(player.getXp())
+        .append("</span><br><b>Level:</b> <span style='font-weight:normal'>")
+        .append(LevelService.calculateLevel(player.getXp()))
+        .append("</span><br><b>Current difficulty:</b> <span style='font-weight:normal'>")
+        .append(difficulty.getLabel())
+        .append("</span><br><br><b>Completed topics:</b><br>");
 
     for (Difficulty level : Difficulty.values()) {
         int count = 0;
@@ -359,42 +361,65 @@ private void showProgress() {
             }
         }
 
-        message.append(level.getLabel())
-                .append(": ")
-                .append(count)
-                .append(" / ")
-                .append(Topic.values().length)
-                .append('\n');
+       message.append("<b>")
+        .append(level.getLabel())
+        .append(":</b> <span style='font-weight:normal'>")
+        .append(count)
+        .append(" / ")
+        .append(Topic.values().length)
+        .append("</span><br>");
     }
+    message.append("</html>");
 
-    JOptionPane.showMessageDialog(
-            this,
-            message.toString(),
-            "Player Progress",
-            JOptionPane.INFORMATION_MESSAGE
-    );
-}
+    javax.swing.UIManager.put("OptionPane.background", new java.awt.Color(0x2B3242));
+    
+    javax.swing.UIManager.put("Panel.background", new java.awt.Color(0x2B3242));
 
-private void confirmExit() {
-    if (!welcomeCompleted) {
-        dispose();
-        return;
-    }
-    int choice = JOptionPane.showConfirmDialog(
-            this,
-            "Save progress and exit JavaJolt?",
-            "Exit",
-            JOptionPane.YES_NO_OPTION
+    javax.swing.UIManager.put("OptionPane.messageForeground", Theme.TEXT);
+
+    javax.swing.UIManager.put(
+        "OptionPane.messageFont",
+        Theme.FONT_BODY.deriveFont(java.awt.Font.PLAIN, 18f)
     );
 
-    if (choice != JOptionPane.YES_OPTION) {
-        return;
+    javax.swing.UIManager.put("Button.background", Theme.ACCENT);
+
+    javax.swing.UIManager.put("Button.foreground", Theme.INSET);
+    
+    javax.swing.UIManager.put("OptionPane.minimumSize", new java.awt.Dimension(500, 350));
+
+   JOptionPane optionPane = new JOptionPane(
+        message.toString(),
+        JOptionPane.INFORMATION_MESSAGE
+    );
+
+    javax.swing.JDialog progressDialog =
+            optionPane.createDialog(this, "Player Progress");
+
+    progressDialog.setLocationRelativeTo(this);
+    progressDialog.setVisible(true);
     }
 
-    if ((tutorialRunning && tutorialCoordinator.isReplay()) || saveProgress()) {
-        dispose();
+    private void confirmExit() {
+        if (!welcomeCompleted) {
+            dispose();
+            return;
+        }
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                "Save progress and exit JavaJolt?",
+                "Exit",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (choice != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        if ((tutorialRunning && tutorialCoordinator.isReplay()) || saveProgress()) {
+            dispose();
+        }
     }
-}
 
 
     private void submitAnswer(String answer) {
