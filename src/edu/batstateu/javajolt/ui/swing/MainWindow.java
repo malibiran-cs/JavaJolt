@@ -538,10 +538,16 @@ private void confirmExit() {
 
             // Create the new results screen
             resultsScreen = new ResultsScreen(
-                    session,
-                    passed,
-                    xpEarned,
-
+            session,
+            passed,
+            xpEarned,
+                session.getQuestions().isEmpty()
+                    ? 0
+                    : Math.min(
+                        100,
+                        session.getScoreEarned() * 100
+                            / session.getQuestions().size()
+                    ),
                     // TRY AGAIN
                     () -> startLesson(
                             completedTopic,

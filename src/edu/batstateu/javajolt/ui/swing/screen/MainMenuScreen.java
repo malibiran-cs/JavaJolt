@@ -1,5 +1,6 @@
 package edu.batstateu.javajolt.ui.swing.screen;
 
+import edu.batstateu.javajolt.service.DifficultyProgressionService;
 import edu.batstateu.javajolt.enums.Achievement;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.service.LevelService;
@@ -28,6 +29,18 @@ public class MainMenuScreen extends Screen {
     private final JLabel levelLabel = createLabel("LEVEL: --");
 
     private final JLabel playerNameLabel = createLabel("PLAYER");
+
+    private final JLabel missionTopicLabel =
+        new JLabel("VARIABLES");
+
+        private final JLabel missionDetailLabel =
+                new JLabel("BEGINNER MISSION");
+
+        private final JLabel missionProgressLabel =
+                new JLabel("0 / 7 TOPICS CLEARED");
+
+        private final JProgressBar missionProgressBar =
+                new JProgressBar(0, Topic.values().length);
 
     private final JProgressBar xpProgressBar =
             new JProgressBar();
@@ -139,6 +152,47 @@ public class MainMenuScreen extends Screen {
                 countCompleted(player, Difficulty.ADVANCED)
                 + " / " + Topic.values().length + " COMPLETED"
         );
+
+
+
+        // Find the next unfinished lesson.
+        Difficulty activeDifficulty =
+                DifficultyProgressionService.currentDifficulty(player);
+
+        int missionsComplete =
+                countCompleted(player, activeDifficulty);
+
+        Topic nextMission = null;
+
+        for (Topic topic : Topic.values()) {
+            if (!player.isComplete(topic, activeDifficulty)) {
+                nextMission = topic;
+                break;
+            }
+        }
+
+        missionTopicLabel.setText(
+                nextMission == null
+                        ? "ALL COMPLETE!"
+                        : nextMission == Topic.OOP
+                                ? "OOP"
+                                : nextMission.getLabel().toUpperCase()
+        );
+
+        missionDetailLabel.setText(
+                nextMission == null
+                        ? "EVERY LESSON MASTERED"
+                        : activeDifficulty.getLabel().toUpperCase()
+                                + " MISSION"
+        );
+
+        missionProgressLabel.setText(
+                missionsComplete + " / "
+                        + Topic.values().length
+                        + " TOPICS CLEARED"
+        );
+
+        missionProgressBar.setValue(missionsComplete);
 
 
         // Update achievement progress
@@ -295,9 +349,95 @@ public class MainMenuScreen extends Screen {
 
         header.add(character, BorderLayout.WEST);
         header.add(stats, BorderLayout.CENTER);
+        header.add(createMissionCard(), BorderLayout.EAST);
 
         return header;
     }
+
+
+private RoundedPanel createMissionCard() {
+
+    RoundedPanel card = new RoundedPanel(
+            new BorderLayout(0, Theme.GAP_S),
+            "panels/panel_inset",
+            13
+    );
+
+    card.setPreferredSize(new Dimension(240, 160));
+
+    card.setBorder(
+            BorderFactory.createEmptyBorder(
+                    Theme.GAP_M,
+                    Theme.GAP_M,
+                    Theme.GAP_M,
+                    Theme.GAP_M
+            )
+    );
+
+    JLabel heading = new JLabel("NEXT MISSION");
+
+    heading.setFont(
+            Theme.FONT_BODY.deriveFont(
+                    java.awt.Font.BOLD, 12f
+            )
+    );
+
+    heading.setForeground(Theme.ACCENT);
+
+    card.add(heading, BorderLayout.NORTH);
+
+    JPanel description = new JPanel();
+
+    description.setOpaque(false);
+    description.setLayout(
+            new BoxLayout(description, BoxLayout.Y_AXIS)
+    );
+
+    missionTopicLabel.setFont(
+            Theme.FONT_BODY.deriveFont(
+                    java.awt.Font.BOLD, 16f
+            )
+    );
+    missionTopicLabel.setForeground(Theme.TEXT);
+
+    missionDetailLabel.setFont(
+            Theme.FONT_BODY.deriveFont(12f)
+    );
+    missionDetailLabel.setForeground(Theme.TEXT_MUTED);
+
+    description.add(missionTopicLabel);
+    description.add(Box.createVerticalStrut(4));
+    description.add(missionDetailLabel);
+
+    card.add(description, BorderLayout.CENTER);
+
+    JPanel footer = new JPanel(
+            new BorderLayout(0, 5)
+    );
+
+    footer.setOpaque(false);
+
+    missionProgressLabel.setFont(
+            Theme.FONT_BODY.deriveFont(11f)
+    );
+    missionProgressLabel.setForeground(Theme.TEXT_MUTED);
+
+    missionProgressBar.setForeground(Theme.ACCENT);
+    missionProgressBar.setBackground(Theme.INSET_BORDER);
+    missionProgressBar.setBorderPainted(false);
+    missionProgressBar.setStringPainted(false);
+
+    missionProgressBar.setPreferredSize(
+            new Dimension(1, 7)
+    );
+
+    footer.add(missionProgressLabel, BorderLayout.NORTH);
+    footer.add(missionProgressBar, BorderLayout.SOUTH);
+
+    card.add(footer, BorderLayout.SOUTH);
+
+    return card;
+}
 
 
 

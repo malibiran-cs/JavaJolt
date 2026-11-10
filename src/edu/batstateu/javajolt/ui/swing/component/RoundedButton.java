@@ -1,5 +1,6 @@
 package edu.batstateu.javajolt.ui.swing.component;
 
+import java.awt.BasicStroke;
 import edu.batstateu.javajolt.ui.swing.NinePatch;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.UiAssets;
@@ -35,21 +36,74 @@ public class RoundedButton extends JButton {
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     }
 
-    @Override
-    public void setEnabled(boolean enabled) {
-        super.setEnabled(enabled);
-        if (style != null) {
-            setForeground(enabled ? style.textColor() : Theme.TEXT_MUTED);
-        }
-    }
 
     @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        currentPatch().paint(g2, getWidth(), getHeight());
-        g2.dispose();
-        super.paintComponent(g);
+    public void setEnabled(boolean enabled) {
+
+        super.setEnabled(enabled);
+
+        if (style != null) {
+            setForeground(
+                    enabled
+                            ? style.textColor()
+                            : Theme.TEXT_MUTED
+            );
+        }
+
+        setCursor(
+                Cursor.getPredefinedCursor(
+                        enabled
+                                ? Cursor.HAND_CURSOR
+                                : Cursor.DEFAULT_CURSOR
+                )
+        );
     }
+
+
+
+@Override
+protected void paintComponent(Graphics g) {
+
+    Graphics2D g2 = (Graphics2D) g.create();
+
+    // Move the button slightly downward when pressed.
+    boolean pressed = isEnabled()
+            && getModel().isPressed()
+            && getModel().isArmed();
+
+    int offset = pressed ? 2 : 0;
+
+    g2.translate(0, offset);
+
+    // Preserve the existing button textures.
+    currentPatch().paint(
+            g2,
+            getWidth(),
+            Math.max(1, getHeight() - offset)
+    );
+
+    // Draw the button text.
+    super.paintComponent(g2);
+
+    // Show a focus indicator for keyboard navigation.
+    if (isEnabled() && isFocusOwner()) {
+
+        g2.setColor(Theme.ACCENT);
+        g2.setStroke(new BasicStroke(2f));
+
+        g2.drawRoundRect(
+                2,
+                2,
+                Math.max(0, getWidth() - 5),
+                Math.max(0, getHeight() - offset - 5),
+                18,
+                18
+        );
+    }
+
+    g2.dispose();
+}
+
 
     private NinePatch currentPatch() {
         String state;

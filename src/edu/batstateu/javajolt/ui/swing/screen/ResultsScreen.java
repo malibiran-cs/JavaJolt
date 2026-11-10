@@ -26,6 +26,7 @@ public class ResultsScreen extends Screen {
             GameSession session,
             boolean passed,
             int xpEarned,
+            int requiredAccuracy,
             Runnable onRetry,
             Runnable onTopics,
             Runnable onMenu,
@@ -180,7 +181,7 @@ public class ResultsScreen extends Screen {
 
         // ACCURACY BAR
         JLabel accuracyLabel = createLabel(
-                "LESSON ACCURACY",
+                "LESSON ACCURACY - " + requiredAccuracy + "% TO PASS",
                 Theme.FONT_BODY,
                 Theme.TEXT_MUTED
         );
@@ -195,7 +196,9 @@ public class ResultsScreen extends Screen {
         );
 
         accuracyBar.setForeground(
-                passed ? Theme.ACCENT : Theme.DANGER
+                accuracyPercent >= requiredAccuracy
+                        ? Theme.ACCENT
+                        : Theme.DANGER
         );
 
         accuracyBar.setBackground(Theme.INSET);
@@ -203,7 +206,8 @@ public class ResultsScreen extends Screen {
         accuracyBar.setStringPainted(true);
 
         accuracyBar.setString(
-                accuracyPercent + "% (" + correctCount + "/" + answeredCount + ")"
+                accuracyPercent + "% | Passing: "
+                        + requiredAccuracy + "%"
         );
 
         body.add(accuracyBar);
@@ -218,6 +222,54 @@ public class ResultsScreen extends Screen {
         );
 
         body.add(resultStatus);
+
+
+        if (!passed) {
+
+        boolean outOfHp =
+                !session.getPlayer().isAlive();
+
+        boolean lowAccuracy =
+                accuracyPercent < requiredAccuracy;
+
+        String failureReason;
+
+        if (outOfHp && lowAccuracy) {
+
+                failureReason =
+                        "WHY YOU FAILED: HP reached zero AND "
+                        + "accuracy was below "
+                        + requiredAccuracy + "%.";
+
+        } else if (outOfHp) {
+
+                failureReason =
+                        "WHY YOU FAILED: HP reached zero. "
+                        + "Survive the quiz to pass.";
+
+        } else {
+
+                failureReason =
+                        "WHY YOU FAILED: Accuracy was "
+                        + accuracyPercent
+                        + "%; at least "
+                        + requiredAccuracy
+                        + "% is required.";
+        }
+
+        body.add(
+                Box.createVerticalStrut(Theme.GAP_S)
+        );
+
+        body.add(
+                createLabel(
+                        failureReason,
+                        Theme.FONT_BODY,
+                        Theme.DANGER
+                )
+        );
+        }
+
 
         // New level / newly unlocked power-ups; rendered only when the
         // controller produced a notice, so ordinary runs show nothing extra.
