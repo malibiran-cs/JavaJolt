@@ -1,5 +1,6 @@
 package edu.batstateu.javajolt.ui.swing.component;
 
+import javax.swing.Timer;
 import edu.batstateu.javajolt.ui.swing.UiAssets;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -27,9 +28,34 @@ public final class MascotView extends JComponent {
 
     private Mood mood = Mood.ONLINE;
 
+
+    private int idleTick = 0;
+
+    private final Timer idleTimer = new Timer(80, event -> {
+        if (isShowing()) {
+            idleTick++;
+            repaint();
+        }
+    });
+
+
     public MascotView() {
         setOpaque(false);
     }
+
+
+    @Override
+    public void addNotify() {
+        super.addNotify();
+        idleTimer.start();
+    }
+
+    @Override
+    public void removeNotify() {
+        idleTimer.stop();
+        super.removeNotify();
+    }
+
 
     public void setMood(Mood mood) {
         this.mood = Objects.requireNonNull(mood);
@@ -60,7 +86,10 @@ public final class MascotView extends JComponent {
         int width = Math.max(1, (int) Math.round(image.getWidth() * scale));
         int height = Math.max(1, (int) Math.round(image.getHeight() * scale));
         int x = (getWidth() - width) / 2;
-        int y = (getHeight() - height) / 2;
+        int y = (getHeight() - height) / 2
+        + (int) Math.round(
+                Math.sin(idleTick * 0.20) * 3
+        );
 
         Graphics2D g2 = (Graphics2D) graphics.create();
         g2.setRenderingHint(

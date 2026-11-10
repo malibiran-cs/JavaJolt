@@ -1039,7 +1039,6 @@ private JPanel createCodeEditor(Question question) {
                         : SoundEffect.ANSWER_INCORRECT
         );
 
-s
         // Refresh displayed player statistics
         hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());
 
