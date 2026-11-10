@@ -6,6 +6,7 @@ import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.entity.PowerUpResult;
 import edu.batstateu.javajolt.entity.TutorialStep;
 import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.JoltMessage;
 import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.enums.TutorialTrigger;
@@ -50,6 +51,7 @@ public class TutorialLogicCheck {
     public static void main(String[] args) {
         checkRenderedNumbers(args.length > 0 && args[0].equals("--print-script"));
         checkWrapUps();
+        checkJoltPractice();
         for (boolean firstCorrect : new boolean[] {false, true}) {
             for (boolean secondCorrect : new boolean[] {false, true}) {
                 for (boolean expire : new boolean[] {false, true}) {
@@ -64,7 +66,9 @@ public class TutorialLogicCheck {
                             && timer.getTimeLimitSeconds(Difficulty.INTERMEDIATE,
                                     content.createQuestions(Topic.VARIABLES, Difficulty.INTERMEDIATE).get(0).getInputMode()) == 24
                             && powerUps.getHealPercent(Difficulty.INTERMEDIATE) == 40
-                            && PowerUp.TIME_STOP.getUnlockLevel() == 22,
+                            && PowerUp.TIME_STOP.getUnlockLevel() == 22
+                            && JoltMessage.SPARK_STREAK == 2 && JoltMessage.JOLT_STREAK == 7
+                            && JoltMessage.SURGE_STREAK == 10 && JoltMessage.SHORT_CIRCUIT_MIN_STREAK == 2,
                     "Temporary recompiled constants are active");
             System.out.println("RETUNED TEXT CHECKS PASSED");
         }
@@ -87,15 +91,27 @@ public class TutorialLogicCheck {
             }
         }
         require(steps.stream().map(TutorialStep::title).toList().equals(List.of(
-                "Your goal", "Your HP", "Enemy attacks", "Score and streaks", "Keeping your score", "Clearing a quiz",
+                "Your goal", "Your HP", "Enemy attacks", "Jolt and score", "Keeping your score", "Clearing a quiz",
                 "Two ways to lose", "The question timer", "Your power-ups", "Try Heal", "XP and levels",
-                "Where to go next", "You're ready!")), "Required concepts plus existing score records in teaching order");
+                "Where to go next", "Build a Jolt", "You're ready!")), "Required concepts plus existing score records in teaching order");
+        require(session.getQuestions().size() == 5, "Five practice questions allow a Jolt and a reset");
+        for (int i = 0; i < session.getQuestions().size(); i++) {
+            require(session.getQuestions().get(i).getId() == -i - 1, "Practice question keeps its own negative ID");
+        }
+        require(steps.stream().filter(step -> step.trigger() == TutorialTrigger.SESSION_START).count() == 5,
+                "Reworking Jolt keeps five introductory steps");
+        require(steps.stream().filter(step -> step.title().equals("Build a Jolt")
+                        && step.trigger() == TutorialTrigger.BEFORE_QUESTION && step.questionIndex() == 3).count() == 1,
+                "Exactly one Jolt step is scheduled before question three");
+        require(steps.stream().noneMatch(step -> step.body().toLowerCase().contains("streak")),
+                "Tutorial uses the player-facing Jolt name everywhere");
         expectNumbers(steps.get(0), session.getQuestions().size());
         expectNumbers(steps.get(1), session.getPlayer().getMaxHp());
         expectNumbers(steps.get(2), Enemy.baseDamageForMaxHp(session.getPlayer().getMaxHp()),
                 session.getEnemy().getEscalationPerMistake());
         expectNumbers(steps.get(3), scores.pointsForCorrect(1), scores.pointsForCorrect(2),
-                scores.pointsForCorrect(3), scores.pointsForCorrect(1));
+                scores.pointsForCorrect(3), JoltMessage.SPARK_STREAK, JoltMessage.JOLT_STREAK,
+                JoltMessage.SURGE_STREAK, JoltMessage.SHORT_CIRCUIT_MIN_STREAK, scores.pointsForCorrect(1));
         expectNumbers(steps.get(4));
         expectNumbers(steps.get(5), lessons.getPassPercent());
         expectNumbers(steps.get(6), lessons.getPassPercent());
@@ -110,7 +126,8 @@ public class TutorialLogicCheck {
                 powerUps.getHealAmount(session.getPlayer().getMaxHp(), session.getDifficulty()));
         expectNumbers(steps.get(10), lessons.lessonCompleteBonus(session.getDifficulty()));
         expectNumbers(steps.get(11));
-        expectNumbers(steps.get(12), session.getPlayer().getHp(), 0, 0, 0, lessons.getPassPercent());
+        expectNumbers(steps.get(12), JoltMessage.SPARK_STREAK);
+        expectNumbers(steps.get(13), session.getPlayer().getHp(), 0, 0, 0, lessons.getPassPercent());
         require(tutorial.getTimeLimitSeconds(1) == Math.min(5,
                         timer.getTimeLimitSeconds(session.getDifficulty(), session.getQuestions().get(0).getInputMode())),
                 "The demo timer is five seconds without changing real limits");
@@ -126,9 +143,9 @@ public class TutorialLogicCheck {
             expected.add(value);
         }
         List<Integer> actual = new ArrayList<>();
-        Matcher matcher = Pattern.compile("\\b\\d+\\b").matcher(step.body());
+        Matcher matcher = Pattern.compile("(?<!\\w)x?(\\d+)\\b").matcher(step.body());
         while (matcher.find()) {
-            actual.add(Integer.parseInt(matcher.group()));
+            actual.add(Integer.parseInt(matcher.group(1)));
         }
         require(actual.equals(expected), "All numeric text reads its rule owner: " + step.title());
     }
@@ -137,11 +154,16 @@ public class TutorialLogicCheck {
         for (String outcome : List.of("passed", "accuracy", "hp")) {
             TutorialService tutorial = tutorial();
             GameSession session = tutorial.getSession();
-            beginQuestion(tutorial, 1);
-            lessons.submitAnswer(session, session.getQuestions().get(0), "A");
-            beginQuestion(tutorial, 2);
-            lessons.submitAnswer(session, session.getQuestions().get(1), outcome.equals("accuracy") ? "A" : "B");
-            if (outcome.equals("hp")) session.getPlayer().takeDamage(session.getPlayer().getHp());
+            for (int index = 1; index <= session.getQuestions().size(); index++) {
+                beginQuestion(tutorial, index);
+                Question question = session.getQuestions().get(index - 1);
+                boolean wrong = outcome.equals("accuracy") && (index == 2 || index == 4);
+                lessons.submitAnswer(session, question, wrong ? "wrong" : correctAnswer(question));
+                if (outcome.equals("hp") && index == 3) {
+                    session.getPlayer().takeDamage(session.getPlayer().getHp());
+                    break;
+                }
+            }
             TutorialStep step = tutorial.getStepsDue(TutorialTrigger.RESULTS, 0).get(0);
             require(step.body().endsWith("This was practice, nothing was lost."), "Wrap-up reassurance: " + outcome);
             if (outcome.equals("passed")) {
@@ -223,10 +245,19 @@ public class TutorialLogicCheck {
             checkTimeout(tutorial);
         }
         checkAnswer(tutorial, secondCorrect ? "B" : "A", secondCorrect);
+        for (int index = 3; index <= demo.getQuestions().size() && !tutorial.isFinished(); index++) {
+            beginQuestion(tutorial, index);
+            collect(tutorial, seen, TutorialTrigger.BEFORE_QUESTION, index, index == 3 ? 1 : 0);
+            checkAnswer(tutorial, correctAnswer(demo.getQuestions().get(index - 1)), true);
+        }
         require(tutorial.isFinished(), "Sample finishes after its fixed questions or final defeat");
         collect(tutorial, seen, TutorialTrigger.RESULTS, 0, 1);
-        require(seen.size() == tutorial.getTotalStepCount() && tutorial.getShownStepCount() == seen.size()
-                        && seen.stream().distinct().count() == seen.size(), "Every concept is seen exactly once on every route");
+        int expectedSteps = tutorial.getTotalStepCount() - (demo.getAnsweredCount() < 3 ? 1 : 0);
+        require(seen.size() == expectedSteps && tutorial.getShownStepCount() == seen.size()
+                        && seen.stream().distinct().count() == seen.size(), "Every reachable concept is seen exactly once on every route");
+        require(seen.contains("Build a Jolt") == (demo.getAnsweredCount() >= 3)
+                        && tutorial.getStepsDue(TutorialTrigger.BEFORE_QUESTION, 3).isEmpty(),
+                "Early defeat cannot consume the future Jolt step");
         require(!demo.isSettled() && demo.getPlayer().getXp() == xpBefore && demo.getPlayer().getScore() == 0
                         && demo.getPlayer().getProgress().copyCompleted().isEmpty()
                         && demo.getPlayer().copyHighScores().isEmpty(), "Tutorial never settles or commits demo rewards");
@@ -244,6 +275,35 @@ public class TutorialLogicCheck {
                 "Replay starts a fresh player, session, questions, usage and step tracking");
         require(tutorial.getStepsDue(TutorialTrigger.SESSION_START, 0).size() == 5,
                 "Replaying shows the same tutorial again");
+    }
+
+    private static void checkJoltPractice() {
+        TutorialService tutorial = tutorial();
+        GameSession session = tutorial.getSession();
+        for (int index = 1; index <= session.getQuestions().size(); index++) {
+            beginQuestion(tutorial, index);
+            if (index == 3) {
+                List<TutorialStep> due = tutorial.getStepsDue(TutorialTrigger.BEFORE_QUESTION, index);
+                require(due.size() == 1 && due.get(0).title().equals("Build a Jolt"), "Jolt teaching step appears at question three");
+                require(tutorial.getStepsDue(TutorialTrigger.BEFORE_QUESTION, index).isEmpty(), "Jolt teaching step appears only once");
+            }
+            Question question = session.getQuestions().get(index - 1);
+            lessons.submitAnswer(session, question, index == 4 ? "wrong" : correctAnswer(question));
+            if (index == JoltMessage.SPARK_STREAK) {
+                require(session.getLastJoltMessage() == JoltMessage.SPARK, "Practice can display SPARK");
+            }
+            if (index == 4) require(session.getLastJoltMessage() == JoltMessage.SHORT_CIRCUIT, "Practice can display SHORT CIRCUIT");
+            if (index == 5) require(session.getLastJoltMessage() == JoltMessage.NONE, "Next correct practice answer clears the message");
+        }
+        require(tutorial.isFinished() && !session.isSettled(), "Jolt practice finishes without settlement");
+    }
+
+    private static String correctAnswer(Question question) {
+        for (String choice : question.getChoices()) {
+            String answer = choice.substring(0, 1);
+            if (question.isCorrect(answer)) return answer;
+        }
+        throw new AssertionError("Sample question needs one correct choice");
     }
 
     private static void collect(TutorialService tutorial, List<String> seen,

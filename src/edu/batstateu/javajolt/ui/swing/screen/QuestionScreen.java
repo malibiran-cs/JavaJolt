@@ -19,6 +19,7 @@ import edu.batstateu.javajolt.ui.swing.component.JavaCodeEditor;
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.InputMode;
+import edu.batstateu.javajolt.enums.JoltMessage;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.game.GameSession;
@@ -66,7 +67,8 @@ public class QuestionScreen extends Screen {
     private final JLabel hpLabel = createLabel("HP: --");
     private final JLabel xpLabel = createLabel("XP: --");
     private final JLabel scoreLabel = createLabel("QUIZ SCORE: --");
-    private final JLabel streakLabel = createLabel("STREAK: --");
+    private final JLabel joltLabel = createLabel("JOLT: --");
+    private final JLabel joltMessageLabel = new JLabel();
     private final JPanel answerPanel = new RoundedPanel(new BorderLayout(Theme.GAP_M, Theme.GAP_M));
     private final JPanel answerContent = new JPanel(new BorderLayout(Theme.GAP_M, Theme.GAP_M));
     private final JPanel actionRow = new JPanel(new BorderLayout(Theme.GAP_M, 0));
@@ -205,21 +207,27 @@ public class QuestionScreen extends Screen {
         leftStatus.add(countdownLabel);
 
         scoreLabel.setForeground(Theme.TEXT_MUTED);
-        streakLabel.setForeground(Theme.TEXT_MUTED);
+        joltLabel.setForeground(Theme.TEXT_MUTED);
         scoreLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        streakLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        joltLabel.setHorizontalAlignment(SwingConstants.LEFT);
         JPanel rightStatus = new JPanel(new GridLayout(2, 1, 0, Theme.GAP_S));
         rightStatus.setOpaque(false);
         rightStatus.add(scoreLabel);
-        rightStatus.add(streakLabel);
+        rightStatus.add(joltLabel);
         int rightStatusWidth = Math.max(textWidth("QUIZ SCORE: 99999"),
-                textWidth("STREAK: 99   (+999 points)")) + Theme.GAP_S;
+                textWidth("JOLT: x99   (+999 points)")) + Theme.GAP_S;
         rightStatus.setPreferredSize(new Dimension(rightStatusWidth, rightStatus.getPreferredSize().height));
 
         JPanel statusRow = new JPanel(new BorderLayout(Theme.GAP_S, 0));
         statusRow.setOpaque(false);
         statusRow.add(leftStatus, BorderLayout.WEST);
         statusRow.add(rightStatus, BorderLayout.EAST);
+        joltMessageLabel.setFont(Theme.FONT_JOLT_MESSAGE);
+        joltMessageLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        joltMessageLabel.setVerticalAlignment(SwingConstants.CENTER);
+        // NOTE: Messages use the existing free space without contributing to header size.
+        joltMessageLabel.setPreferredSize(new Dimension(0, 0));
+        statusRow.add(joltMessageLabel, BorderLayout.CENTER);
         questionHeader.add(statusRow, BorderLayout.NORTH);
         questionHeader.add(
                 questionProgress,
@@ -271,15 +279,32 @@ public class QuestionScreen extends Screen {
 
     // One line of immediate feedback: the live consecutive-correct streak plus,
     // right after a resolved answer, the points that answer just earned.
-    private void refreshStreakLabel(int streak, int lastPoints) {
+    private void refreshJoltLabel(int streak, int lastPoints) {
         if (lastPoints > 0) {
-            streakLabel.setText(
-                    "STREAK: " + streak
+            joltLabel.setText(
+                    "JOLT: x" + streak
                     + "   (+" + lastPoints + " points)"
             );
         } else {
-            streakLabel.setText("STREAK: " + streak);
+            joltLabel.setText("JOLT: x" + streak);
         }
+    }
+
+    public void showJoltMessage(JoltMessage message) {
+        joltMessageLabel.setForeground(switch (message) {
+            case SPARK -> Theme.JOLT_SPARK;
+            case JOLT -> Theme.JOLT_JOLT;
+            case SURGE -> Theme.JOLT_SURGE;
+            case SHORT_CIRCUIT -> Theme.DANGER;
+            default -> Theme.TEXT;
+        });
+        String text = message.getText();
+        if (message == JoltMessage.JAVAJOLT) {
+            text = String.format("<html><font color='#%06X'>%s</font><font color='#%06X'>%s</font></html>",
+                    Theme.TEXT.getRGB() & 0xFFFFFF, text.substring(0, "JAVA".length()),
+                    Theme.ACCENT.getRGB() & 0xFFFFFF, text.substring("JAVA".length()));
+        }
+        joltMessageLabel.setText(text);
     }
 
     // Battle-side meta display: names the enemy and refreshes the power-up row
@@ -390,7 +415,7 @@ public class QuestionScreen extends Screen {
         // displayXp is provisional quiz XP; it commits to the player only at settlement.
         xpLabel.setText("XP: " + displayXp);
         scoreLabel.setText("QUIZ SCORE: " + quizScore);
-        refreshStreakLabel(streak, lastPoints);
+        refreshJoltLabel(streak, lastPoints);
         progressLabel.setText("QUESTION " + number + " OF " + total);
         questionProgress.setValue(
         total == 0
@@ -1083,7 +1108,7 @@ private JPanel createCodeEditor(Question question) {
         // displayXp is provisional quiz XP; it commits to the player only at settlement.
         xpLabel.setText("XP: " + displayXp);
         scoreLabel.setText("QUIZ SCORE: " + quizScore);
-        refreshStreakLabel(streak, lastPoints);
+        refreshJoltLabel(streak, lastPoints);
 
         // Change the section heading
         answerHeading.setText("ANSWER FEEDBACK");
@@ -1272,6 +1297,10 @@ private JPanel createCodeEditor(Question question) {
 
     public void setTopicsButtonEnabled(boolean enabled) {
         topicsButton.setEnabled(enabled);
+    }
+
+    public void setContinueButtonEnabled(boolean enabled) {
+        nextButton.setEnabled(enabled);
     }
 
     public void showLessonResult(GameSession session, boolean passed) {

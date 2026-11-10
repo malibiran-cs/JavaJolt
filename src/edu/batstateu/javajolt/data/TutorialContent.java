@@ -3,6 +3,7 @@ package edu.batstateu.javajolt.data;
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.TutorialStep;
 import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.JoltMessage;
 import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.enums.TutorialTrigger;
@@ -21,6 +22,7 @@ public class TutorialContent {
     private static final int TIMER_QUESTION_INDEX = 1;
     // Power-ups are introduced together before the second practice question.
     private static final int HEAL_QUESTION_INDEX = 2;
+    private static final int JOLT_QUESTION_INDEX = 3;
 
     private final LessonRunnerService lessons;
     private final ScoreService scores;
@@ -46,7 +48,19 @@ public class TutorialContent {
                 new MultipleChoiceQuestion(-2,
                         "After int count = 3; followed by count = 4; what value does count hold?",
                         topic, difficulty, "Assigning 4 replaces the earlier value, so count now holds 4.",
-                        List.of("A. 3", "B. 4", "C. 7", "D. count"), "B"));
+                        List.of("A. 3", "B. 4", "C. 7", "D. count"), "B"),
+                new MultipleChoiceQuestion(-3,
+                        "Which Java type stores true or false?",
+                        topic, difficulty, "boolean stores the truth values true and false.",
+                        List.of("A. int", "B. double", "C. boolean", "D. String"), "C"),
+                new MultipleChoiceQuestion(-4,
+                        "After int count = 3; followed by count = count + 2; what value does count hold?",
+                        topic, difficulty, "Adding 2 to 3 and assigning the result makes count equal to 5.",
+                        List.of("A. 2", "B. 3", "C. 4", "D. 5"), "D"),
+                new MultipleChoiceQuestion(-5,
+                        "Which line assigns 4 to an existing variable named count?",
+                        topic, difficulty, "The assignment operator = stores 4 in the existing variable count.",
+                        List.of("A. count = 4;", "B. int = count 4;", "C. count == 4;", "D. 4 = count;"), "A"));
     }
 
     public int getTimerQuestionIndex() {
@@ -62,7 +76,7 @@ public class TutorialContent {
                 new TutorialStep(TutorialTrigger.SESSION_START, 0, "Your goal", goal(session)),
                 new TutorialStep(TutorialTrigger.SESSION_START, 0, "Your HP", hp(session)),
                 new TutorialStep(TutorialTrigger.SESSION_START, 0, "Enemy attacks", damage(session)),
-                new TutorialStep(TutorialTrigger.SESSION_START, 0, "Score and streaks", score()),
+                new TutorialStep(TutorialTrigger.SESSION_START, 0, "Jolt and score", score()),
                 new TutorialStep(TutorialTrigger.SESSION_START, 0, "Keeping your score", records()),
                 new TutorialStep(TutorialTrigger.BEFORE_QUESTION, TIMER_QUESTION_INDEX,
                         "Clearing a quiz", winning()),
@@ -78,6 +92,8 @@ public class TutorialContent {
                         "XP and levels", xp(session)),
                 new TutorialStep(TutorialTrigger.BEFORE_QUESTION, HEAL_QUESTION_INDEX,
                         "Where to go next", progression()),
+                new TutorialStep(TutorialTrigger.BEFORE_QUESTION, JOLT_QUESTION_INDEX,
+                        "Build a Jolt", jolt()),
                 createResultsStep(session));
     }
 
@@ -123,10 +139,23 @@ public class TutorialContent {
     }
 
     private String score() {
-        return "Correct answers earn score, separate from XP. As your correct streak grows, "
+        return "Consecutive correct answers build your Jolt, increasing its multiplier. A higher Jolt pays more: "
                 + "your next answers earn " + scores.pointsForCorrect(1) + ", " + scores.pointsForCorrect(2)
-                + ", then " + scores.pointsForCorrect(3) + " points. A mistake resets the streak; "
-                + "the next correct answer starts again at " + scores.pointsForCorrect(1) + " points.";
+                + ", then " + scores.pointsForCorrect(3) + " points, separate from XP. Milestones: "
+                + JoltMessage.SPARK.getText() + " at x" + JoltMessage.SPARK_STREAK + ", "
+                + JoltMessage.JOLT.getText() + " at x" + JoltMessage.JOLT_STREAK + ", "
+                + JoltMessage.SURGE.getText() + " at x" + JoltMessage.SURGE_STREAK + ". "
+                + "Answer every question correctly for " + JoltMessage.JAVAJOLT.getText()
+                + " A mistake ends a Jolt of at least x" + JoltMessage.SHORT_CIRCUIT_MIN_STREAK
+                + " with " + JoltMessage.SHORT_CIRCUIT.getText()
+                + " Your next correct answer restarts at the first multiplier and earns "
+                + scores.pointsForCorrect(1) + " points.";
+    }
+
+    private String jolt() {
+        return "Answer the next questions correctly in a row. Reach x" + JoltMessage.SPARK_STREAK
+                + " to see " + JoltMessage.SPARK.getText() + " appear, then miss one on purpose if you'd like to see "
+                + JoltMessage.SHORT_CIRCUIT.getText() + " This is practice; nothing here is saved.";
     }
 
     private String winning() {
@@ -178,7 +207,7 @@ public class TutorialContent {
                 + session.getDifficulty().getLabel() + " with " + session.getPlayer().getMaxHp()
                 + " maximum HP, it restores up to "
                 + powerUps.getHealAmount(session.getPlayer().getMaxHp(), session.getDifficulty())
-                + " HP, stopping at full HP. Heal changes HP only; your score, accuracy and streak stay the same.";
+                + " HP, stopping at full HP. Heal changes HP only; your score, accuracy and Jolt stay the same.";
     }
 
     private String xp(GameSession session) {

@@ -3,6 +3,7 @@ package edu.batstateu.javajolt.ui.swing;
 
 import edu.batstateu.javajolt.ui.swing.screen.TitleScreen;
 import edu.batstateu.javajolt.enums.Achievement;
+import edu.batstateu.javajolt.enums.JoltMessage;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import edu.batstateu.javajolt.ui.swing.screen.AchievementsScreen;
@@ -59,8 +60,11 @@ public class MainWindow extends JFrame {
     private final TutorialCoordinator tutorialCoordinator;
     private boolean tutorialRunning;
     private static final int COUNTDOWN_TICK_MILLIS = 100;
+    private static final int PERFECT_HOLD_MILLIS = 2000;
     private ScreenId titleStartDestination = ScreenId.WELCOME;
     private Timer countdown;
+    private Timer perfectHold;
+    private long perfectShownAt;
     private long countdownVersion;
     private long countdownDeadline;
     private int remainingSeconds;
@@ -277,6 +281,7 @@ public class MainWindow extends JFrame {
 
         if (tutorialRunning) return;
         stopCountdown();
+        clearPerfectHold();
         questionActive = false;
         // Remember XP before the quiz begins
         xpAtLessonStart = player.getXp();
@@ -457,6 +462,10 @@ private void showProgress() {
                         session.getCurrentStreak(),
                         session.getLastPoints()
                 );
+                questionScreen.showJoltMessage(session.getLastJoltMessage());
+                if (session.getLastJoltMessage() == JoltMessage.JAVAJOLT) {
+                    perfectShownAt = System.nanoTime();
+                }
                 refreshBattleInfo(false);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -482,6 +491,9 @@ private void showProgress() {
                 || isTutorialPopupOpen() || (questionActive && session.getPlayer().isAlive())) {
             return;
         }
+        if (waitForPerfectMessage()) {
+            return;
+        }
         stopCountdown();
         questionActive = false;
 
@@ -490,6 +502,7 @@ private void showProgress() {
         // Check whether the lesson is finished
         if (questionIndex >= session.getQuestions().size()
                 || !session.getPlayer().isAlive()) {
+            clearPerfectHold();
 
             if (tutorialRunning) {
                 lessonResultRecorded = true;
@@ -680,11 +693,51 @@ private void showProgress() {
                 session.getCurrentStreak(),
                 session.getLastPoints()
         );
+        questionScreen.showJoltMessage(session.getLastJoltMessage());
         refreshBattleInfo(true);
         startCountdown(tutorialRunning ? tutorialCoordinator.getTimeLimitSeconds(questionIndex + 1)
                 : answerTimerService.getTimeLimitSeconds(session.getDifficulty(),
                         session.getQuestions().get(questionIndex).getInputMode()));
         if (tutorialRunning) showTutorialSteps(false);
+    }
+
+    private boolean waitForPerfectMessage() {
+        if (perfectShownAt == 0) {
+            return false;
+        }
+        long remaining = TimeUnit.MILLISECONDS.toNanos(PERFECT_HOLD_MILLIS)
+                - (System.nanoTime() - perfectShownAt);
+        if (remaining <= 0) {
+            return false;
+        }
+        questionScreen.setContinueButtonEnabled(false);
+        questionScreen.setTopicsButtonEnabled(false);
+        if (perfectHold == null) {
+            GameSession heldSession = session;
+            int delay = (int) Math.ceil(remaining / (double) TimeUnit.MILLISECONDS.toNanos(1));
+            perfectHold = new Timer(delay, event -> {
+                if (event.getSource() != perfectHold) {
+                    return;
+                }
+                perfectHold = null;
+                if (session == heldSession && questionScreen.isShowing()) {
+                    showNextQuestion();
+                }
+            });
+            perfectHold.setRepeats(false);
+            perfectHold.start();
+        }
+        return true;
+    }
+
+    private void clearPerfectHold() {
+        if (perfectHold != null) {
+            perfectHold.stop();
+            perfectHold = null;
+        }
+        perfectShownAt = 0;
+        questionScreen.setContinueButtonEnabled(true);
+        questionScreen.setTopicsButtonEnabled(!tutorialRunning);
     }
 
     private void restoreQuestionAfterCheckFailure() {
@@ -750,6 +803,7 @@ private void showProgress() {
     public void dispose() {
         if (tutorialRunning) clearTutorial();
         stopCountdown();
+        clearPerfectHold();
         questionActive = false;
         super.dispose();
     }
@@ -887,6 +941,7 @@ public void setTitleStartDestination(ScreenId destination) {
     public void startTutorial(boolean replay) {
         if (tutorialCoordinator == null) throw new IllegalStateException("Tutorial was not wired for this window.");
         stopCountdown();
+        clearPerfectHold();
         session = tutorialCoordinator.start(replay);
         tutorialRunning = true;
         questionScreen.setTopicsButtonEnabled(false);
@@ -924,6 +979,7 @@ public void setTitleStartDestination(ScreenId destination) {
 
     private void clearTutorial() {
         tutorialRunning = false;
+        clearPerfectHold();
         tutorialCoordinator.stop();
         questionScreen.setTopicsButtonEnabled(true);
         stopCountdown();
@@ -940,6 +996,7 @@ public void setTitleStartDestination(ScreenId destination) {
         }
         if (id != ScreenId.QUESTION) {
             stopCountdown();
+            clearPerfectHold();
             questionActive = false;
         }
         if (id == ScreenId.MAIN_MENU) {

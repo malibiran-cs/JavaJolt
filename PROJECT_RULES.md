@@ -13,6 +13,7 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
 - **Game flow:** Topics unlock one after another (enum order) within a difficulty. Completing every topic of a difficulty moves the player to the next one.
 - **Tutorial routing:** New players go Title -> Welcome -> tutorial -> menu. Loaded players with tutorialCompleted=false go Title -> tutorial without Welcome; true (including legacy saves) goes Title -> menu. Only confirming the wrap-up marks/saves first completion. Menu replays never set the flag or save; tutorial navigation cannot escape to another screen.
 - **State:** Persisted: name, XP, difficulty, completed topics, cumulative score, high scores, tutorial completion. A new player's tutorial flag starts false; a legacy save missing the key loads true. One quiz attempt: HP (max HP derived per quiz from level) and the session's provisional score/XP, which commit only once at end-of-quiz settlement.
+- **Naming:** Jolt is the player-facing name of the correct-answer streak. Code keeps `streak` (`currentStreak`, `ScoreService`); player-facing text says Jolt. Milestone thresholds live only in `JoltMessage`.
 - **Root package:** `edu.batstateu.javajolt`
 
 ### Where things live
@@ -35,7 +36,7 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
 - `entity/`: data holders that guard their own state (`Player`, `SaveData`, `LessonPage`, `PowerUpResult`, `TutorialStep`).
 - `Question` and `types/`: abstract `Question` and its subclasses (`MultipleChoiceQuestion`, `IdentificationQuestion`, `CodeQuestion`).
 - `data/`: question content (`<Topic>Questions`), registered in `QuestionBank`; `TutorialContent` owns the separate sample questions and rule-derived popup text; `EnemyRoster` maps each topic/difficulty pair to its enemy. Lesson text is in the project-root `data/lessons/`.
-- `enums/`: `Topic`, `Difficulty`, `InputMode`, `PowerUp` (power-up unlock levels live only here), `TutorialTrigger` (session start, before question, results).
+- `enums/`: `Topic`, `Difficulty`, `InputMode`, `PowerUp` (power-up unlock levels live only here), `JoltMessage` (milestone thresholds and messages), `TutorialTrigger` (session start, before question, results).
 - `exception/`: domain exceptions.
 - `preview/`: development-only launchers and checks (`StagePreview`, later `BalanceReport` and `MechanicsCheck`). They build their own wiring like a composition root and must never read or write the real `saves/` folder (throwaway temp save location instead).
 - `ui/`: console UI. `ui/swing/`: `MainWindow` (shared quiz loop/countdown), `TutorialCoordinator` (modal step presentation), `ScreenId`, `Theme`, `UiAssets`, `SoundEffect`, `UiSounds`, `ButtonSounds`, `NinePatch`, `screen/`, `component/` (including `TutorialPopup`).
@@ -97,6 +98,7 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
 - **Use the kit images:** Visuals come from the Softline UI Kit Flat Night PNGs through `UiAssets` and `NinePatch` (9-slice). Do not redraw the kit's look with `Graphics2D`. A new image is copied into `ui/swing/assets/` and listed in that folder's `README.txt`.
 - **Build screens from small `createX()` methods,** one per region of the layout.
 - **Threading:** Create and update Swing components on the event dispatch thread (`SwingUtilities.invokeLater`).
+- **Jolt messages:** Jolt message colors and font live in `Theme`; the screen only maps a `JoltMessage` to them.
 - **Sound:** effects are registered in `SoundEffect` and files live in `assets/sfx/<group>/`. Only the Swing layer plays sounds. Services and entities never do. Button sounds are installed once by `ButtonSounds.install()`; a screen that must be silent sets the `ButtonSounds.SILENT_ZONE` client property on itself.
 - **Look and feel:** Minimal, Duolingo-like, with generous padding between elements and from the window edge. Reserve space for features not built yet (character, level, badges).
 - **Don't use `Question.display()` in Swing.** Render from the question's getters.

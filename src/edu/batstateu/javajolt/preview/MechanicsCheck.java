@@ -6,6 +6,7 @@ import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.entity.PowerUpResult;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.InputMode;
+import edu.batstateu.javajolt.enums.JoltMessage;
 import edu.batstateu.javajolt.service.AnswerTimerService;
 import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.enums.Topic;
@@ -66,6 +67,7 @@ public class MechanicsCheck {
         checkPassSettlesOnce();
         checkReplayEarnsNothing();
         checkStreakScoring();
+        checkJoltMessages();
         checkPowerUps();
         checkHeal();
         checkAnswerTimer();
@@ -175,6 +177,51 @@ public class MechanicsCheck {
         check("streak: 12-correct run = 252 points, best streak 12",
                 fullSession.getScoreEarned() == FULL_RUN_STREAK_SCORE
                         && fullSession.getBestStreak() == 12);
+    }
+
+    private static void checkJoltMessages() {
+        JoltMessage[] expected = {JoltMessage.NONE, JoltMessage.NONE,
+                JoltMessage.SPARK, JoltMessage.SPARK, JoltMessage.SPARK,
+                JoltMessage.JOLT, JoltMessage.JOLT, JoltMessage.JOLT,
+                JoltMessage.SURGE, JoltMessage.SURGE, JoltMessage.SURGE, JoltMessage.JAVAJOLT};
+        for (int streak = 1; streak <= QUIZ_SIZE; streak++) {
+            check("Jolt: message at streak " + streak,
+                    JoltMessage.afterAnswer(streak - 1, streak, QUIZ_SIZE) == expected[streak - 1]);
+        }
+        check("Jolt: perfect nine beats SURGE", JoltMessage.afterAnswer(8, 9, 9) == JoltMessage.JAVAJOLT);
+        check("Jolt: perfect five beats SPARK", JoltMessage.afterAnswer(4, 5, 5) == JoltMessage.JAVAJOLT);
+        check("Jolt: a two-question perfect run has no milestone", JoltMessage.afterAnswer(1, 2, 2) == JoltMessage.NONE);
+        check("Jolt: lost streak four short circuits", JoltMessage.afterAnswer(4, 0, QUIZ_SIZE) == JoltMessage.SHORT_CIRCUIT);
+        check("Jolt: a mistake without a streak is silent", JoltMessage.afterAnswer(0, 0, QUIZ_SIZE) == JoltMessage.NONE);
+        check("Jolt: shortest configured lost streak short circuits",
+                JoltMessage.afterAnswer(JoltMessage.SHORT_CIRCUIT_MIN_STREAK, 0, QUIZ_SIZE) == JoltMessage.SHORT_CIRCUIT);
+
+        GameSession session = timerSession(Difficulty.INTERMEDIATE, 15);
+        check("Jolt: new session starts empty", session.getLastJoltMessage() == JoltMessage.NONE);
+        for (int streak = 1; streak <= QUIZ_SIZE; streak++) {
+            session.recordCorrect(new ScoreService().pointsForCorrect(streak));
+            check("Jolt: session records correct message " + streak,
+                    session.getLastJoltMessage() == expected[streak - 1]);
+        }
+        check("Jolt: score and best streak unchanged",
+                session.getScoreEarned() == FULL_RUN_STREAK_SCORE && session.getBestStreak() == QUIZ_SIZE);
+        session.recordTimeout(1);
+        check("Jolt: timeout preserves message", session.getLastJoltMessage() == JoltMessage.JAVAJOLT);
+        session.getPlayer().takeDamage(5);
+        check("Jolt: Heal preserves message",
+                powerUps.use(session, PowerUp.HEAL, session.getQuestions().get(0)).applied()
+                        && session.getLastJoltMessage() == JoltMessage.JAVAJOLT);
+        session.recordMistake(0);
+        check("Jolt: session records a short circuit", session.getLastJoltMessage() == JoltMessage.SHORT_CIRCUIT);
+        session.recordCorrect(new ScoreService().pointsForCorrect(1));
+        check("Jolt: first correct answer after reset clears message",
+                session.getLastJoltMessage() == JoltMessage.NONE && session.getCurrentStreak() == 1
+                        && session.getLastPoints() == 10 && session.getBestStreak() == QUIZ_SIZE);
+        session.recordMistake(0);
+        session.recordMistake(0);
+        check("Jolt: repeated mistake clears short circuit", session.getLastJoltMessage() == JoltMessage.NONE);
+        check("Jolt: replacement session starts empty",
+                newSession(session.getPlayer()).getLastJoltMessage() == JoltMessage.NONE);
     }
 
     // Phase 5 power-ups: fixed unlock levels, one use of each unlocked

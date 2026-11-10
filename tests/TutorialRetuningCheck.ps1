@@ -32,6 +32,10 @@ Set-TutorialTestConstant 'enums/PowerUp.java' 'HINT("Hint", 5)' 'HINT("Hint", 6)
 Set-TutorialTestConstant 'enums/PowerUp.java' 'SHIELD("Shield", 10)' 'SHIELD("Shield", 11)'
 Set-TutorialTestConstant 'enums/PowerUp.java' 'HEAL("Heal", 15)' 'HEAL("Heal", 16)'
 Set-TutorialTestConstant 'enums/PowerUp.java' 'TIME_STOP("Time Stop", 20)' 'TIME_STOP("Time Stop", 22)'
+Set-TutorialTestConstant 'enums/JoltMessage.java' 'SPARK_STREAK = 3' 'SPARK_STREAK = 2'
+Set-TutorialTestConstant 'enums/JoltMessage.java' 'JOLT_STREAK = 6' 'JOLT_STREAK = 7'
+Set-TutorialTestConstant 'enums/JoltMessage.java' 'SURGE_STREAK = 9' 'SURGE_STREAK = 10'
+Set-TutorialTestConstant 'enums/JoltMessage.java' 'SHORT_CIRCUIT_MIN_STREAK = 1' 'SHORT_CIRCUIT_MIN_STREAK = 2'
 
 $tutorialFiles = @(Get-ChildItem -LiteralPath $tutorialSource -Recurse -Filter '*.java' |
         ForEach-Object { '"' + $_.FullName.Replace('\', '/') + '"' })

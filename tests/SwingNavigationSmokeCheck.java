@@ -286,6 +286,17 @@ public class SwingNavigationSmokeCheck {
         });
         await(() -> findButton(window, "Continue") != null);
         clickLater("Continue");
+        await(() -> popup() != null && hasLabel(popup(), "Build a Jolt"));
+        dismissSteps(1);
+        await(() -> popup() == null);
+        for (String answer : List.of("C. boolean", "D. 5", "A. count = 4;")) {
+            SwingUtilities.invokeAndWait(() -> {
+                findButton(window, answer).doClick();
+                findButton(window, "Submit answer").doClick();
+            });
+            await(() -> findButton(window, "Continue") != null);
+            clickLater("Continue");
+        }
         await(() -> popup() != null && hasLabel(popup(), "You're ready!"));
         if (firstRun) {
             assertTrue(!routedPlayer.isTutorialCompleted() && (!routedSave.hasSave() || !routedSave.load().tutorialCompleted()),
@@ -391,7 +402,7 @@ public class SwingNavigationSmokeCheck {
         });
         clickLater("GET STARTED");
         await(() -> popup() != null);
-        SwingUtilities.invokeAndWait(() -> assertTrue(hasLabel(popup(), "Step 1 of 13"), "actual newplayer mode starts the same mandatory tutorial"));
+        SwingUtilities.invokeAndWait(() -> assertTrue(hasLabel(popup(), "Step 1 of 14"), "actual newplayer mode starts the same mandatory tutorial"));
         closeThroughConfirmation();
     }
 

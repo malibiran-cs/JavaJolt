@@ -28,6 +28,9 @@ public final class Theme {
     public static final Color TEXT = new Color(0xEEF0F4);
     public static final Color TEXT_MUTED = new Color(0x8B919E);
     public static final Color TEXT_ON_ACCENT = new Color(0x17181C);
+    public static final Color JOLT_SPARK = new Color(0xFFC53D);
+    public static final Color JOLT_JOLT = new Color(0x3DD9FF);
+    public static final Color JOLT_SURGE = new Color(0xB48CFF);
 
     // Fonts
     public static final Font FONT_TITLE =
@@ -35,6 +38,7 @@ public final class Theme {
 
     public static final Font FONT_HEADING =
             new Font(Font.SANS_SERIF, Font.BOLD, 22);
+    public static final Font FONT_JOLT_MESSAGE = new Font(Font.SANS_SERIF, Font.BOLD, 22);
 
     public static final Font FONT_BODY =
             new Font(Font.SANS_SERIF, Font.PLAIN, 16);

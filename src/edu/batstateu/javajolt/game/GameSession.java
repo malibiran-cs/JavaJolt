@@ -3,6 +3,7 @@ package edu.batstateu.javajolt.game; // Angelo
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Difficulty;
+import edu.batstateu.javajolt.enums.JoltMessage;
 import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.enums.Topic;
 import java.util.EnumSet;
@@ -22,6 +23,7 @@ public class GameSession {
     private int bestStreak;    // highest currentStreak reached this attempt
     private int lastDamage; // actual HP cost of the most recent mistake or timeout (0 if blocked)
     private int lastPoints; // points awarded for the most recent answer (0 on a mistake)
+    private JoltMessage lastJoltMessage = JoltMessage.NONE;
     private int scoreEarned;
     private int provisionalXp; // first-clear XP earned so far; commits at settlement
     private boolean settled;   // end-of-quiz settlement already ran for this attempt
@@ -40,6 +42,7 @@ public class GameSession {
 
     // State Updaters
     public void recordCorrect(int points) {
+        int streakBefore = currentStreak;
         correctCount++;
         consecutiveMistakes = 0;
         currentStreak++;
@@ -48,16 +51,19 @@ public class GameSession {
         }
         scoreEarned += points;
         lastPoints = points;
+        lastJoltMessage = JoltMessage.afterAnswer(streakBefore, currentStreak, questions.size());
     }
 
     // Runs once per mistake, after its damage was already applied. Records the
     // actual HP cost (0 when a Shield blocked it) and clears the correct streak.
     public void recordMistake(int damage) {
+        int streakBefore = currentStreak;
         mistakeCount++;
         consecutiveMistakes++;
         currentStreak = 0;
         lastPoints = 0;
         lastDamage = damage;
+        lastJoltMessage = JoltMessage.afterAnswer(streakBefore, currentStreak, questions.size());
     }
 
     // POWER-UPS (one use of each unlocked power-up per quiz; a new session resets all)
@@ -226,6 +232,10 @@ public class GameSession {
 
     public int getLastPoints() {
         return lastPoints;
+    }
+
+    public JoltMessage getLastJoltMessage() {
+        return lastJoltMessage;
     }
 
     public boolean isSettled() {

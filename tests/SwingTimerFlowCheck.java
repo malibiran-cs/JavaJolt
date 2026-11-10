@@ -5,6 +5,7 @@ import edu.batstateu.javajolt.data.TutorialContent;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.InputMode;
+import edu.batstateu.javajolt.enums.JoltMessage;
 import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.game.GameSession;
@@ -239,7 +240,7 @@ public class SwingTimerFlowCheck {
         Thread.sleep(1400);
         onEdt(() -> {
             TutorialPopup popup = tutorialPopup();
-            require(popup.isModal() && hasLabel(popup, "Step 1 of 13"), "tutorial popup is modal and numbers its steps");
+            require(popup.isModal() && hasLabel(popup, "Step 1 of 14"), "tutorial popup is modal and numbers its steps");
             require(button(popup, "Exit tutorial") == null && button(popup, "Skip") == null,
                     "first-run popup has no skip or replay exit");
             require(!demo.isQuestionTimedOut() && demo.getPlayer().getHp() == 15
@@ -263,7 +264,7 @@ public class SwingTimerFlowCheck {
         await(() -> tutorialPopup() != null);
         Thread.sleep(1400);
         onEdt(() -> {
-            require(hasLabel(tutorialPopup(), "Step 9 of 13") && demo.getPlayer().getHp() == 9,
+            require(hasLabel(tutorialPopup(), "Step 9 of 14") && demo.getPlayer().getHp() == 9,
                     "next question uses the same index path and performs Heal setup before popups");
             button(window, "Heal").doClick();
             require(!demo.hasUsed(PowerUp.HEAL) && demo.getPlayer().getHp() == 9 && !demo.isQuestionTimedOut(),
@@ -284,9 +285,43 @@ public class SwingTimerFlowCheck {
         });
         await(() -> demo.getAnsweredCount() == 2 && showingButton("Continue"));
         SwingUtilities.invokeLater(() -> button(window, "Continue").doClick());
+        await(() -> tutorialPopup() != null && hasLabel(tutorialPopup(), "Build a Jolt"));
+        onEdt(() -> require(hasLabel(tutorialPopup(), "Step 13 of 14")
+                        && demo.getCurrentQuestionIndex() == 3,
+                "Jolt teaching popup appears before question three"));
+        dismissTutorialSteps(1);
+        await(() -> tutorialPopup() == null);
+        onEdt(() -> {
+            button(window, "C. boolean").doClick();
+            button(window, "Submit answer").doClick();
+        });
+        await(() -> demo.getAnsweredCount() == 3 && showingButton("Continue"));
+        onEdt(() -> {
+            require(demo.getLastJoltMessage() == JoltMessage.SPARK
+                            && hasLabel(window, "SPARK!") && hasLabel(window, "JOLT: x3   (+14 points)"),
+                    "tutorial correct answers display SPARK and the unchanged score suffix");
+            button(window, "Continue").doClick();
+            require(hasLabel(window, "SPARK!"), "milestone persists into the next question");
+            button(window, "D. 5").doClick();
+            button(window, "Submit answer").doClick();
+        });
+        await(() -> demo.getAnsweredCount() == 4 && showingButton("Continue"));
+        onEdt(() -> {
+            require(demo.getLastJoltMessage() == JoltMessage.SPARK
+                            && hasLabel(window, "SPARK!") && hasLabel(window, "JOLT: x4   (+16 points)"),
+                    "SPARK persists above its threshold with the unchanged score progression");
+            button(window, "Continue").doClick();
+            button(window, "B. int = count 4;").doClick();
+            button(window, "Submit answer").doClick();
+        });
+        await(() -> demo.getAnsweredCount() == 5 && showingButton("Continue"));
+        onEdt(() -> require(demo.getLastJoltMessage() == JoltMessage.SHORT_CIRCUIT
+                        && hasLabel(window, "SHORT CIRCUIT!") && hasLabel(window, "JOLT: x0"),
+                "tutorial mistake displays SHORT CIRCUIT through the shared answer path"));
+        SwingUtilities.invokeLater(() -> button(window, "Continue").doClick());
         await(() -> tutorialPopup() != null && hasLabel(tutorialPopup(), "You're ready!"));
         onEdt(() -> {
-            require(hasLabel(tutorialPopup(), "Step 13 of 13") && runner.submissions == 2
+            require(hasLabel(tutorialPopup(), "Step 14 of 14") && runner.submissions == 5
                             && runner.settlements == 0 && !demo.isSettled(),
                     "full tutorial reaches wrap-up through shared submission without settlement");
             require(!player.isTutorialCompleted(), "wrap-up must be confirmed before setting completion");
@@ -344,7 +379,7 @@ public class SwingTimerFlowCheck {
         GameSession replaced = tutorial.getSession();
         SwingUtilities.invokeLater(() -> window.startTutorial(true));
         await(() -> tutorial.getSession() != replaced && tutorialPopup() != null);
-        onEdt(() -> require(hasLabel(tutorialPopup(), "Step 1 of 13") && !replaced.isSettled(),
+        onEdt(() -> require(hasLabel(tutorialPopup(), "Step 1 of 14") && !replaced.isSettled(),
                 "replacement run is protected from the old modal stack"));
         GameSession navigated = tutorial.getSession();
         onEdt(() -> window.showScreen(ScreenId.TOPIC_SELECTION));
