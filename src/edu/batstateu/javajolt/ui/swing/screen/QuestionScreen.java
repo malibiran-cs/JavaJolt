@@ -13,6 +13,8 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
+import edu.batstateu.javajolt.ui.swing.SoundEffect;
+import edu.batstateu.javajolt.ui.swing.UiSounds;
 import edu.batstateu.javajolt.ui.swing.component.JavaCodeEditor;
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.entity.Player;
@@ -21,6 +23,8 @@ import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.ui.swing.ButtonSounds;
+import edu.batstateu.javajolt.ui.swing.SoundEffect;
+import edu.batstateu.javajolt.ui.swing.UiSounds;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
 import edu.batstateu.javajolt.ui.swing.component.MascotView;
@@ -682,25 +686,37 @@ private JPanel createIdentificationEditor() {
             buttons.add(button);
             grid.add(button);
 
-            // Update all card styles when selected
-            button.addActionListener(
-                    event -> updateChoiceBorders(buttons)
-            );
+            // Selection uses the existing click sound once; global button
+            // sounds do not apply to these JRadioButton answer cards.
+            button.addActionListener(event -> {
+                UiSounds.play(SoundEffect.BUTTON_CLICK);
+                updateChoiceBorders(buttons);
+            });
 
-            // Hover appearance
+            // Keep hover state independent from the selected state.
             button.addMouseListener(new MouseAdapter() {
-
                 @Override
                 public void mouseEntered(MouseEvent event) {
-                    if (!button.isSelected()) {
-                        button.setBackground(
-                                Theme.SECONDARY_HOVER
-                        );
-                    }
+                    button.putClientProperty("choiceHovered", Boolean.TRUE);
+                    updateChoiceBorders(buttons);
                 }
 
                 @Override
                 public void mouseExited(MouseEvent event) {
+                    button.putClientProperty("choiceHovered", Boolean.FALSE);
+                    updateChoiceBorders(buttons);
+                }
+            });
+
+            // Swing focus decoration is off; draw a visible focus border.
+            button.addFocusListener(new java.awt.event.FocusAdapter() {
+                @Override
+                public void focusGained(java.awt.event.FocusEvent event) {
+                    updateChoiceBorders(buttons);
+                }
+
+                @Override
+                public void focusLost(java.awt.event.FocusEvent event) {
                     updateChoiceBorders(buttons);
                 }
             });
@@ -959,35 +975,30 @@ private JPanel createCodeEditor(Question question) {
 
 
 
-    private void updateChoiceBorders(
-            List<JRadioButton> buttons) {
-
+    private void updateChoiceBorders(List<JRadioButton> buttons) {
         for (JRadioButton button : buttons) {
-
             boolean selected = button.isSelected();
+            boolean hovered = Boolean.TRUE.equals(
+                    button.getClientProperty("choiceHovered")
+            );
+            boolean focused = button.isFocusOwner();
 
-            // Selected answers receive an orange tint
+            // A selection remains orange even when the pointer moves away.
             button.setBackground(
-                    selected
-                            ? new java.awt.Color(0x403128)
+                    selected ? new java.awt.Color(0x403128)
+                            : hovered || focused ? new java.awt.Color(0x333840)
                             : Theme.INSET
             );
 
-            // Selected answers receive an orange border
-            button.setBorder(
-                    BorderFactory.createCompoundBorder(
-                            BorderFactory.createLineBorder(
-                                    selected
-                                            ? Theme.ACCENT
-                                            : Theme.INSET_BORDER,
-                                    2,
-                                    true
-                            ),
-                            BorderFactory.createEmptyBorder(
-                                    14, 18, 14, 18
-                            )
-                    )
-            );
+            java.awt.Color borderColor = selected || focused
+                    ? Theme.ACCENT
+                    : hovered ? new java.awt.Color(0x727C8A)
+                            : Theme.INSET_BORDER;
+
+            button.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(borderColor, 2, true),
+                    BorderFactory.createEmptyBorder(14, 18, 14, 18)
+            ));
         }
     }
 
@@ -1020,6 +1031,15 @@ private JPanel createCodeEditor(Question question) {
                         : MascotView.Mood.LOW_BATTERY
         );
 
+
+        // Play the appropriate sound after checking an answer.
+        UiSounds.play(
+                correct
+                        ? SoundEffect.ANSWER_CORRECT
+                        : SoundEffect.ANSWER_INCORRECT
+        );
+
+s
         // Refresh displayed player statistics
         hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());
 
@@ -1041,7 +1061,7 @@ private JPanel createCodeEditor(Question question) {
 
         // Display the new feedback card
         answerContent.add(
-                createFeedbackCard(correct, explanation, player),
+                createFeedbackCard(correct, explanation, player, lastPoints),
                 BorderLayout.CENTER
         );
 
@@ -1077,7 +1097,8 @@ private JPanel createCodeEditor(Question question) {
         private JPanel createFeedbackCard(
                 boolean correct,
                 String explanation,
-                Player player) {
+                Player player,
+                int lastPoints) {
 
         RoundedPanel card = new RoundedPanel(
                 new BorderLayout(0, Theme.GAP_M),
@@ -1104,26 +1125,58 @@ private JPanel createCodeEditor(Question question) {
                 )
         );
 
-        // FEEDBACK TITLE
+
+        // FEEDBACK TITLE AND POINTS
+
+        JPanel headline = new JPanel(
+                new BorderLayout(Theme.GAP_S, 0)
+        );
+
+        headline.setOpaque(false);
+
         JLabel status = createHeading(
                 correct
                         ? "CORRECT ANSWER!"
-                        : "NOT QUITE!"
+                        : "INCORRECT ANSWER"
         );
 
         status.setForeground(
-                correct
-                        ? Theme.ACCENT
-                        : Theme.DANGER
+                correct ? Theme.ACCENT : Theme.DANGER
         );
 
-        card.add(status, BorderLayout.NORTH);
+        JLabel outcome = createLabel(
+                correct
+                        ? (lastPoints > 0
+                                ? "+" + lastPoints + " POINTS"
+                                : "ANSWER ACCEPTED")
+                        : (player.isAlive()
+                                ? "KEEP TRYING"
+                                : "HP DEPLETED")
+        );
+
+        outcome.setFont(
+                Theme.FONT_BODY.deriveFont(
+                        java.awt.Font.BOLD, 13f
+                )
+        );
+
+        outcome.setForeground(
+                correct ? Theme.ACCENT : Theme.DANGER
+        );
+
+        outcome.setHorizontalAlignment(
+                SwingConstants.RIGHT
+        );
+
+        headline.add(status, BorderLayout.CENTER);
+        headline.add(outcome, BorderLayout.EAST);
+
+        card.add(headline, BorderLayout.NORTH);
 
         // EXPLANATION
         String message = correct
-                ? "Well done!\n\n"
-                : "Review the explanation and "
-                        + "try the next question.\n\n";
+                ? "Nice work! Here's why the answer is correct:\n\n"
+                : "Here's why that answer wasn't correct:\n\n";
 
         String explanationText =
                 explanation == null || explanation.isBlank()
@@ -1167,7 +1220,11 @@ private JPanel createCodeEditor(Question question) {
                                         + "! Continue to see your results.")
         );
 
-        footer.setForeground(Theme.TEXT_MUTED);
+        footer.setForeground(
+                player.isAlive()
+                        ? Theme.TEXT_MUTED
+                        : Theme.DANGER
+        );
 
         card.add(footer, BorderLayout.SOUTH);
 
