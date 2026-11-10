@@ -13,6 +13,7 @@ import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.ui.GameUI;
 
 public class LessonRunnerService {
+    // Minimum answered-question accuracy required alongside surviving the quiz.
     private static final int PASS_PERCENT = 70;
     // XP tuning (fixed for now, but kept in methods so they can scale by difficulty later)
     private static final int XP_PER_CORRECT = 5;
@@ -51,6 +52,11 @@ public class LessonRunnerService {
     // the level-derived max HP, the topic's enemy, and a full HP restore (brief Phase 2/3).
     public GameSession startSession(Player player, Topic topic, Difficulty difficulty) {
         List<Question> questions = questionService.selectQuestions(topic, difficulty);
+        return startSession(player, topic, difficulty, questions);
+    }
+
+    // Scripted tutorial questions share normal enemy and HP setup without selecting from the bank.
+    public GameSession startSession(Player player, Topic topic, Difficulty difficulty, List<Question> questions) {
         GameSession session = new GameSession(player, topic, difficulty, questions);
         session.setEnemy(enemyRoster.getEnemy(topic, difficulty));
         player.setMaxHp(LevelRewardService.maxHpForLevel(LevelService.calculateLevel(player.getXp())));
@@ -76,16 +82,14 @@ public class LessonRunnerService {
     // Records one answer using the same rules for console and Swing callers.
     // Score points come from ScoreService based on the streak that ends with
     // this answer; they accumulate in the session (provisional) and settle only
-    // at settleAttempt, exactly like XP. Point Boost applies to the next
-    // correct answer only; Shield zeroes the next mistake's damage (the mistake
-    // still counts and still escalates the chain).
+    // at settleAttempt, exactly like XP. Shield zeroes the next mistake's damage;
+    // the mistake still counts and still escalates the chain.
     public boolean submitAnswer(GameSession session, Question question, String answer) {
         Player player = session.getPlayer();
         if (questionService.isCorrect(question, answer)) {
-            boolean boosted = session.consumePointBoost();
             int points =
-                    scoreService.pointsForCorrect(boosted, session.getCurrentStreak() + 1);
-            session.recordCorrect(points, boosted);
+                    scoreService.pointsForCorrect(session.getCurrentStreak() + 1);
+            session.recordCorrect(points);
 
             // First-clear XP is provisional until the attempt settles.
             if (!player.isComplete(session.getTopic(), session.getDifficulty())) {
@@ -104,6 +108,10 @@ public class LessonRunnerService {
         player.takeDamage(damage);
         session.recordMistake(damage);
         return false;
+    }
+
+    public int getPassPercent() {
+        return PASS_PERCENT;
     }
 
     public boolean hasPassed(GameSession session) {

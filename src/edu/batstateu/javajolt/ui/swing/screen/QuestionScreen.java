@@ -235,14 +235,12 @@ public class QuestionScreen extends Screen {
     }
 
     // One line of immediate feedback: the live consecutive-correct streak plus,
-    // right after a resolved answer, the points that answer just earned (marked
-    // "doubled" when Point Boost produced them).
-    private void refreshStreakLabel(int streak, int lastPoints, boolean lastAnswerBoosted) {
+    // right after a resolved answer, the points that answer just earned.
+    private void refreshStreakLabel(int streak, int lastPoints) {
         if (lastPoints > 0) {
             streakLabel.setText(
                     "STREAK: " + streak
-                    + "   (+" + lastPoints + " points"
-                    + (lastAnswerBoosted ? " · doubled)" : ")")
+                    + "   (+" + lastPoints + " points)"
             );
         } else {
             streakLabel.setText("STREAK: " + streak);
@@ -275,8 +273,6 @@ public class QuestionScreen extends Screen {
 
                 if (isArmed && powerUp == PowerUp.SHIELD) {
                     button.setText("Shield ready");
-                } else if (isArmed && powerUp == PowerUp.POINT_BOOST) {
-                    button.setText("Boost ready");
                 } else {
                     button.setText(powerUp.getLabel());
                 }
@@ -329,9 +325,14 @@ public class QuestionScreen extends Screen {
 
     // Refresh only the notice and HP so the player's input stays intact.
     public void showTimeout(Player player) {
-        hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());
+        showHp(player);
         countdownLabel.setText("TIME: expired");
         showPowerUpNotice("Time expired. You can still answer this question.");
+    }
+
+    // Refresh HP after an instant recovery without rebuilding the answer editor.
+    public void showHp(Player player) {
+        hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());
     }
 
     public void showPowerUpNotice(String message) {
@@ -347,8 +348,7 @@ public class QuestionScreen extends Screen {
             int displayXp,
             int quizScore,
             int streak,
-            int lastPoints,
-            boolean lastAnswerBoosted) {
+            int lastPoints) {
         quizMascot.setMood(MascotView.Mood.THINKING);
         playerNameLabel.setText(player.getName());
         hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());
@@ -357,7 +357,7 @@ public class QuestionScreen extends Screen {
                 "XP: " + displayXp
                 + "   QUIZ SCORE: " + quizScore
         );
-        refreshStreakLabel(streak, lastPoints, lastAnswerBoosted);
+        refreshStreakLabel(streak, lastPoints);
         progressLabel.setText("QUESTION " + number + " OF " + total);
         questionProgress.setValue(
         total == 0
@@ -1011,8 +1011,7 @@ private JPanel createCodeEditor(Question question) {
             int displayXp,
             int quizScore,
             int streak,
-            int lastPoints,
-            boolean lastAnswerBoosted) {
+            int lastPoints) {
         quizMascot.setMood(
                 correct
                         ? MascotView.Mood.CHARGED
@@ -1027,7 +1026,7 @@ private JPanel createCodeEditor(Question question) {
                 "XP: " + displayXp
                 + "   QUIZ SCORE: " + quizScore
         );
-        refreshStreakLabel(streak, lastPoints, lastAnswerBoosted);
+        refreshStreakLabel(streak, lastPoints);
 
         // Change the section heading
         answerHeading.setText("ANSWER FEEDBACK");
@@ -1175,6 +1174,10 @@ private JPanel createCodeEditor(Question question) {
 
     public void setCheckingAnswer(boolean checking) {
         submitButton.setEnabled(!checking);
+    }
+
+    public void setTopicsButtonEnabled(boolean enabled) {
+        topicsButton.setEnabled(enabled);
     }
 
     public void showLessonResult(GameSession session, boolean passed) {

@@ -26,6 +26,7 @@ public class SaveService {
     private static final String KEY_SCORE = "score";
     private static final String KEY_HIGH_SCORES = "highScores";
     private static final String KEY_DIFFICULTY = "difficulty";
+    private static final String KEY_TUTORIAL_COMPLETED = "tutorialCompleted";
     // Stored as comma-separated TOPIC:DIFFICULTY pairs, e.g. VARIABLES:BEGINNER,OPERATORS:BEGINNER.
     private static final String KEY_COMPLETED = "completedTopics";
 
@@ -54,6 +55,7 @@ public class SaveService {
         props.setProperty(KEY_HIGH_SCORES, encodeHighScores(player.copyHighScores()));
         props.setProperty(KEY_DIFFICULTY, difficulty.name());
         props.setProperty(KEY_COMPLETED, encode(player.getProgress().copyCompleted()));
+        props.setProperty(KEY_TUTORIAL_COMPLETED, String.valueOf(player.isTutorialCompleted()));
 
         try (java.io.Writer writer = Files.newBufferedWriter(saveFile)) {
             props.store(writer, "JavaJolt player save");
@@ -80,10 +82,21 @@ public class SaveService {
             Map<Topic, Set<Difficulty>> completed = decode(props.getProperty(KEY_COMPLETED, ""));
             Map<Topic, Map<Difficulty, Integer>> highScores =
                     decodeHighScores(props.getProperty(KEY_HIGH_SCORES, ""));
-            return new SaveData(name, xp, difficulty, score, completed, highScores);
+            // Missing key means a returning legacy player, who must not be forced into the tutorial.
+            boolean tutorialCompleted = decodeTutorialCompleted(
+                    props.getProperty(KEY_TUTORIAL_COMPLETED, "true"));
+            return new SaveData(name, xp, difficulty, score, completed, highScores, tutorialCompleted);
         } catch (IllegalArgumentException e) {
             throw new SaveFileException("Save file is corrupted: " + saveFile, e);
         }
+    }
+
+    // Reject malformed flags through the same corrupted-save path as other invalid fields.
+    private static boolean decodeTutorialCompleted(String raw) {
+        if (!"true".equalsIgnoreCase(raw) && !"false".equalsIgnoreCase(raw)) {
+            throw new IllegalArgumentException("Invalid tutorial completion flag.");
+        }
+        return Boolean.parseBoolean(raw);
     }
 
     // Converts progress map to single-line property value.

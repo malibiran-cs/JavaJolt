@@ -17,6 +17,7 @@ public class Player {
     private int maxHp = STARTING_HP;
     private int xp;      // persistent: written to the save file and restored on load
     private int score;   // cumulative score across quiz attempts; persisted
+    private boolean tutorialCompleted; // new players have not completed the tutorial
     private final Map<Topic, EnumMap<Difficulty, Integer>> highScores =
             new EnumMap<>(Topic.class);
     private PlayerProgressService progress = new PlayerProgressService();
@@ -220,6 +221,14 @@ public class Player {
 
     public void setScore(int score) {
         this.score = score;
+    }
+
+    public boolean isTutorialCompleted() {
+        return tutorialCompleted;
+    }
+
+    public void setTutorialCompleted(boolean tutorialCompleted) {
+        this.tutorialCompleted = tutorialCompleted;
     }
 
     public static int getStartingHp() {

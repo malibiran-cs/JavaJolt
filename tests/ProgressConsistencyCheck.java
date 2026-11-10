@@ -6,6 +6,8 @@ import edu.batstateu.javajolt.entity.SaveData;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.game.GameSession;
+import edu.batstateu.javajolt.exception.SaveFileException;
+import edu.batstateu.javajolt.preview.PreviewSandbox;
 import edu.batstateu.javajolt.service.LessonRunnerService;
 import edu.batstateu.javajolt.service.LessonService;
 import edu.batstateu.javajolt.service.QuestionService;
@@ -25,6 +27,8 @@ public class ProgressConsistencyCheck {
     public static void main(String[] args) throws Exception {
 
         Player player = new Player("Test Player", 0);
+        require(!player.isTutorialCompleted(), "New player must start with tutorial incomplete");
+        System.out.println("PASS: New player tutorial flag defaults to false");
 
         LessonRunnerService runner = new LessonRunnerService(
                 new QuestionService(new QuestionBank()),
@@ -106,6 +110,7 @@ public class ProgressConsistencyCheck {
             );
 
             restored.setScore(saved.score());
+            restored.setTutorialCompleted(saved.tutorialCompleted());
 
             restored.restoreProgress(
                     saved.completedTopics()
@@ -120,6 +125,8 @@ public class ProgressConsistencyCheck {
 
             require(restored.getScore() == player.getScore(),
                     "Score was not restored");
+            require(!saved.tutorialCompleted() && !restored.isTutorialCompleted(),
+                    "Incomplete tutorial flag was not restored");
 
             require(restored.isComplete(TOPIC, LEVEL),
                     "Completion was not restored");
@@ -157,6 +164,60 @@ public class ProgressConsistencyCheck {
 
             System.out.println("PASS: High score preservation");
 
+            checkTutorialRoundTrips(saves, restored);
+
+            // Old saves have no power-up fields; only quiz state holds usage.
+            Files.writeString(saveFile,
+                    "name=Legacy Player\nxp=750\nscore=52\ndifficulty=INTERMEDIATE\n"
+                            + "completedTopics=VARIABLES:BEGINNER\nhighScores=VARIABLES:BEGINNER:52\n");
+            SaveData legacy = saves.load();
+            require(legacy.name().equals("Legacy Player") && legacy.xp() == 750
+                            && legacy.score() == 52 && legacy.difficulty() == Difficulty.INTERMEDIATE
+                            && legacy.completedTopics().get(TOPIC).contains(LEVEL)
+                            && legacy.highScores().get(TOPIC).get(LEVEL) == 52,
+                    "Existing save must load without power-up data");
+            System.out.println("PASS: Legacy save without power-up data");
+            require(legacy.tutorialCompleted(), "Legacy save without tutorial key must default to true");
+            System.out.println("PASS: Legacy save tutorial flag defaults to true");
+
+            String legacyContents = Files.readString(saveFile);
+            Player preview = new Player("Preview flag check", 750);
+            SaveService sandbox = PreviewSandbox.createFor(preview, Difficulty.INTERMEDIATE);
+            require(preview.isTutorialCompleted() && sandbox.load().tutorialCompleted(),
+                    "Preview player and sandbox save must mark tutorial complete");
+            preview.addScore(123);
+            sandbox.save(preview, Difficulty.INTERMEDIATE);
+            require(sandbox.load().score() == 123 && Files.readString(saveFile).equals(legacyContents),
+                    "Preview writes must stay isolated from existing save data");
+            require(saves.load().tutorialCompleted(), "Legacy reads must preserve their default");
+            System.out.println("PASS: Preview flags and isolated sandbox writes");
+            Player newcomer = new Player("New preview", 0);
+            SaveService newPreview = PreviewSandbox.createNewPlayer();
+            require(!newPreview.hasSave() && !newcomer.isTutorialCompleted()
+                            && newcomer.getXp() == 0 && newcomer.getProgress().copyCompleted().isEmpty(),
+                    "New-player sandbox must have no seed save or progress");
+            newPreview.save(newcomer, Difficulty.BEGINNER);
+            require(!newPreview.load().tutorialCompleted() && Files.readString(saveFile).equals(legacyContents),
+                    "New-player sandbox must preserve false and isolate its writes");
+            System.out.println("PASS: Unseeded new-player preview sandbox");
+
+            Files.writeString(saveFile, "name=Oldest Player\nxp=0\ndifficulty=BEGINNER\n");
+            SaveData oldest = saves.load();
+            require(oldest.tutorialCompleted() && oldest.score() == 0
+                            && oldest.completedTopics().isEmpty() && oldest.highScores().isEmpty(),
+                    "Oldest save must retain existing defaults and count tutorial complete");
+            System.out.println("PASS: Minimal legacy save defaults");
+
+            Files.writeString(saveFile, legacyContents + "tutorialCompleted=unfinished\n");
+            boolean rejected = false;
+            try {
+                saves.load();
+            } catch (SaveFileException e) {
+                rejected = true;
+            }
+            require(rejected, "Malformed tutorial flag must use the corrupted-save error path");
+            System.out.println("PASS: Invalid tutorial flag rejected");
+
             System.out.println(
                     "\nALL PROGRESSION CHECKS PASSED"
             );
@@ -165,6 +226,24 @@ public class ProgressConsistencyCheck {
 
             Files.deleteIfExists(saveFile);
             Files.deleteIfExists(tempDir);
+        }
+    }
+
+    private static void checkTutorialRoundTrips(SaveService saves, Player player)
+            throws SaveFileException {
+        for (boolean completed : new boolean[] {true, false}) {
+            player.setTutorialCompleted(completed);
+            saves.save(player, LEVEL);
+            SaveData saved = saves.load();
+            Player restored = new Player(saved.name(), saved.xp());
+            restored.setTutorialCompleted(saved.tutorialCompleted());
+            require(saved.tutorialCompleted() == completed && restored.isTutorialCompleted() == completed,
+                    "Tutorial flag must survive save/load and restoration: " + completed);
+            require(saved.xp() == player.getXp() && saved.score() == player.getScore()
+                            && saved.completedTopics().get(TOPIC).contains(LEVEL)
+                            && saved.highScores().get(TOPIC).get(LEVEL) == player.getHighScore(TOPIC, LEVEL),
+                    "Tutorial persistence must preserve other progress");
+            System.out.println("PASS: Tutorial flag round-trip " + completed);
         }
     }
 

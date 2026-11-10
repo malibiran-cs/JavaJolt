@@ -23,6 +23,18 @@ public final class PreviewSandbox {
     // Creates the sandbox and writes the seed save once, so MainWindow treats
     // the preview like a normal loaded game (no "could not save" warnings).
     public static SaveService createFor(Player player, Difficulty difficulty) {
+        SaveService saveService = createNewPlayer();
+        player.setTutorialCompleted(true);
+        try {
+            saveService.save(player, difficulty);
+        } catch (SaveFileException e) {
+            throw new IllegalStateException("Could not seed preview sandbox save: " + e.getMessage(), e);
+        }
+        return saveService;
+    }
+
+    // No seed file or flag mutation: Title/Welcome behaves like a real first launch.
+    public static SaveService createNewPlayer() {
         Path saveFile;
         try {
             Path tempDir = Files.createTempDirectory("javajolt-preview");
@@ -34,12 +46,6 @@ public final class PreviewSandbox {
         // The sandbox file is the only thing to delete; the temp dir itself is left empty.
         saveFile.toFile().deleteOnExit();
 
-        SaveService saveService = new SaveService(saveFile);
-        try {
-            saveService.save(player, difficulty);
-        } catch (SaveFileException e) {
-            throw new IllegalStateException("Could not seed preview sandbox save: " + e.getMessage(), e);
-        }
-        return saveService;
+        return new SaveService(saveFile);
     }
 }

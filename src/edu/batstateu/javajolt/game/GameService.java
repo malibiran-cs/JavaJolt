@@ -54,6 +54,7 @@ public class GameService {
             player = new Player(saveData.name(), saveData.xp());
             player.setScore(saveData.score());
             player.restoreHighScores(saveData.highScores());
+            player.setTutorialCompleted(saveData.tutorialCompleted());
 
             // Get completed topics
             Map<Topic, Set<Difficulty>> completedTopics = saveData.completedTopics();

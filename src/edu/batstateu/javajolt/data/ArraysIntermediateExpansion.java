@@ -196,7 +196,7 @@ public final class ArraysIntermediateExpansion {
                 544,
                 "What prints?\nint[] a = {1,2,3};\nfor (int i=0;i<a.length;i++) a[i]*=2;\nSystem.out.println(a[2]);",
                 Topic.ARRAYS, Difficulty.INTERMEDIATE,
-                "The third value is doubled from 3 to 6.",
+                "The third value is multiplied by 2, from 3 to 6.",
                 List.of(
                         "A. 6",
                         "B. 3",

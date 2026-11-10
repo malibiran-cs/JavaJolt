@@ -56,6 +56,8 @@ public class MainWindow extends JFrame {
     private final SaveService saveService;
     private final PowerUpService powerUpService;
     private final AnswerTimerService answerTimerService;
+    private final TutorialCoordinator tutorialCoordinator;
+    private boolean tutorialRunning;
     private static final int COUNTDOWN_TICK_MILLIS = 100;
     private ScreenId titleStartDestination = ScreenId.WELCOME;
     private Timer countdown;
@@ -105,6 +107,13 @@ public class MainWindow extends JFrame {
             PowerUpService powerUpService,
             AnswerTimerService answerTimerService,
             SaveService saveService) {
+        this(player, questionService, lessonRunnerService, difficulty, powerUpService,
+                answerTimerService, saveService, null);
+    }
+
+    public MainWindow(Player player, QuestionService questionService, LessonRunnerService lessonRunnerService,
+            Difficulty difficulty, PowerUpService powerUpService, AnswerTimerService answerTimerService,
+            SaveService saveService, TutorialCoordinator tutorialCoordinator) {
         super("JavaJolt");
         this.player = player;
         this.questionService = questionService;
@@ -112,13 +121,14 @@ public class MainWindow extends JFrame {
         this.difficulty = difficulty;
         this.powerUpService = powerUpService;
         this.answerTimerService = answerTimerService;
+        this.tutorialCoordinator = tutorialCoordinator;
         this.saveService = saveService;
         this.welcomeCompleted = saveService.hasSave();
 
 
         container.add(
                 new TitleScreen(
-                        () -> showScreen(titleStartDestination),
+                        this::startFromTitle,
                         this::confirmExit
                 ),
                 ScreenId.TITLE.name()
@@ -129,7 +139,8 @@ public class MainWindow extends JFrame {
         container.add(new WelcomeScreen(name -> {
             player.setName(name);
             welcomeCompleted = true;
-            showScreen(ScreenId.MAIN_MENU);
+            if (player.isTutorialCompleted()) showScreen(ScreenId.MAIN_MENU);
+            else startTutorial(false);
         }), ScreenId.WELCOME.name());
 
         mainMenuScreen = new MainMenuScreen(
@@ -138,6 +149,7 @@ public class MainWindow extends JFrame {
                 this::saveWithFeedback,
                 this::showProgress,
                 this::showAchievements,
+                () -> startTutorial(true),
                 this::confirmExit
         );
 
@@ -261,6 +273,7 @@ public class MainWindow extends JFrame {
             Topic topic,
             Difficulty lessonDifficulty) {
 
+        if (tutorialRunning) return;
         stopCountdown();
         questionActive = false;
         // Remember XP before the quiz begins
@@ -328,14 +341,16 @@ private void saveWithFeedback() {
 }
 
 private void showProgress() {
-    StringBuilder message = new StringBuilder()
-            .append("Player: ").append(player.getName())
-            .append("\nXP: ").append(player.getXp())
-            .append("\nLevel: ")
-            .append(LevelService.calculateLevel(player.getXp()))
-            .append("\nCurrent difficulty: ")
-            .append(difficulty.getLabel())
-            .append("\n\nCompleted topics:\n");
+  StringBuilder message = new StringBuilder()
+        .append("<html><b>Player:</b> <span style='font-weight:normal'>")
+        .append(player.getName())
+        .append("</span><br><b>XP:</b> <span style='font-weight:normal'>")
+        .append(player.getXp())
+        .append("</span><br><b>Level:</b> <span style='font-weight:normal'>")
+        .append(LevelService.calculateLevel(player.getXp()))
+        .append("</span><br><b>Current difficulty:</b> <span style='font-weight:normal'>")
+        .append(difficulty.getLabel())
+        .append("</span><br><br><b>Completed topics:</b><br>");
 
     for (Difficulty level : Difficulty.values()) {
         int count = 0;
@@ -346,49 +361,73 @@ private void showProgress() {
             }
         }
 
-        message.append(level.getLabel())
-                .append(": ")
-                .append(count)
-                .append(" / ")
-                .append(Topic.values().length)
-                .append('\n');
+       message.append("<b>")
+        .append(level.getLabel())
+        .append(":</b> <span style='font-weight:normal'>")
+        .append(count)
+        .append(" / ")
+        .append(Topic.values().length)
+        .append("</span><br>");
     }
+    message.append("</html>");
 
-    JOptionPane.showMessageDialog(
-            this,
-            message.toString(),
-            "Player Progress",
-            JOptionPane.INFORMATION_MESSAGE
-    );
-}
+    javax.swing.UIManager.put("OptionPane.background", new java.awt.Color(0x2B3242));
+    
+    javax.swing.UIManager.put("Panel.background", new java.awt.Color(0x2B3242));
 
-private void confirmExit() {
-    if (!welcomeCompleted) {
-        dispose();
-        return;
-    }
-    int choice = JOptionPane.showConfirmDialog(
-            this,
-            "Save progress and exit JavaJolt?",
-            "Exit",
-            JOptionPane.YES_NO_OPTION
+    javax.swing.UIManager.put("OptionPane.messageForeground", Theme.TEXT);
+
+    javax.swing.UIManager.put(
+        "OptionPane.messageFont",
+        Theme.FONT_BODY.deriveFont(java.awt.Font.PLAIN, 18f)
     );
 
-    if (choice != JOptionPane.YES_OPTION) {
-        return;
+    javax.swing.UIManager.put("Button.background", Theme.ACCENT);
+
+    javax.swing.UIManager.put("Button.foreground", Theme.INSET);
+    
+    javax.swing.UIManager.put("OptionPane.minimumSize", new java.awt.Dimension(500, 350));
+
+   JOptionPane optionPane = new JOptionPane(
+        message.toString(),
+        JOptionPane.INFORMATION_MESSAGE
+    );
+
+    javax.swing.JDialog progressDialog =
+            optionPane.createDialog(this, "Player Progress");
+
+    progressDialog.setLocationRelativeTo(this);
+    progressDialog.setVisible(true);
     }
 
-    if (saveProgress()) {
-        dispose();
+    private void confirmExit() {
+        if (!welcomeCompleted) {
+            dispose();
+            return;
+        }
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                "Save progress and exit JavaJolt?",
+                "Exit",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (choice != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        if ((tutorialRunning && tutorialCoordinator.isReplay()) || saveProgress()) {
+            dispose();
+        }
     }
-}
 
 
     private void submitAnswer(String answer) {
-        if (session == null || !questionActive || !player.isAlive()
+        if (session == null || !questionActive || !session.getPlayer().isAlive() || isTutorialPopupOpen()
                 || questionIndex < 0 || questionIndex >= session.getQuestions().size()) return;
         stopCountdown();
         GameSession answerSession = session;
+        Player quizPlayer = answerSession.getPlayer();
         // No power-up may be used once an answer was submitted: this flag turns
         // off before checking and stays off through the result and transitions.
         questionActive = false;
@@ -410,12 +449,11 @@ private void confirmExit() {
                 questionScreen.showAnswerResult(
                         get(),
                         current.getExplanation(),
-                        player,
-                        player.getXp() + session.getProvisionalXp(),
+                        quizPlayer,
+                        quizPlayer.getXp() + session.getProvisionalXp(),
                         session.getScoreEarned(),
                         session.getCurrentStreak(),
-                        session.getLastPoints(),
-                        session.isLastAnswerBoosted()
+                        session.getLastPoints()
                 );
                 refreshBattleInfo(false);
                 } catch (InterruptedException e) {
@@ -439,7 +477,7 @@ private void confirmExit() {
 
     private void showNextQuestion() {
         if (session == null || !questionScreen.isVisible() || lessonResultRecorded
-                || (questionActive && player.isAlive())) {
+                || isTutorialPopupOpen() || (questionActive && session.getPlayer().isAlive())) {
             return;
         }
         stopCountdown();
@@ -449,7 +487,13 @@ private void confirmExit() {
 
         // Check whether the lesson is finished
         if (questionIndex >= session.getQuestions().size()
-                || !player.isAlive()) {
+                || !session.getPlayer().isAlive()) {
+
+            if (tutorialRunning) {
+                lessonResultRecorded = true;
+                showTutorialSteps(true);
+                return;
+            }
 
             // Prevent recording rewards twice
             if (lessonResultRecorded) {
@@ -617,6 +661,7 @@ private void confirmExit() {
         session.setCurrentQuestionIndex(
                 questionIndex + 1
         );
+        if (tutorialRunning) tutorialCoordinator.prepareQuestion();
 
         // The new question is active: power-ups may be used again (the
         // controller re-enables them; Hint visuals are per-question, since the
@@ -627,16 +672,17 @@ private void confirmExit() {
                 session.getQuestions().get(questionIndex),
                 questionIndex + 1,
                 session.getQuestions().size(),
-                player,
-                player.getXp() + session.getProvisionalXp(),
+                session.getPlayer(),
+                session.getPlayer().getXp() + session.getProvisionalXp(),
                 session.getScoreEarned(),
                 session.getCurrentStreak(),
-                session.getLastPoints(),
-                session.isLastAnswerBoosted()
+                session.getLastPoints()
         );
         refreshBattleInfo(true);
-        startCountdown(answerTimerService.getTimeLimitSeconds(session.getDifficulty(),
-                session.getQuestions().get(questionIndex).getInputMode()));
+        startCountdown(tutorialRunning ? tutorialCoordinator.getTimeLimitSeconds(questionIndex + 1)
+                : answerTimerService.getTimeLimitSeconds(session.getDifficulty(),
+                        session.getQuestions().get(questionIndex).getInputMode()));
+        if (tutorialRunning) showTutorialSteps(false);
     }
 
     private void restoreQuestionAfterCheckFailure() {
@@ -648,9 +694,13 @@ private void confirmExit() {
     }
 
     private void startCountdown(int seconds) {
+        startCountdown(TimeUnit.SECONDS.toNanos(seconds));
+    }
+
+    private void startCountdown(long nanos) {
         stopCountdown();
-        remainingSeconds = seconds;
-        countdownDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(remainingSeconds);
+        remainingSeconds = (int) ((nanos + TimeUnit.SECONDS.toNanos(1) - 1) / TimeUnit.SECONDS.toNanos(1));
+        countdownDeadline = System.nanoTime() + nanos;
         questionScreen.showCountdown(remainingSeconds, false);
         long version = countdownVersion;
         GameSession timedSession = session;
@@ -681,21 +731,22 @@ private void confirmExit() {
     }
 
     private void handleTimeout() {
-        if (!questionActive || session == null) {
+        if (!questionActive || session == null || isTutorialPopupOpen()) {
             return;
         }
         answerTimerService.applyTimeout(session);
-        if (!player.isAlive()) {
+        if (!session.getPlayer().isAlive()) {
             // Reuse the existing completion path without recording an answer.
             showNextQuestion();
             return;
         }
-        questionScreen.showTimeout(player);
+        questionScreen.showTimeout(session.getPlayer());
         refreshBattleInfo(true);
     }
 
     @Override
     public void dispose() {
+        if (tutorialRunning) clearTutorial();
         stopCountdown();
         questionActive = false;
         super.dispose();
@@ -708,7 +759,8 @@ private void confirmExit() {
         if (session == null
                 || questionIndex < 0
                 || questionIndex >= session.getQuestions().size()
-                || !questionActive) {
+                || !questionActive || isTutorialPopupOpen()
+                || (tutorialRunning && !tutorialCoordinator.canUsePowerUp(powerUp))) {
             return;
         }
 
@@ -720,6 +772,9 @@ private void confirmExit() {
         if (result.applied() && powerUp == PowerUp.TIME_STOP) {
             stopCountdown();
             questionScreen.showCountdown(remainingSeconds, true);
+        }
+        if (result.applied() && powerUp == PowerUp.HEAL) {
+            questionScreen.showHp(session.getPlayer());
         }
         if (result.applied() && !result.removedChoices().isEmpty()) {
             questionScreen.applyHintRemovedChoices(result.removedChoices());
@@ -742,17 +797,15 @@ private void confirmExit() {
                 : null;
 
         for (PowerUp powerUp : PowerUp.values()) {
-            if (powerUpService.isUnlocked(player, powerUp)) {
+            if (powerUpService.isUnlocked(session.getPlayer(), powerUp)) {
                 unlocked.add(powerUp);
             }
             if (session.hasUsed(powerUp)
-                    || !powerUpService.isApplicable(powerUp, session, current)) {
+                    || !powerUpService.isApplicable(powerUp, session, current)
+                    || (tutorialRunning && !tutorialCoordinator.canUsePowerUp(powerUp))) {
                 disabled.add(powerUp);
             }
             if (powerUp == PowerUp.SHIELD && session.isShieldArmed()) {
-                armed.add(powerUp);
-            }
-            if (powerUp == PowerUp.POINT_BOOST && session.isPointBoostArmed()) {
                 armed.add(powerUp);
             }
         }
@@ -812,7 +865,8 @@ private void confirmExit() {
 public void setTitleStartDestination(ScreenId destination) {
 
     if (destination != ScreenId.WELCOME
-            && destination != ScreenId.MAIN_MENU) {
+            && destination != ScreenId.MAIN_MENU
+            && destination != ScreenId.QUESTION) {
 
         throw new IllegalArgumentException(
                 "Invalid title destination: " + destination
@@ -823,7 +877,65 @@ public void setTitleStartDestination(ScreenId destination) {
 }
 
 
+    private void startFromTitle() {
+        if (titleStartDestination == ScreenId.QUESTION) startTutorial(false);
+        else showScreen(titleStartDestination);
+    }
+
+    public void startTutorial(boolean replay) {
+        if (tutorialCoordinator == null) throw new IllegalStateException("Tutorial was not wired for this window.");
+        stopCountdown();
+        session = tutorialCoordinator.start(replay);
+        tutorialRunning = true;
+        questionScreen.setTopicsButtonEnabled(false);
+        questionIndex = -1;
+        lessonResultRecorded = false;
+        questionActive = false;
+        showScreen(ScreenId.QUESTION);
+        showNextQuestion();
+    }
+
+    private boolean isTutorialPopupOpen() {
+        return tutorialCoordinator != null && tutorialCoordinator.isPopupOpen();
+    }
+
+    private void showTutorialSteps(boolean finished) {
+        GameSession tutorialSession = session;
+        long nanos = countdown == null ? -1 : Math.max(0, countdownDeadline - System.nanoTime());
+        stopCountdown();
+        boolean confirmed = false;
+        if (finished) confirmed = tutorialCoordinator.showWrapUp(this, this::confirmExit);
+        else tutorialCoordinator.showQuestionSteps(this, questionIndex + 1, this::confirmExit);
+        if (session != tutorialSession || !isDisplayable()) return;
+        if (finished || !tutorialCoordinator.isActive()) {
+            boolean firstCompletion = confirmed && !tutorialCoordinator.isReplay() && !player.isTutorialCompleted();
+            clearTutorial();
+            if (firstCompletion) {
+                player.setTutorialCompleted(true);
+                saveProgress();
+            }
+            showScreen(ScreenId.MAIN_MENU);
+        } else if (questionActive && session.isQuestionTimerRunning() && nanos >= 0) {
+            startCountdown(nanos);
+        }
+    }
+
+    private void clearTutorial() {
+        tutorialRunning = false;
+        tutorialCoordinator.stop();
+        questionScreen.setTopicsButtonEnabled(true);
+        stopCountdown();
+        session = null;
+        questionIndex = -1;
+        questionActive = false;
+        remainingSeconds = 0;
+        lessonResultRecorded = false;
+    }
+
     public void showScreen(ScreenId id) {
+        if (tutorialRunning && id != ScreenId.QUESTION) {
+            return;
+        }
         if (id != ScreenId.QUESTION) {
             stopCountdown();
             questionActive = false;

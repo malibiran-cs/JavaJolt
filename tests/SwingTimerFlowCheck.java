@@ -1,9 +1,11 @@
 import edu.batstateu.javajolt.Question;
 import edu.batstateu.javajolt.data.EnemyRoster;
 import edu.batstateu.javajolt.data.QuestionBank;
+import edu.batstateu.javajolt.data.TutorialContent;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.InputMode;
+import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.service.AnswerTimerService;
@@ -13,17 +15,23 @@ import edu.batstateu.javajolt.service.PowerUpService;
 import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.service.SaveService;
 import edu.batstateu.javajolt.service.ScoreService;
+import edu.batstateu.javajolt.service.TutorialService;
 import edu.batstateu.javajolt.ui.swing.MainWindow;
 import edu.batstateu.javajolt.ui.swing.ScreenId;
+import edu.batstateu.javajolt.ui.swing.TutorialCoordinator;
+import edu.batstateu.javajolt.ui.swing.component.TutorialPopup;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Window;
+import java.awt.event.WindowEvent;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Arrays;
 import java.util.function.BooleanSupplier;
 import javax.swing.AbstractButton;
 import javax.swing.JLabel;
+import javax.swing.JDialog;
 import javax.swing.JRadioButton;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
@@ -36,11 +44,20 @@ public class SwingTimerFlowCheck {
     private static RecordingRunner runner;
     private static JTextComponent editor;
     private static int checks;
+    private static TutorialService tutorial;
+    private static Path savePath;
 
     public static void main(String[] args) throws Exception {
+        if (args.length > 0 && args[0].equals("--tutorial")) {
+            open(Difficulty.BEGINNER);
+            onEdt(() -> window.showScreen(ScreenId.MAIN_MENU));
+            SwingUtilities.invokeLater(() -> window.startTutorial(false));
+            return;
+        }
         try {
             open(Difficulty.ADVANCED);
             onEdt(() -> {
+                require(!button(window, "Heal").isEnabled(), "Heal disabled at full HP");
                 JRadioButton choice = (JRadioButton) button(window, "A. answer");
                 choice.doClick();
             });
@@ -142,6 +159,25 @@ public class SwingTimerFlowCheck {
             await(() -> runner.last.isQuestionTimedOut());
             onEdt(() -> require(player.getHp() == 15 && runner.last.isShieldArmed(),
                     "Beginner expiry preserves Shield"));
+            onEdt(() -> window.dispose());
+
+            open(Difficulty.INTERMEDIATE);
+            onEdt(() -> button(window, "A. answer").doClick());
+            await(() -> runner.last.isQuestionTimedOut());
+            onEdt(() -> {
+                require(player.getHp() == 14 && button(window, "Heal").isEnabled(),
+                        "Heal becomes available after timeout damage");
+                button(window, "Heal").doClick();
+                require(player.getHp() == 15 && hasLabel(window, "HP: 15/15")
+                                && hasLabel(window, "Heal restored 1 HP."),
+                        "Heal refreshes HP and reports capped recovery");
+                require(((JRadioButton) button(window, "A. answer")).isSelected()
+                                && button(window, "Submit answer").isEnabled(),
+                        "Heal preserves answer input and submission");
+                require(!button(window, "Heal").isEnabled(), "Heal disabled after use");
+            });
+            onEdt(() -> window.dispose());
+            checkTutorial();
             System.out.println("ALL SWING TIMER FLOW CHECKS PASSED (" + checks + ")");
         } finally {
             onEdt(() -> {
@@ -156,6 +192,7 @@ public class SwingTimerFlowCheck {
         Path temp = Files.createTempDirectory("javajolt-timer-flow-");
         temp.toFile().deleteOnExit();
         Path save = temp.resolve("player.properties");
+        savePath = save;
         save.toFile().deleteOnExit();
         player = new Player("Timer flow", 1000);
         SaveService saves = new SaveService(save);
@@ -168,20 +205,184 @@ public class SwingTimerFlowCheck {
                             new FlowQuestion(3, true, false), new FlowQuestion(4, false, false));
                 }
             };
-            runner = new RecordingRunner(questions);
+            ScoreService scores = new ScoreService();
+            runner = new RecordingRunner(questions, scores);
             AnswerTimerService shortTimer = new AnswerTimerService() {
                 @Override
                 public int getTimeLimitSeconds(Difficulty level, InputMode mode) {
                     return 1;
                 }
             };
+            PowerUpService powers = new PowerUpService();
+            tutorial = new TutorialService(new TutorialContent(runner, scores, shortTimer, powers),
+                    runner, shortTimer, powers);
             window = new MainWindow(player, questions, runner, difficulty,
-                    new PowerUpService(), shortTimer, saves);
+                    powers, shortTimer, saves, new TutorialCoordinator(tutorial));
             window.showScreen(ScreenId.MAIN_MENU);
             window.setVisible(true);
             button(window, "Explore Lessons").doClick();
             startQuiz();
         });
+    }
+
+    private static void checkTutorial() throws Exception {
+        open(Difficulty.BEGINNER);
+        onEdt(() -> {
+            window.showScreen(ScreenId.MAIN_MENU);
+            // A dead real player proves guards and display use the tutorial's own player.
+            player.setHp(0);
+        });
+        byte[] savedBefore = Files.readAllBytes(savePath);
+        SwingUtilities.invokeLater(() -> window.startTutorial(false));
+        await(() -> tutorialPopup() != null);
+        GameSession demo = tutorial.getSession();
+        Thread.sleep(1400);
+        onEdt(() -> {
+            TutorialPopup popup = tutorialPopup();
+            require(popup.isModal() && hasLabel(popup, "Step 1 of 13"), "tutorial popup is modal and numbers its steps");
+            require(button(popup, "Exit tutorial") == null && button(popup, "Skip") == null,
+                    "first-run popup has no skip or replay exit");
+            require(!demo.isQuestionTimedOut() && demo.getPlayer().getHp() == 15
+                            && hasLabel(window, "TIME: 1 s") && demo.getUsedPowerUps().isEmpty(),
+                    "reading past the deadline pauses the shared timer without consuming Time Stop");
+            button(window, "A. int count = 3;").doClick();
+            button(window, "Submit answer").doClick();
+            require(demo.getAnsweredCount() == 0 && runner.submissions == 0,
+                    "underlying submit callbacks are blocked while a popup is open");
+        });
+        dismissTutorialSteps(8);
+        await(() -> tutorialPopup() == null);
+        await(demo::isQuestionTimedOut);
+        onEdt(() -> {
+            require(demo.getPlayer().getHp() == 14 && player.getHp() == 0,
+                    "resumed tutorial countdown uses the shared timeout path on the demo player");
+            button(window, "Submit answer").doClick();
+        });
+        await(() -> demo.getAnsweredCount() == 1 && showingButton("Continue"));
+        SwingUtilities.invokeLater(() -> button(window, "Continue").doClick());
+        await(() -> tutorialPopup() != null);
+        Thread.sleep(1400);
+        onEdt(() -> {
+            require(hasLabel(tutorialPopup(), "Step 9 of 13") && demo.getPlayer().getHp() == 9,
+                    "next question uses the same index path and performs Heal setup before popups");
+            button(window, "Heal").doClick();
+            require(!demo.hasUsed(PowerUp.HEAL) && demo.getPlayer().getHp() == 9 && !demo.isQuestionTimedOut(),
+                    "popup blocks power-up callbacks and pauses the new countdown too");
+        });
+        dismissTutorialSteps(4);
+        await(() -> tutorialPopup() == null);
+        onEdt(() -> {
+            button(window, "Time Stop").doClick();
+            button(window, "Heal").doClick();
+            button(window, "Hint").doClick();
+            button(window, "Shield").doClick();
+            require(demo.getPlayer().getHp() == 14 && demo.isQuestionTimerFrozen()
+                            && demo.isShieldArmed() && demo.getUsedPowerUps().size() == 4,
+                    "tutorial power-ups execute through the existing shared handler");
+            button(window, "B. 4").doClick();
+            button(window, "Submit answer").doClick();
+        });
+        await(() -> demo.getAnsweredCount() == 2 && showingButton("Continue"));
+        SwingUtilities.invokeLater(() -> button(window, "Continue").doClick());
+        await(() -> tutorialPopup() != null && hasLabel(tutorialPopup(), "You're ready!"));
+        onEdt(() -> {
+            require(hasLabel(tutorialPopup(), "Step 13 of 13") && runner.submissions == 2
+                            && runner.settlements == 0 && !demo.isSettled(),
+                    "full tutorial reaches wrap-up through shared submission without settlement");
+            require(!player.isTutorialCompleted(), "wrap-up must be confirmed before setting completion");
+            button(tutorialPopup(), "Got it").doClick();
+        });
+        await(() -> tutorialPopup() == null && showingButton("Explore Lessons"));
+        require(new SaveService(savePath).load().tutorialCompleted(), "confirmed first run saves completion immediately");
+        onEdt(() -> require(player.getXp() == 1000 && player.getScore() == 0 && player.getHp() == 0
+                        && player.isTutorialCompleted() && player.copyHighScores().isEmpty()
+                        && player.getProgress().copyCompleted().isEmpty(),
+                "first completion changes only the real tutorial flag"));
+        savedBefore = Files.readAllBytes(savePath);
+        onEdt(() -> player.setTutorialCompleted(false));
+
+        SwingUtilities.invokeLater(() -> window.startTutorial(true));
+        await(() -> tutorialPopup() != null);
+        GameSession abandoned = tutorial.getSession();
+        onEdt(() -> button(tutorialPopup(), "Exit tutorial").doClick());
+        await(() -> tutorialPopup() == null && showingButton("Explore Lessons"));
+        Thread.sleep(1400);
+        onEdt(() -> require(!abandoned.isQuestionTimedOut() && !abandoned.isSettled() && runner.settlements == 0,
+                "replay exit clears timer and session without a later callback"));
+        require(Arrays.equals(savedBefore, Files.readAllBytes(savePath)), "replay exit does not re-save");
+        onEdt(() -> require(!player.isTutorialCompleted(), "replay never sets an incomplete player's flag"));
+        onEdt(() -> {
+            button(window, "Explore Lessons").doClick();
+            startQuiz();
+            require(runner.last != abandoned && runner.last.getCurrentQuestionIndex() == 1
+                            && runner.last.getAnsweredCount() == 0 && player.getHp() == 15,
+                    "normal quiz after tutorial starts clean on the real player");
+            window.showScreen(ScreenId.MAIN_MENU);
+        });
+
+        SwingUtilities.invokeLater(() -> window.startTutorial(false));
+        await(() -> tutorialPopup() != null);
+        SwingUtilities.invokeLater(() -> window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING)));
+        await(() -> exitDialog() != null);
+        onEdt(() -> button(exitDialog(), "No").doClick());
+        await(() -> exitDialog() == null && tutorialPopup() != null);
+        onEdt(() -> require(window.isDisplayable() && !player.isTutorialCompleted()
+                        && !tutorial.getSession().isQuestionTimedOut(), "declining exit preserves the paused, incomplete tutorial"));
+        SwingUtilities.invokeLater(() -> tutorialPopup().dispatchEvent(
+                new WindowEvent(tutorialPopup(), WindowEvent.WINDOW_CLOSING)));
+        await(() -> exitDialog() != null);
+        onEdt(() -> button(exitDialog(), "Yes").doClick());
+        await(() -> !window.isDisplayable() && tutorialPopup() == null);
+        require(!new SaveService(savePath).load().tutorialCompleted() && runner.settlements == 0,
+                "closing mid-tutorial follows exit confirmation and saves no completion or demo rewards");
+
+        open(Difficulty.BEGINNER);
+        onEdt(() -> window.showScreen(ScreenId.MAIN_MENU));
+        byte[] replayBefore = Files.readAllBytes(savePath);
+        SwingUtilities.invokeLater(() -> window.startTutorial(true));
+        await(() -> tutorialPopup() != null);
+        GameSession replaced = tutorial.getSession();
+        SwingUtilities.invokeLater(() -> window.startTutorial(true));
+        await(() -> tutorial.getSession() != replaced && tutorialPopup() != null);
+        onEdt(() -> require(hasLabel(tutorialPopup(), "Step 1 of 13") && !replaced.isSettled(),
+                "replacement run is protected from the old modal stack"));
+        GameSession navigated = tutorial.getSession();
+        onEdt(() -> window.showScreen(ScreenId.TOPIC_SELECTION));
+        onEdt(() -> require(tutorialPopup() != null && tutorial.getSession() == navigated,
+                "topic navigation cannot escape an active tutorial"));
+        onEdt(() -> button(tutorialPopup(), "Exit tutorial").doClick());
+        await(() -> tutorialPopup() == null && showingButton("Explore Lessons"));
+        Thread.sleep(1400);
+        onEdt(() -> require(!navigated.isQuestionTimedOut() && !navigated.isSettled(),
+                "explicit replay exit returns to a clean menu after blocked navigation"));
+        SwingUtilities.invokeLater(() -> window.startTutorial(true));
+        await(() -> tutorialPopup() != null);
+        SwingUtilities.invokeLater(() -> window.dispatchEvent(new WindowEvent(window, WindowEvent.WINDOW_CLOSING)));
+        await(() -> exitDialog() != null);
+        onEdt(() -> button(exitDialog(), "Yes").doClick());
+        await(() -> !window.isDisplayable() && tutorialPopup() == null);
+        require(Arrays.equals(replayBefore, Files.readAllBytes(savePath)), "application exit during replay does not re-save");
+    }
+
+    private static void dismissTutorialSteps(int count) throws Exception {
+        for (int i = 0; i < count; i++) {
+            await(() -> tutorialPopup() != null);
+            onEdt(() -> button(tutorialPopup(), "Got it").doClick());
+        }
+    }
+
+    private static TutorialPopup tutorialPopup() {
+        for (Window open : Window.getWindows()) {
+            if (open instanceof TutorialPopup popup && popup.isShowing()) return popup;
+        }
+        return null;
+    }
+
+    private static JDialog exitDialog() {
+        for (Window open : Window.getWindows()) {
+            if (open instanceof JDialog dialog && dialog.isShowing() && dialog.getTitle().equals("Exit")) return dialog;
+        }
+        return null;
     }
 
     private static void startQuiz() {
@@ -275,9 +476,22 @@ public class SwingTimerFlowCheck {
         GameSession last;
         List<FlowQuestion> questions;
         int settlements;
+        int submissions;
 
-        RecordingRunner(QuestionService questionService) {
-            super(questionService, new LessonService(), new EnemyRoster(), new ScoreService(), null);
+        RecordingRunner(QuestionService questionService, ScoreService scores) {
+            super(questionService, new LessonService(), new EnemyRoster(), scores, null);
+        }
+
+        @Override
+        public GameSession startSession(Player player, Topic topic, Difficulty difficulty, List<Question> scripted) {
+            last = super.startSession(player, topic, difficulty, scripted);
+            return last;
+        }
+
+        @Override
+        public boolean submitAnswer(GameSession session, Question question, String answer) {
+            submissions++;
+            return super.submitAnswer(session, question, answer);
         }
 
         @Override
