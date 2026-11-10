@@ -56,6 +56,8 @@ public final class Theme {
 
     // Question screen sizing
     public static final int CHARACTER_SIZE = 110;
+    // Fresh-quiz player stats preferred width before compacting the rows.
+    public static final int PLAYER_COLUMN_WIDTH = 164;
     public static final int QUESTION_PROMPT_WIDTH = 520;
     public static final int QUESTION_PROMPT_HEIGHT = 170;
     public static final int ANSWER_FIELD_WIDTH = 360;

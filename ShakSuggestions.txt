@@ -10,6 +10,7 @@ UI
   but some like String, System.out.print, etc. are not yet, this could be optional too
 - Check UI during a Quiz Session, all player values are tightly packed. Quiz Score and Streak can actually be placed parallel to Question no.
   indicator and the Timer respectively, like indented at right side of them
+- Possible small badge arts for achievements
 
 MECHANICS
 - Replace point boost with a more meaningful powerup like heal (Done)

@@ -64,7 +64,8 @@ public class QuestionScreen extends Screen {
     private final JLabel answerHeading = createHeading("ANSWER");
     private final JLabel playerNameLabel = createLabel("PLAYER");
     private final JLabel hpLabel = createLabel("HP: --");
-    private final JLabel xpScoreLabel = createLabel("XP: --   SCORE: --");
+    private final JLabel xpLabel = createLabel("XP: --");
+    private final JLabel scoreLabel = createLabel("QUIZ SCORE: --");
     private final JLabel streakLabel = createLabel("STREAK: --");
     private final JPanel answerPanel = new RoundedPanel(new BorderLayout(Theme.GAP_M, Theme.GAP_M));
     private final JPanel answerContent = new JPanel(new BorderLayout(Theme.GAP_M, Theme.GAP_M));
@@ -151,12 +152,17 @@ public class QuestionScreen extends Screen {
         playerPortrait.add(quizMascot, BorderLayout.CENTER);
 
 
-        JPanel playerStats = new JPanel(new GridLayout(4, 1));
+        JPanel playerVitals = new JPanel(new BorderLayout(Theme.GAP_S, 0));
+        playerVitals.setOpaque(false);
+        hpLabel.setPreferredSize(new Dimension(textWidth("HP: 99/99"), hpLabel.getPreferredSize().height));
+        playerVitals.add(hpLabel, BorderLayout.WEST);
+        playerVitals.add(xpLabel, BorderLayout.CENTER);
+
+        JPanel playerStats = new JPanel(new GridLayout(2, 1));
         playerStats.setOpaque(false);
         playerStats.add(playerNameLabel);
-        playerStats.add(hpLabel);
-        playerStats.add(xpScoreLabel);
-        playerStats.add(streakLabel);
+        playerStats.add(playerVitals);
+        playerStats.setPreferredSize(new Dimension(Theme.PLAYER_COLUMN_WIDTH, playerStats.getPreferredSize().height));
         playerSide.add(playerStats, BorderLayout.NORTH);
         playerSide.add(playerPortrait, BorderLayout.CENTER);
 
@@ -192,17 +198,36 @@ public class QuestionScreen extends Screen {
                 new Dimension(1, 8)
         );
 
-        questionHeader.add(
-                progressLabel,
-                BorderLayout.NORTH
-        );
-
         countdownLabel.setForeground(Theme.TEXT_MUTED);
-        questionHeader.add(countdownLabel, BorderLayout.CENTER);
+        JPanel leftStatus = new JPanel(new GridLayout(2, 1, 0, Theme.GAP_S));
+        leftStatus.setOpaque(false);
+        leftStatus.add(progressLabel);
+        leftStatus.add(countdownLabel);
+
+        scoreLabel.setForeground(Theme.TEXT_MUTED);
+        streakLabel.setForeground(Theme.TEXT_MUTED);
+        scoreLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        streakLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        JPanel rightStatus = new JPanel(new GridLayout(2, 1, 0, Theme.GAP_S));
+        rightStatus.setOpaque(false);
+        rightStatus.add(scoreLabel);
+        rightStatus.add(streakLabel);
+        int rightStatusWidth = Math.max(textWidth("QUIZ SCORE: 99999"),
+                textWidth("STREAK: 99   (+999 points)")) + Theme.GAP_S;
+        rightStatus.setPreferredSize(new Dimension(rightStatusWidth, rightStatus.getPreferredSize().height));
+
+        JPanel statusRow = new JPanel(new BorderLayout(Theme.GAP_S, 0));
+        statusRow.setOpaque(false);
+        statusRow.add(leftStatus, BorderLayout.WEST);
+        statusRow.add(rightStatus, BorderLayout.EAST);
+        questionHeader.add(statusRow, BorderLayout.NORTH);
         questionHeader.add(
                 questionProgress,
                 BorderLayout.SOUTH
         );
+        // NOTE: BorderLayout reserves two vertical gaps even with an empty center.
+        questionHeader.setPreferredSize(new Dimension(questionHeader.getPreferredSize().width,
+                statusRow.getPreferredSize().height + Theme.GAP_S + questionProgress.getPreferredSize().height));
 
         question.add(
                 questionHeader,
@@ -238,6 +263,10 @@ public class QuestionScreen extends Screen {
         battle.add(powerUpRow, BorderLayout.SOUTH);
         battle.setBorder(BorderFactory.createEmptyBorder(0, 0, Theme.GAP_M, 0));
         return battle;
+    }
+
+    private int textWidth(String text) {
+        return getFontMetrics(Theme.FONT_BODY).stringWidth(text);
     }
 
     // One line of immediate feedback: the live consecutive-correct streak plus,
@@ -359,10 +388,8 @@ public class QuestionScreen extends Screen {
         playerNameLabel.setText(player.getName());
         hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());
         // displayXp is provisional quiz XP; it commits to the player only at settlement.
-        xpScoreLabel.setText(
-                "XP: " + displayXp
-                + "   QUIZ SCORE: " + quizScore
-        );
+        xpLabel.setText("XP: " + displayXp);
+        scoreLabel.setText("QUIZ SCORE: " + quizScore);
         refreshStreakLabel(streak, lastPoints);
         progressLabel.setText("QUESTION " + number + " OF " + total);
         questionProgress.setValue(
@@ -1054,10 +1081,8 @@ private JPanel createCodeEditor(Question question) {
         hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());
 
         // displayXp is provisional quiz XP; it commits to the player only at settlement.
-        xpScoreLabel.setText(
-                "XP: " + displayXp
-                + "   QUIZ SCORE: " + quizScore
-        );
+        xpLabel.setText("XP: " + displayXp);
+        scoreLabel.setText("QUIZ SCORE: " + quizScore);
         refreshStreakLabel(streak, lastPoints);
 
         // Change the section heading
