@@ -13,3 +13,7 @@ UI
 
 MECHANICS
 - Replace point boost with a more meaningful powerup like heal (Done)
+
+MASCOTS
+- Add emotes for all characters 
+- Add visual hp bar 

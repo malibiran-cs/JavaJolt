@@ -1032,6 +1032,17 @@ private JPanel createCodeEditor(Question question) {
         );
 
 
+        quizMascot.flashGlow(correct);
+
+        if (correct) {
+        // Successful attack: enemy flashes red.
+        enemyPortrait.flashHit();
+        } else {
+        // Incorrect answer: mascot shakes from damage.
+        quizMascot.shakeDamage();
+        }
+
+
         // Play the appropriate sound after checking an answer.
         UiSounds.play(
                 correct

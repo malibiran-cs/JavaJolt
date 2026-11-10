@@ -4,6 +4,9 @@ import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.ui.swing.NinePatch;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.UiAssets;
+import java.awt.Color;
+import java.awt.BasicStroke;
+import javax.swing.Timer;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -20,8 +23,47 @@ public final class EnemyPortraitView extends JComponent {
 
     private Topic topic = Topic.VARIABLES;
 
+
+    private int hitShakeFrames = 0;
+
+    private final Timer hitShakeTimer = new Timer(45, event -> {
+
+        hitShakeFrames--;
+
+        if (hitShakeFrames <= 0) {
+            hitShakeFrames = 0;
+            ((Timer) event.getSource()).stop();
+        }
+
+        repaint();
+    });
+
+    private boolean hitFlash = false;
+
+    private final Timer hitTimer = new Timer(450, event -> {
+        hitFlash = false;
+        repaint();
+    });
+
+
+    public void flashHit() {
+
+        // Red hit flash.
+        hitFlash = true;
+        hitTimer.restart();
+
+        // Horizontal damage shake.
+        hitShakeFrames = 8;
+        hitShakeTimer.restart();
+
+        repaint();
+    }
+
+
+
     public EnemyPortraitView() {
         setOpaque(false);
+        hitTimer.setRepeats(false);
     }
 
     public void setTopic(Topic topic) {
@@ -31,6 +73,15 @@ public final class EnemyPortraitView extends JComponent {
         this.topic = topic;
         setToolTipText(topic.getLabel() + " enemy");
         repaint();
+    }
+
+    @Override
+    public void removeNotify() {
+        hitTimer.stop();
+        hitShakeTimer.stop();
+        hitFlash = false;
+        hitShakeFrames = 0;
+        super.removeNotify();
     }
 
     @Override
@@ -56,9 +107,45 @@ public final class EnemyPortraitView extends JComponent {
             int x = (getWidth() - drawWidth) / 2;
             int y = (getHeight() - drawHeight) / 2;
 
+
+        // Shake the enemy horizontally when hit.
+        if (hitShakeFrames > 0) {
+            x += (hitShakeFrames % 2 == 0) ? 4 : -4;
+        }
+
+
             g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
                     RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g2.drawImage(image, x, y, drawWidth, drawHeight, null);
+
+
+        // Brief red flash when the enemy is hit.
+        if (hitFlash) {
+
+            int inset = 4;
+            int flashWidth = Math.max(1, getWidth() - inset * 2);
+            int flashHeight = Math.max(1, getHeight() - inset * 2);
+
+            // Translucent red overlay.
+            g2.setColor(new Color(255, 60, 80, 65));
+
+            g2.fillRoundRect(
+                    inset, inset,
+                    flashWidth, flashHeight,
+                    16, 16
+            );
+
+            // Bright red outline.
+            g2.setColor(new Color(255, 70, 90, 220));
+            g2.setStroke(new BasicStroke(3f));
+
+            g2.drawRoundRect(
+                    inset, inset,
+                    flashWidth, flashHeight,
+                    16, 16
+            );
+        }
+
         } finally {
             g2.dispose();
         }
