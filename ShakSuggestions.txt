@@ -8,6 +8,8 @@ UI
   difficulties in select lesson menu?)
 - (More of a polishing feature) Give several java keywords/features further editor convenience, example is some are already colored,
   but some like String, System.out.print, etc. are not yet, this could be optional too
+- Check UI during a Quiz Session, all player values are tightly packed. Quiz Score and Streak can actually be placed parallel to Question no.
+  indicator and the Timer respectively, like indented at right side of them
 
 MECHANICS
-- Replace point boost with a more meaningful powerup like heal
+- Replace point boost with a more meaningful powerup like heal (Done)
