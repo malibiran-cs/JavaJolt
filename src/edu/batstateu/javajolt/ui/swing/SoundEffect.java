@@ -7,7 +7,14 @@ public enum SoundEffect {
     BUTTON_CLICK("ui/button_click2.wav", 0.4f),
 
     ANSWER_CORRECT("ui/answer_correct.wav", 0.65f),
-    ANSWER_INCORRECT("ui/answer_incorrect.wav", 0.65f);
+    ANSWER_INCORRECT("ui/answer_incorrect.wav", 0.65f),
+
+    JOLT_SPARK("jolt/jolt_spark.wav", 1.0f),
+    JOLT_JOLT("jolt/jolt_jolt.wav", 0.8f),
+    JOLT_SURGE("jolt/jolt_surge.wav", 0.9f),
+    JOLT_SHORT_CIRCUIT("jolt/jolt_short_circuit.wav", 0.5f),
+
+    TIMER_COUNTDOWN("timer/timer_countdown_3.wav", 1.0f);
 
 
     private final String resourcePath;

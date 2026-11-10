@@ -215,7 +215,7 @@ public class QuestionScreen extends Screen {
         rightStatus.add(scoreLabel);
         rightStatus.add(joltLabel);
         int rightStatusWidth = Math.max(textWidth("QUIZ SCORE: 99999"),
-                textWidth("JOLT: x99   (+999 points)")) + Theme.GAP_S;
+                textWidth("JOLT: 99x   (+999 points)")) + Theme.GAP_S;
         rightStatus.setPreferredSize(new Dimension(rightStatusWidth, rightStatus.getPreferredSize().height));
 
         JPanel statusRow = new JPanel(new BorderLayout(Theme.GAP_S, 0));
@@ -282,11 +282,11 @@ public class QuestionScreen extends Screen {
     private void refreshJoltLabel(int streak, int lastPoints) {
         if (lastPoints > 0) {
             joltLabel.setText(
-                    "JOLT: x" + streak
+                    "JOLT: " + streak + "x"
                     + "   (+" + lastPoints + " points)"
             );
         } else {
-            joltLabel.setText("JOLT: x" + streak);
+            joltLabel.setText("JOLT: " + streak + "x");
         }
     }
 

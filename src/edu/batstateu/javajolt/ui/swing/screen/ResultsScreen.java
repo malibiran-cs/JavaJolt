@@ -172,7 +172,7 @@ public class ResultsScreen extends Screen {
         // Highest consecutive-correct run of this attempt
         scoreStats.add(createStatCard(
                 "BEST JOLT",
-                "x" + bestStreak
+                bestStreak + "x"
         ));
 
         body.add(scoreStats);

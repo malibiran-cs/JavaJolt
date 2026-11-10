@@ -15,7 +15,7 @@ Java source paths below are relative to `src/edu/batstateu/javajolt/`.
 | `preview/MechanicsCheck.java` | MODIFIED | Add milestone, perfect-run, reset, timeout, Heal and unchanged-score checks. |
 | `ui/swing/Theme.java` | MODIFIED | Three milestone colors and an independent message font. |
 | `ui/swing/screen/QuestionScreen.java` | MODIFIED | Jolt multiplier wording, centered message presentation and Continue enablement. |
-| `ui/swing/screen/ResultsScreen.java` | MODIFIED | BEST JOLT with an x-prefixed value. |
+| `ui/swing/screen/ResultsScreen.java` | MODIFIED | BEST JOLT with an number-first value. |
 | `ui/swing/MainWindow.java` | MODIFIED | Refresh the session message on answers/questions; guard and cancel the perfect hold. |
 | `data/TutorialContent.java` | MODIFIED | Three additional questions, reworked Jolt teaching and one question-three popup. |
 | `tests/TutorialLogicCheck.java` | MODIFIED | Adapt script/count/outcome checks; verify Jolt presentation data and reachable-step uniqueness. |
@@ -37,12 +37,12 @@ The table above lists every existing file edited. In the screen, only the Jolt l
 
 ## 5. Player-visible behavior changes
 
-- STREAK: 3 -> JOLT: x3, preserving the points suffix.
-- Milestones: SPARK from x3, JOLT from x6, SURGE from x9; a perfect eligible quiz takes precedence as JAVAJOLT.
+- STREAK: 3 -> JOLT: 3x, preserving the points suffix.
+- Milestones: SPARK from 3x, JOLT from 6x, SURGE from 9x; a perfect eligible quiz takes precedence as JAVAJOLT.
 - Losing a configured minimum streak shows SHORT CIRCUIT; the next correct answer clears it until another tier is reached.
 - Messages persist across question transitions; new sessions begin blank.
 - Perfect-run Continue waits only for the remainder of two seconds, disables Continue/topics while waiting and settles once afterward. Tutorial runs share this path without settling practice rewards.
-- BEST STREAK -> BEST JOLT, with an x-prefixed value.
+- BEST STREAK -> BEST JOLT, with an number-first value.
 - Two tutorial questions/thirteen popups -> five questions/fourteen popups, keeping five SESSION_START steps.
 
 ## 6. Save compatibility
@@ -119,7 +119,7 @@ At default and maximized sizes, the message occupies the existing 50 px status r
 ## 9. Manual test steps for the owner
 
 1. Run `RUN_JAVAJOLT.bat`, then start/replay the tutorial. The first three correct choices are A, B, C. Observe SPARK after question three; choose a wrong answer on question four, then answer question five correctly to see SHORT CIRCUIT followed by a blank message. Confirm the final popup.
-2. In a normal quiz, build x3, x6 and x9 to inspect the gold, cyan and violet messages. Complete a perfect run and immediately press Continue; JAVAJOLT remains until its two-second minimum is met.
+2. In a normal quiz, build 3x, 6x and 9x to inspect the gold, cyan and violet messages. Complete a perfect run and immediately press Continue; JAVAJOLT remains until its two-second minimum is met.
 3. Start another quiz, confirm the message is cleared, then check BEST JOLT on results. Edit only the listed Theme constants to restyle messages and recompile.
 
 ## 10. Docs updated

@@ -11,7 +11,7 @@ if errorlevel 1 (
 
 if not exist out mkdir out
 echo Compiling JavaJolt and its tests...
-javac -encoding UTF-8 -d out -sourcepath src src\edu\batstateu\javajolt\GameApplication.java src\edu\batstateu\javajolt\preview\MechanicsCheck.java tests\ProgressConsistencyCheck.java tests\ContentCoverageCheck.java tests\TutorialLogicCheck.java tests\SwingTimerFlowCheck.java tests\SwingNavigationSmokeCheck.java tests\EnemyArtworkIntegrationCheck.java
+javac -encoding UTF-8 -d out -sourcepath src src\edu\batstateu\javajolt\GameApplication.java src\edu\batstateu\javajolt\preview\MechanicsCheck.java tests\ProgressConsistencyCheck.java tests\ContentCoverageCheck.java tests\TutorialLogicCheck.java tests\JoltSoundRulesCheck.java tests\SwingTimerFlowCheck.java tests\SwingNavigationSmokeCheck.java tests\EnemyArtworkIntegrationCheck.java
 if errorlevel 1 goto failed
 
 echo.
@@ -32,6 +32,11 @@ if errorlevel 1 goto failed
 echo.
 echo ==== Tutorial logic ====
 java -cp out TutorialLogicCheck
+if errorlevel 1 goto failed
+
+echo.
+echo ==== Jolt sound rules ====
+java -cp out JoltSoundRulesCheck
 if errorlevel 1 goto failed
 
 echo.

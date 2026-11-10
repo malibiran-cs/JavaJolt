@@ -60,6 +60,8 @@ public class MainWindow extends JFrame {
     private final TutorialCoordinator tutorialCoordinator;
     private boolean tutorialRunning;
     private static final int COUNTDOWN_TICK_MILLIS = 100;
+    // SOUND TUNING: Milliseconds before expiry at which the countdown sound starts.
+    private static final int COUNTDOWN_SOUND_LEAD_MILLIS = 3000;
     private static final int PERFECT_HOLD_MILLIS = 2000;
     private ScreenId titleStartDestination = ScreenId.WELCOME;
     private Timer countdown;
@@ -68,6 +70,7 @@ public class MainWindow extends JFrame {
     private long countdownVersion;
     private long countdownDeadline;
     private int remainingSeconds;
+    private boolean countdownSoundStarted;
     private final MainMenuScreen mainMenuScreen;
     private boolean lessonResultRecorded;
     private final LessonService lessonService = new LessonService();
@@ -434,6 +437,7 @@ private void showProgress() {
                 || questionIndex < 0 || questionIndex >= session.getQuestions().size()) return;
         stopCountdown();
         GameSession answerSession = session;
+        JoltMessage messageBefore = session.getLastJoltMessage();
         Player quizPlayer = answerSession.getPlayer();
         // No power-up may be used once an answer was submitted: this flag turns
         // off before checking and stays off through the result and transitions.
@@ -463,6 +467,7 @@ private void showProgress() {
                         session.getLastPoints()
                 );
                 questionScreen.showJoltMessage(session.getLastJoltMessage());
+                JoltSounds.onAnswerResolved(messageBefore, session.getLastJoltMessage());
                 if (session.getLastJoltMessage() == JoltMessage.JAVAJOLT) {
                     perfectShownAt = System.nanoTime();
                 }
@@ -754,6 +759,7 @@ private void showProgress() {
 
     private void startCountdown(long nanos) {
         stopCountdown();
+        countdownSoundStarted = false;
         remainingSeconds = (int) ((nanos + TimeUnit.SECONDS.toNanos(1) - 1) / TimeUnit.SECONDS.toNanos(1));
         countdownDeadline = System.nanoTime() + nanos;
         questionScreen.showCountdown(remainingSeconds, false);
@@ -766,18 +772,37 @@ private void showProgress() {
                 return;
             }
             long nanosLeft = Math.max(0, countdownDeadline - System.nanoTime());
+            playCountdownSoundIfDue(nanosLeft);
             remainingSeconds = (int) ((nanosLeft + TimeUnit.SECONDS.toNanos(1) - 1)
                     / TimeUnit.SECONDS.toNanos(1));
             questionScreen.showCountdown(remainingSeconds, false);
             if (remainingSeconds == 0) {
-                stopCountdown();
+                stopCountdownTimer();
                 handleTimeout();
             }
         });
         countdown.start();
+        playCountdownSoundIfDue(Math.max(0, countdownDeadline - System.nanoTime()));
+    }
+
+    private void playCountdownSoundIfDue(long nanosLeft) {
+        if (countdownSoundStarted || nanosLeft <= 0) {
+            return;
+        }
+        if (nanosLeft > TimeUnit.MILLISECONDS.toNanos(COUNTDOWN_SOUND_LEAD_MILLIS)) {
+            return;
+        }
+        long millisLeft = TimeUnit.NANOSECONDS.toMillis(nanosLeft);
+        UiSounds.playFrom(SoundEffect.TIMER_COUNTDOWN, COUNTDOWN_SOUND_LEAD_MILLIS - millisLeft);
+        countdownSoundStarted = true;
     }
 
     private void stopCountdown() {
+        stopCountdownTimer();
+        UiSounds.stop(SoundEffect.TIMER_COUNTDOWN);
+    }
+
+    private void stopCountdownTimer() {
         countdownVersion++;
         if (countdown != null) {
             countdown.stop();

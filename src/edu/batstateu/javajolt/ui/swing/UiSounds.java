@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -38,14 +40,42 @@ public final class UiSounds {
     }
 
     public static void play(SoundEffect effect) {
+        playFrom(effect, 0);
+    }
+
+    public static void playFrom(SoundEffect effect, long startMillis) {
+        useClip(effect, clip -> {
+            long startMicros = TimeUnit.MILLISECONDS.toMicros(Math.max(0, startMillis));
+            if (startMicros >= clip.getMicrosecondLength()) {
+                return;
+            }
+            clip.stop();
+            clip.setMicrosecondPosition(startMicros);
+            clip.start();
+        });
+    }
+
+    public static void loop(SoundEffect effect) {
+        useClip(effect, clip -> {
+            if (clip.isRunning()) {
+                return;
+            }
+            clip.setFramePosition(0);
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+        });
+    }
+
+    public static void stop(SoundEffect effect) {
+        useClip(effect, Clip::stop);
+    }
+
+    private static void useClip(SoundEffect effect, Consumer<Clip> action) {
         Clip clip = CLIPS.get(effect);
         if (clip == null) {
             return;
         }
         try {
-            clip.stop();
-            clip.setFramePosition(0);
-            clip.start();
+            action.accept(clip);
         } catch (RuntimeException e) {
             markUnavailable(effect, clip, e);
         }

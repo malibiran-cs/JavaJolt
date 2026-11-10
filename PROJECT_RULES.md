@@ -39,7 +39,7 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
 - `enums/`: `Topic`, `Difficulty`, `InputMode`, `PowerUp` (power-up unlock levels live only here), `JoltMessage` (milestone thresholds and messages), `TutorialTrigger` (session start, before question, results).
 - `exception/`: domain exceptions.
 - `preview/`: development-only launchers and checks (`StagePreview`, later `BalanceReport` and `MechanicsCheck`). They build their own wiring like a composition root and must never read or write the real `saves/` folder (throwaway temp save location instead).
-- `ui/`: console UI. `ui/swing/`: `MainWindow` (shared quiz loop/countdown), `TutorialCoordinator` (modal step presentation), `ScreenId`, `Theme`, `UiAssets`, `SoundEffect`, `UiSounds`, `ButtonSounds`, `NinePatch`, `screen/`, `component/` (including `TutorialPopup`).
+- `ui/`: console UI. `ui/swing/`: `MainWindow` (shared quiz loop/countdown), `TutorialCoordinator` (modal step presentation), `ScreenId`, `Theme`, `UiAssets`, `SoundEffect`, `UiSounds`, `ButtonSounds`, `JoltSounds`, `NinePatch`, `screen/`, `component/` (including `TutorialPopup`).
 
 ---
 
@@ -99,7 +99,7 @@ If a request conflicts with a rule here, say so in chat and ask before breaking 
 - **Build screens from small `createX()` methods,** one per region of the layout.
 - **Threading:** Create and update Swing components on the event dispatch thread (`SwingUtilities.invokeLater`).
 - **Jolt messages:** Jolt message colors and font live in `Theme`; the screen only maps a `JoltMessage` to them.
-- **Sound:** effects are registered in `SoundEffect` and files live in `assets/sfx/<group>/`. Only the Swing layer plays sounds. Services and entities never do. Button sounds are installed once by `ButtonSounds.install()`; a screen that must be silent sets the `ButtonSounds.SILENT_ZONE` client property on itself.
+- **Sound:** effects are registered in `SoundEffect` and files live in `assets/sfx/<group>/`. Only the Swing layer plays sounds. Services and entities never do. Button sounds are installed once by `ButtonSounds.install()`; a screen that must be silent sets the `ButtonSounds.SILENT_ZONE` client property on itself. Looping and stopping go through `UiSounds.loop` / `stop`; which Jolt message plays which sound lives in `JoltSounds`.
 - **Look and feel:** Minimal, Duolingo-like, with generous padding between elements and from the window edge. Reserve space for features not built yet (character, level, badges).
 - **Don't use `Question.display()` in Swing.** Render from the question's getters.
 - **The console `GameUI` stays as it is** unless asked. Swing is built alongside it.

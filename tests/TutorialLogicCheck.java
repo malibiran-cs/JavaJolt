@@ -143,7 +143,7 @@ public class TutorialLogicCheck {
             expected.add(value);
         }
         List<Integer> actual = new ArrayList<>();
-        Matcher matcher = Pattern.compile("(?<!\\w)x?(\\d+)\\b").matcher(step.body());
+        Matcher matcher = Pattern.compile("(?<!\\w)(\\d+)x?\\b").matcher(step.body());
         while (matcher.find()) {
             actual.add(Integer.parseInt(matcher.group(1)));
         }

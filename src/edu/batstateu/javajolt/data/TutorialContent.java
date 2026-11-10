@@ -142,19 +142,19 @@ public class TutorialContent {
         return "Consecutive correct answers build your Jolt, increasing its multiplier. A higher Jolt pays more: "
                 + "your next answers earn " + scores.pointsForCorrect(1) + ", " + scores.pointsForCorrect(2)
                 + ", then " + scores.pointsForCorrect(3) + " points, separate from XP. Milestones: "
-                + JoltMessage.SPARK.getText() + " at x" + JoltMessage.SPARK_STREAK + ", "
-                + JoltMessage.JOLT.getText() + " at x" + JoltMessage.JOLT_STREAK + ", "
-                + JoltMessage.SURGE.getText() + " at x" + JoltMessage.SURGE_STREAK + ". "
+                + JoltMessage.SPARK.getText() + " at " + JoltMessage.SPARK_STREAK + "x, "
+                + JoltMessage.JOLT.getText() + " at " + JoltMessage.JOLT_STREAK + "x, "
+                + JoltMessage.SURGE.getText() + " at " + JoltMessage.SURGE_STREAK + "x. "
                 + "Answer every question correctly for " + JoltMessage.JAVAJOLT.getText()
-                + " A mistake ends a Jolt of at least x" + JoltMessage.SHORT_CIRCUIT_MIN_STREAK
-                + " with " + JoltMessage.SHORT_CIRCUIT.getText()
+                + " A mistake ends a Jolt of at least " + JoltMessage.SHORT_CIRCUIT_MIN_STREAK
+                + "x with " + JoltMessage.SHORT_CIRCUIT.getText()
                 + " Your next correct answer restarts at the first multiplier and earns "
                 + scores.pointsForCorrect(1) + " points.";
     }
 
     private String jolt() {
-        return "Answer the next questions correctly in a row. Reach x" + JoltMessage.SPARK_STREAK
-                + " to see " + JoltMessage.SPARK.getText() + " appear, then miss one on purpose if you'd like to see "
+        return "Answer the next questions correctly in a row. Reach " + JoltMessage.SPARK_STREAK
+                + "x to see " + JoltMessage.SPARK.getText() + " appear, then miss one on purpose if you'd like to see "
                 + JoltMessage.SHORT_CIRCUIT.getText() + " This is practice; nothing here is saved.";
     }
 
