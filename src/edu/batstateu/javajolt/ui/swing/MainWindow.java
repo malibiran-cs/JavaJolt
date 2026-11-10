@@ -115,6 +115,8 @@ public class MainWindow extends JFrame {
             Difficulty difficulty, PowerUpService powerUpService, AnswerTimerService answerTimerService,
             SaveService saveService, TutorialCoordinator tutorialCoordinator) {
         super("JavaJolt");
+        UiSounds.preload();
+        ButtonSounds.install();
         this.player = player;
         this.questionService = questionService;
         this.lessonRunnerService = lessonRunnerService;

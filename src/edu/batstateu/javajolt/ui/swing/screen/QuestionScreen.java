@@ -20,6 +20,7 @@ import edu.batstateu.javajolt.enums.InputMode;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.game.GameSession;
+import edu.batstateu.javajolt.ui.swing.ButtonSounds;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
 import edu.batstateu.javajolt.ui.swing.component.MascotView;
@@ -88,6 +89,7 @@ public class QuestionScreen extends Screen {
             Runnable onNext,
             Runnable onTopics,
             Consumer<PowerUp> onPowerUp) {
+        putClientProperty(ButtonSounds.SILENT_ZONE, Boolean.TRUE);
         this.onPowerUp = onPowerUp;
         this.onTopics = onTopics;
         add(createBattleArea(), BorderLayout.NORTH);
