@@ -298,7 +298,7 @@ public class SwingTimerFlowCheck {
         await(() -> demo.getAnsweredCount() == 3 && showingButton("Continue"));
         onEdt(() -> {
             require(demo.getLastJoltMessage() == JoltMessage.SPARK
-                            && hasLabel(window, "SPARK!") && hasLabel(window, "JOLT: x3   (+14 points)"),
+                            && hasLabel(window, "SPARK!") && hasLabel(window, "JOLT: 3x   (+14 points)"),
                     "tutorial correct answers display SPARK and the unchanged score suffix");
             button(window, "Continue").doClick();
             require(hasLabel(window, "SPARK!"), "milestone persists into the next question");
@@ -308,7 +308,7 @@ public class SwingTimerFlowCheck {
         await(() -> demo.getAnsweredCount() == 4 && showingButton("Continue"));
         onEdt(() -> {
             require(demo.getLastJoltMessage() == JoltMessage.SPARK
-                            && hasLabel(window, "SPARK!") && hasLabel(window, "JOLT: x4   (+16 points)"),
+                            && hasLabel(window, "SPARK!") && hasLabel(window, "JOLT: 4x   (+16 points)"),
                     "SPARK persists above its threshold with the unchanged score progression");
             button(window, "Continue").doClick();
             button(window, "B. int = count 4;").doClick();
@@ -316,7 +316,7 @@ public class SwingTimerFlowCheck {
         });
         await(() -> demo.getAnsweredCount() == 5 && showingButton("Continue"));
         onEdt(() -> require(demo.getLastJoltMessage() == JoltMessage.SHORT_CIRCUIT
-                        && hasLabel(window, "SHORT CIRCUIT!") && hasLabel(window, "JOLT: x0"),
+                        && hasLabel(window, "SHORT CIRCUIT!") && hasLabel(window, "JOLT: 0x"),
                 "tutorial mistake displays SHORT CIRCUIT through the shared answer path"));
         SwingUtilities.invokeLater(() -> button(window, "Continue").doClick());
         await(() -> tutorialPopup() != null && hasLabel(tutorialPopup(), "You're ready!"));
