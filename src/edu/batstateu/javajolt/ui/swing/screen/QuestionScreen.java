@@ -24,8 +24,6 @@ import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.enums.PowerUp;
 import edu.batstateu.javajolt.game.GameSession;
 import edu.batstateu.javajolt.ui.swing.ButtonSounds;
-import edu.batstateu.javajolt.ui.swing.SoundEffect;
-import edu.batstateu.javajolt.ui.swing.UiSounds;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
 import edu.batstateu.javajolt.ui.swing.component.MascotView;

@@ -51,7 +51,6 @@ public class MainWindow extends JFrame {
         EnumSet.noneOf(Achievement.class);
     private AchievementsScreen achievementsScreen;
     private final Player player;
-    private final QuestionService questionService;
     private final LessonRunnerService lessonRunnerService;
     private Difficulty difficulty;
     private final SaveService saveService;
@@ -125,7 +124,6 @@ public class MainWindow extends JFrame {
         UiSounds.preload();
         ButtonSounds.install();
         this.player = player;
-        this.questionService = questionService;
         this.lessonRunnerService = lessonRunnerService;
         this.difficulty = difficulty;
         this.powerUpService = powerUpService;
@@ -925,16 +923,19 @@ private void showProgress() {
             if (notice.length() > 0) {
                 notice.append(' ');
             }
-            if (newPowerUps.size() == 1) {
+            if (newPowerUps != null && newPowerUps.size() == 1) {
                 notice.append("New power-up unlocked: ")
                         .append(newPowerUps.get(0).getLabel()).append('!');
             } else {
                 notice.append("New power-ups unlocked: ");
-                for (int i = 0; i < newPowerUps.size(); i++) {
+                List<PowerUp> unlockedPowerUps = newPowerUps == null
+                        ? java.util.Collections.emptyList()
+                        : newPowerUps;
+                for (int i = 0; i < unlockedPowerUps.size(); i++) {
                     if (i > 0) {
                         notice.append(", ");
                     }
-                    notice.append(newPowerUps.get(i).getLabel());
+                    notice.append(unlockedPowerUps.get(i).getLabel());
                 }
                 notice.append('!');
             }
