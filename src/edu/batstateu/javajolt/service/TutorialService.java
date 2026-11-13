@@ -20,7 +20,6 @@ public class TutorialService {
     private static final Difficulty DEMO_DIFFICULTY = Difficulty.INTERMEDIATE;
     // The sample uses the real Variables opponent for the demo difficulty.
     private static final Topic DEMO_TOPIC = Topic.VARIABLES;
-    // Only the timer-demo question uses this shortened limit.
     private static final int DEMO_TIMER_SECONDS = 5;
 
     private final TutorialContent content;
@@ -97,10 +96,18 @@ public class TutorialService {
                 && powerUps.isApplicable(powerUp, session, currentQuestion());
     }
 
+
     public int getTimeLimitSeconds(int questionIndex) {
         requireRun();
-        Question question = session.getQuestions().get(questionIndex - 1);
-        int seconds = timer.getTimeLimitSeconds(session.getDifficulty(), question.getInputMode());
+
+        Question question = session.getQuestions().get(
+                questionIndex - 1
+        );
+
+        int seconds = timer.getTimeLimitSeconds(
+                session.getDifficulty(),
+                question.getInputMode()
+        );
         return questionIndex == content.getTimerQuestionIndex() ? Math.min(DEMO_TIMER_SECONDS, seconds) : seconds;
     }
 

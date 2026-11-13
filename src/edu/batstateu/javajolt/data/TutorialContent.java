@@ -18,8 +18,10 @@ import java.util.List;
 
 // The single tutorial script; numeric gameplay facts come from their rule owners.
 public class TutorialContent {
-    // The first practice question demonstrates a short countdown.
-    private static final int TIMER_QUESTION_INDEX = 1;
+        // Question 1 is untimed.
+        // Introduce the timer before Question 2.
+        private static final int FIRST_QUESTION_INDEX = 1;
+        private static final int TIMER_QUESTION_INDEX = 2;
     // Power-ups are introduced together before the second practice question.
     private static final int HEAL_QUESTION_INDEX = 2;
     private static final int JOLT_QUESTION_INDEX = 3;
@@ -176,16 +178,32 @@ public class TutorialContent {
                 + "separately, so you must meet both.";
     }
 
-    private String countdown(GameSession session, int demoSeconds) {
-        Question question = session.getQuestions().get(TIMER_QUESTION_INDEX - 1);
-        return "The usual timer for this kind of question is "
-                + timer.getTimeLimitSeconds(session.getDifficulty(), question.getInputMode())
-                + " seconds at " + session.getDifficulty().getLabel() + ". This practice question uses "
-                + demoSeconds + " seconds; let it run out if you'd like to see what happens. "
-                + "Here the enemy attacks once for " + timer.getTimeoutDamage(session)
-                + " HP when time runs out, but you can still answer; Beginner has no penalty, "
-                + "while Advanced uses the enemy's base attack.";
-    }
+
+        private String countdown(
+                GameSession session,
+                int timerSeconds) {
+
+        return "Great job completing your first practice question! "
+                + "You had unlimited time to think and answer.\n\n"
+
+                + "Starting with this question, you will have "
+                + timerSeconds
+                + " seconds to submit your answer.\n\n"
+
+                + "There is no need to rush. Read the question "
+                + "carefully, consider your choices, and answer "
+                + "when you're ready.\n\n"
+
+                + "The timer pauses while tutorial instructions "
+                + "are being shown.\n\n"
+
+                + "If the countdown reaches zero, you will lose "
+                + timer.getTimeoutDamage(session)
+                + " HP in this practice, but you can still answer. "
+                + "Beginner has no penalty for timing out.";
+
+        }
+
 
     private String powers() {
         return "Power-ups unlock by level, and each can be used once per quiz. "

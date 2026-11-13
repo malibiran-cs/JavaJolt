@@ -1,6 +1,5 @@
 
 package edu.batstateu.javajolt.ui.swing;
-
 import edu.batstateu.javajolt.ui.swing.screen.TitleScreen;
 import edu.batstateu.javajolt.enums.Achievement;
 import edu.batstateu.javajolt.enums.JoltMessage;
@@ -143,12 +142,17 @@ public class MainWindow extends JFrame {
 
 
 
+
         container.add(new WelcomeScreen(name -> {
             player.setName(name);
             welcomeCompleted = true;
-            if (player.isTutorialCompleted()) showScreen(ScreenId.MAIN_MENU);
-            else startTutorial(false);
+            if (player.isTutorialCompleted()) {
+                showScreen(ScreenId.MAIN_MENU);
+            } else {
+                startTutorial(false);
+            }
         }), ScreenId.WELCOME.name());
+
 
         mainMenuScreen = new MainMenuScreen(
                 player,
@@ -697,11 +701,36 @@ private void showProgress() {
                 session.getLastPoints()
         );
         questionScreen.showJoltMessage(session.getLastJoltMessage());
-        refreshBattleInfo(true);
-        startCountdown(tutorialRunning ? tutorialCoordinator.getTimeLimitSeconds(questionIndex + 1)
-                : answerTimerService.getTimeLimitSeconds(session.getDifficulty(),
-                        session.getQuestions().get(questionIndex).getInputMode()));
-        if (tutorialRunning) showTutorialSteps(false);
+
+    refreshBattleInfo(true);
+
+    if (tutorialRunning && questionIndex == 0) {
+
+        // First tutorial question: no countdown.
+        stopCountdown();
+        questionScreen.showUntimedPracticeNotice();
+
+    } else {
+
+        // Normal countdown for all remaining questions.
+        startCountdown(
+                tutorialRunning
+                        ? tutorialCoordinator.getTimeLimitSeconds(
+                                questionIndex + 1
+                        )
+                        : answerTimerService.getTimeLimitSeconds(
+                                session.getDifficulty(),
+                                session.getQuestions()
+                                        .get(questionIndex)
+                                        .getInputMode()
+                        )
+        );
+    }
+
+    if (tutorialRunning) {
+        showTutorialSteps(false);
+    }
+
     }
 
     private boolean waitForPerfectMessage() {
@@ -959,10 +988,15 @@ public void setTitleStartDestination(ScreenId destination) {
 }
 
 
+
     private void startFromTitle() {
-        if (titleStartDestination == ScreenId.QUESTION) startTutorial(false);
-        else showScreen(titleStartDestination);
+        if (titleStartDestination == ScreenId.QUESTION) {
+            startTutorial(false);
+        } else {
+            showScreen(titleStartDestination);
+        }
     }
+
 
     public void startTutorial(boolean replay) {
         if (tutorialCoordinator == null) throw new IllegalStateException("Tutorial was not wired for this window.");

@@ -381,6 +381,16 @@ public class QuestionScreen extends Screen {
         countdownLabel.setText("TIME: " + seconds + " s" + (frozen ? " (frozen)" : ""));
     }
 
+
+        public void showUntimedPracticeNotice() {
+
+        countdownLabel.setText(
+                "PRACTICE QUESTION - NO TIMER"
+        );
+
+        }
+
+
     // Refresh only the notice and HP so the player's input stays intact.
     public void showTimeout(Player player) {
         showHp(player);
