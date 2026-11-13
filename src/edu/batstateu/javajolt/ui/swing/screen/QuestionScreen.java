@@ -149,7 +149,7 @@ public class QuestionScreen extends Screen {
                 )
         );
 
-        quizMascot.setMood(MascotView.Mood.ONLINE);
+        quizMascot.showIdle();
 
         playerPortrait.add(quizMascot, BorderLayout.CENTER);
 
@@ -409,7 +409,9 @@ public class QuestionScreen extends Screen {
             int quizScore,
             int streak,
             int lastPoints) {
-        quizMascot.setMood(MascotView.Mood.THINKING);
+        // Both sides return to their idle sprite for each new question.
+        quizMascot.showIdle();
+        enemyPortrait.showIdle();
         playerNameLabel.setText(player.getName());
         hpLabel.setText("HP: " + player.getHp() + "/" + player.getMaxHp());
         // displayXp is provisional quiz XP; it commits to the player only at settlement.
@@ -1077,23 +1079,16 @@ private JPanel createCodeEditor(Question question) {
             int quizScore,
             int streak,
             int lastPoints) {
-        quizMascot.setMood(
-                correct
-                        ? MascotView.Mood.CHARGED
-                        : MascotView.Mood.LOW_BATTERY
-        );
-
-
-        quizMascot.flashGlow(correct);
-
+        // Reactions use the team's three Aseprite drawings for each character.
+        // Correct answer: player celebrates; enemy takes damage.
+        // Wrong answer: player takes damage; enemy celebrates.
         if (correct) {
-        // Successful attack: enemy flashes red.
-        enemyPortrait.flashHit();
+            quizMascot.showCorrect();
+            enemyPortrait.showHurt();
         } else {
-        // Incorrect answer: mascot shakes from damage.
-        quizMascot.shakeDamage();
+            quizMascot.showHurt();
+            enemyPortrait.showCorrect();
         }
-
 
         // Play the appropriate sound after checking an answer.
         UiSounds.play(

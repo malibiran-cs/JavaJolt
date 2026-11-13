@@ -32,7 +32,7 @@ public final class TitleScreen extends Screen {
         artSide.setOpaque(false);
 
         MascotView mascot = new MascotView();
-        mascot.setMood(MascotView.Mood.ONLINE);
+        mascot.showIdle();
         artSide.add(mascot, BorderLayout.CENTER);
 
         JLabel artCaption = new JLabel("YOUR CODING COMPANION", JLabel.CENTER);

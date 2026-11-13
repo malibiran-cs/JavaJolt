@@ -272,7 +272,7 @@ public class MainMenuScreen extends Screen {
 
         MascotView mascot = new MascotView();
 
-        mascot.setMood(MascotView.Mood.ONLINE);
+        mascot.showIdle();
 
         character.add(
                 mascot,

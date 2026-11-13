@@ -106,7 +106,7 @@ private RoundedPanel createMascotPanel() {
     mascotHolder.setOpaque(false);
 
     MascotView mascot = new MascotView();
-    mascot.setMood(MascotView.Mood.ONLINE);
+    mascot.showIdle();
 
     mascot.setPreferredSize(
         new Dimension(230, 260)

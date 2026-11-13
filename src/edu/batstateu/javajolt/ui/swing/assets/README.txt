@@ -26,7 +26,7 @@ buttons/button_large_secondary_*  RoundedButton (secondary)
 buttons/button_large_danger_*     RoundedButton (danger)
 buttons/button_large_disabled_normal
 panels/panel                      RoundedPanel (default panel)
-panels/panel_inset                CharacterPlaceholder (portrait frame)
+panels/panel_inset                EnemyPortraitView and player portrait frames
 panels/title_plate                WelcomeScreen (GREETINGS plate)
 panels/divider                    Divider
 fields/input_normal               RoundedTextField (not focused)
@@ -52,3 +52,14 @@ when reading the 2x image.
 To add another component, copy its PNG_2x file into the matching folder,
 add its slices.json values to the component, and load it with
 UiAssets.image(...) or UiAssets.patch(...).
+
+
+TEAM-OWNED CHARACTER ARTWORK
+----------------------------
+characters/mascot/{idle,correct,hurt}.png
+characters/enemies/{topic}/{idle,correct,hurt}.png
+
+These 24 PNGs were exported from the team's original Aseprite drawings.
+Editable sources live in art-source/characters at the project root.
+The unified emotion system and renderer are documented in
+CHARACTER_ART_INTEGRATION.md.

@@ -139,3 +139,11 @@ JavaJolt was developed as a collaborative OOP 101 project by:
 **Mark Angelo R. Malibiran**
 
 ---
+
+### Team-drawn character sprites
+
+The mascot and seven topic enemies now use the team's own Aseprite art in
+**Idle**, **Correct**, and **Hurt** variants. Character portrait rendering,
+flash colors, and shake timing are shared across the UI; all original
+editable files are included. See [Character Art Integration](CHARACTER_ART_INTEGRATION.md)
+and the [sprite preview](art-source/CHARACTER_VARIANTS_PREVIEW.png).

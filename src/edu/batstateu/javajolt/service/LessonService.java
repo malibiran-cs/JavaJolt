@@ -46,17 +46,20 @@ public class LessonService {
     }
 
     private static Path findLessonFolder() {
-        Path currentDirectory = Path.of("data", "lessons");
-        if (Files.isDirectory(currentDirectory)) {
-            return currentDirectory;
+        Path workingDirectory = Path.of("").toAbsolutePath().normalize();
+        Path[] candidates = {
+                workingDirectory.resolve("data").resolve("lessons"),
+                workingDirectory.resolve("JavaJolt").resolve("data").resolve("lessons"),
+                workingDirectory.resolve("JavaJolt-main").resolve("data").resolve("lessons")
+        };
+
+        for (Path candidate : candidates) {
+            if (Files.isDirectory(candidate)) {
+                return candidate;
+            }
         }
 
-        Path nestedProjectDirectory = Path.of("JavaJolt", "data", "lessons");
-        if (Files.isDirectory(nestedProjectDirectory)) {
-            return nestedProjectDirectory;
-        }
-
-        return currentDirectory;
+        return Path.of("data", "lessons");
     }
 
     private String fileNameFor(Topic topic) {
