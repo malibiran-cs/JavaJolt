@@ -18,10 +18,9 @@ import java.util.List;
 
 // The single tutorial script; numeric gameplay facts come from their rule owners.
 public class TutorialContent {
-        // Question 1 is untimed.
-        // Introduce the timer before Question 2.
+        // Introduce the timer before Question 1.
         private static final int FIRST_QUESTION_INDEX = 1;
-        private static final int TIMER_QUESTION_INDEX = 2;
+        private static final int TIMER_QUESTION_INDEX = 1;
     // Power-ups are introduced together before the second practice question.
     private static final int HEAL_QUESTION_INDEX = 2;
     private static final int JOLT_QUESTION_INDEX = 3;
@@ -182,11 +181,16 @@ public class TutorialContent {
         private String countdown(
                 GameSession session,
                 int timerSeconds) {
+            int normalSeconds = timer.getTimeLimitSeconds(
+                    session.getDifficulty(),
+                    session.getQuestions().get(TIMER_QUESTION_INDEX - 1).getInputMode());
 
         return "Great job completing your first practice question! "
                 + "You had unlimited time to think and answer.\n\n"
 
-                + "Starting with this question, you will have "
+                    + "In a normal quiz, this question gives you "
+                    + normalSeconds
+                    + " seconds. In this practice, you will have "
                 + timerSeconds
                 + " seconds to submit your answer.\n\n"
 

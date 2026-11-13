@@ -65,7 +65,9 @@ public class TutorialService {
         List<TutorialStep> due = new ArrayList<>();
         for (int i = 0; i < steps.size(); i++) {
             TutorialStep step = steps.get(i);
-            if (step.trigger() == trigger && step.questionIndex() == questionIndex && shownSteps.add(i)) {
+            if (step.trigger() == trigger
+                    && step.questionIndex() == questionIndex
+                    && shownSteps.add(i)) {
                 due.add(trigger == TutorialTrigger.RESULTS ? content.createResultsStep(session) : step);
             }
         }
@@ -108,7 +110,9 @@ public class TutorialService {
                 session.getDifficulty(),
                 question.getInputMode()
         );
-        return questionIndex == content.getTimerQuestionIndex() ? Math.min(DEMO_TIMER_SECONDS, seconds) : seconds;
+        return questionIndex == content.getTimerQuestionIndex()
+                ? Math.min(DEMO_TIMER_SECONDS, seconds)
+                : seconds;
     }
 
     public GameSession getSession() {

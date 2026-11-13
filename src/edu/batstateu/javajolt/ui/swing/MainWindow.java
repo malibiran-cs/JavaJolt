@@ -5,6 +5,7 @@ import edu.batstateu.javajolt.enums.Achievement;
 import edu.batstateu.javajolt.enums.JoltMessage;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import edu.batstateu.javajolt.ui.swing.screen.ExitDialog;
 import edu.batstateu.javajolt.ui.swing.screen.AchievementsScreen;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.entity.LessonPage;
@@ -412,11 +413,10 @@ private void showProgress() {
     progressDialog.setVisible(true);
     }
 
-    private void confirmExit() {
-        if (!welcomeCompleted) {
-            dispose();
-            return;
-        }
+
+
+private void confirmExit() {
+    if (tutorialRunning) {
         int choice = JOptionPane.showConfirmDialog(
                 this,
                 "Save progress and exit JavaJolt?",
@@ -424,14 +424,83 @@ private void showProgress() {
                 JOptionPane.YES_NO_OPTION
         );
 
-        if (choice != JOptionPane.YES_OPTION) {
-            return;
-        }
-
-        if ((tutorialRunning && tutorialCoordinator.isReplay()) || saveProgress()) {
+        if (choice == JOptionPane.YES_OPTION
+                && ((tutorialCoordinator != null
+                        && tutorialCoordinator.isReplay())
+                        || saveProgress())) {
             dispose();
         }
+        return;
     }
+
+    // Find the active window so the exit dialog
+    // appears above tutorial popups as well.
+    java.awt.Window activeWindow =
+            java.awt.KeyboardFocusManager
+                    .getCurrentKeyboardFocusManager()
+                    .getActiveWindow();
+
+    java.awt.Window owner =
+            activeWindow != null && activeWindow.isShowing()
+                    ? activeWindow
+                    : this;
+
+    // Only offer saving when a player profile exists.
+    boolean canSave = welcomeCompleted;
+
+    // Preserve the current quiz timer while the
+    // player decides whether to exit.
+    long timeLeftNanos = -1L;
+
+    GameSession pendingSession = session;
+    int pendingQuestion = questionIndex;
+
+    if (countdown != null && countdown.isRunning()) {
+
+        timeLeftNanos = Math.max(
+                0L,
+                countdownDeadline - System.nanoTime()
+        );
+
+        stopCountdown();
+
+        questionScreen.showCountdown(
+                remainingSeconds, true
+        );
+    }
+
+    try {
+
+        // Display JavaJolt's custom exit interface.
+        ExitDialog.Choice choice =
+                ExitDialog.showChoice(owner, canSave);
+
+        if (choice == ExitDialog.Choice.SAVE_AND_EXIT) {
+            if (saveProgress()) {
+                clearTutorial();
+                dispose();
+            }
+        } else if (choice == ExitDialog.Choice.EXIT_WITHOUT_SAVING) {
+            clearTutorial();
+            dispose();
+        }
+
+    } finally {
+
+        // Resume the timer only if the player stayed
+        // on the same active question.
+        if (timeLeftNanos >= 0
+                && isDisplayable()
+                && session == pendingSession
+                && questionIndex == pendingQuestion
+                && questionActive) {
+
+            startCountdown(timeLeftNanos);
+        }
+    }
+}
+
+
 
 
     private void submitAnswer(String answer) {
@@ -704,28 +773,18 @@ private void showProgress() {
 
     refreshBattleInfo(true);
 
-    if (tutorialRunning && questionIndex == 0) {
-
-        // First tutorial question: no countdown.
-        stopCountdown();
-        questionScreen.showUntimedPracticeNotice();
-
-    } else {
-
-        // Normal countdown for all remaining questions.
-        startCountdown(
-                tutorialRunning
-                        ? tutorialCoordinator.getTimeLimitSeconds(
-                                questionIndex + 1
-                        )
-                        : answerTimerService.getTimeLimitSeconds(
-                                session.getDifficulty(),
-                                session.getQuestions()
-                                        .get(questionIndex)
-                                        .getInputMode()
-                        )
-        );
-    }
+    startCountdown(
+            tutorialRunning
+                    ? tutorialCoordinator.getTimeLimitSeconds(
+                            questionIndex + 1
+                    )
+                    : answerTimerService.getTimeLimitSeconds(
+                            session.getDifficulty(),
+                            session.getQuestions()
+                                    .get(questionIndex)
+                                    .getInputMode()
+                    )
+    );
 
     if (tutorialRunning) {
         showTutorialSteps(false);
