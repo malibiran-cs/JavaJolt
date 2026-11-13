@@ -621,7 +621,7 @@ public class MechanicsCheck {
         player.restoreFullHp();
         GameSession session = newSession(player);
         Question question = session.getQuestions().get(0);
-        int base = session.getEnemy().baseDamageForMaxHp(13);
+        int base = Enemy.baseDamageForMaxHp(13);
 
         runner.submitAnswer(session, question, ""); // first mistake
         check("enemy: counter is 1 after one mistake", session.getConsecutiveMistakes() == 1);
@@ -700,7 +700,7 @@ public class MechanicsCheck {
         playSpreadWrong(session2, 12);
         check(label + "4 isolated wrong across 12: alive, fails by accuracy 66",
                 player2.isAlive() && session2.getAccuracyPercent() == 66
-                        && player2.getHp() == maxHp - 4 * session2.getEnemy().baseDamageForMaxHp(maxHp)
+                        && player2.getHp() == maxHp - 4 * Enemy.baseDamageForMaxHp(maxHp)
                         && !runner.hasPassed(session2));
 
         // A full 12-correct run finishes alive and passes.
@@ -880,7 +880,7 @@ public class MechanicsCheck {
     // damage math as the real submitAnswer path: [A, B, C, D] where A/B are HP
     // defeats (accuracy over answered >=/< 70), C alive accuracy-fail, D pass.
     private static int[] enumerateOutcomes(int maxHp, Enemy enemy) {
-        int base = enemy.baseDamageForMaxHp(maxHp);
+        int base = Enemy.baseDamageForMaxHp(maxHp);
         int escalation = enemy.getEscalationPerMistake();
         int[] counts = new int[4];
         // A run that dies is counted once per below-death prefix: bits after the

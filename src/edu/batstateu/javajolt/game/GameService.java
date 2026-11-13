@@ -5,7 +5,6 @@ import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
 import edu.batstateu.javajolt.exception.SaveFileException;
 import edu.batstateu.javajolt.service.LessonRunnerService;
-import edu.batstateu.javajolt.service.QuestionService;
 import edu.batstateu.javajolt.service.SaveService;
 import edu.batstateu.javajolt.ui.GameUI;
 import java.util.ArrayList;
@@ -16,16 +15,14 @@ import java.util.function.BiConsumer;
 
 public class GameService {
     // NOTE: Add a LessonRunnerService, it may or may not change the other current attributes/dependencies
-    private final QuestionService questionService;
     private final LessonRunnerService lessonRunnerService;
     private final SaveService saveService;
     private final GameUI ui;
     private final BiConsumer<Player, Difficulty> onPlayerReady;
 
-    public GameService(QuestionService questionService, 
+    public GameService(
                 LessonRunnerService lessonRunnerService, SaveService saveService, GameUI ui,
                 BiConsumer<Player, Difficulty> onPlayerReady) {
-        this.questionService = questionService;
         this.lessonRunnerService = lessonRunnerService;
         this.saveService = saveService;
         this.ui = ui;

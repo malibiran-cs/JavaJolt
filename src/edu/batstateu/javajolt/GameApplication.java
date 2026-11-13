@@ -52,7 +52,6 @@ public class GameApplication {
                 && "--console".equalsIgnoreCase(args[0])) {
             try {
                 new GameService(
-                        questions,
                         runner,
                         saves,
                         consoleUI,

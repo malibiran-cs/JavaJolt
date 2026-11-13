@@ -67,7 +67,7 @@ public class BalanceReport {
         for (int maxHp = HP_BAND_MIN; maxHp <= HP_BAND_MAX; maxHp++) {
             for (Difficulty difficulty : Difficulty.values()) {
                 Enemy enemy = roster.getEnemy(Topic.VARIABLES, difficulty);
-                int base = enemy.baseDamageForMaxHp(maxHp);
+                int base = Enemy.baseDamageForMaxHp(maxHp);
                 int escalation = enemy.getEscalationPerMistake();
                 int m1 = base;
                 int m2 = base + escalation;
@@ -216,7 +216,7 @@ public class BalanceReport {
     // counted once per below-death prefix (bits after the killing answer do
     // not matter). Returns [A, B, C, D] counts.
     private static int[] enumerateOutcomes(int maxHp, Enemy enemy) {
-        int base = enemy.baseDamageForMaxHp(maxHp);
+        int base = Enemy.baseDamageForMaxHp(maxHp);
         int escalation = enemy.getEscalationPerMistake();
         int[] counts = new int[4];
         boolean[] countedKey = new boolean[1 << QUIZ_SIZE];
@@ -271,7 +271,7 @@ public class BalanceReport {
     // contributes its below-death prefix weight exactly once, so the shares
     // add to 1. Returns the share [A, B, C, D].
     private static double[] weightedOutcomes(int maxHp, Enemy enemy, int[] slotRates) {
-        int base = enemy.baseDamageForMaxHp(maxHp);
+        int base = Enemy.baseDamageForMaxHp(maxHp);
         int escalation = enemy.getEscalationPerMistake();
         double[] shares = new double[4];
         boolean[] weightedKey = new boolean[1 << QUIZ_SIZE];

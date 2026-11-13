@@ -9,9 +9,6 @@ import edu.batstateu.javajolt.data.QuestionBank;
 import edu.batstateu.javajolt.enums.Difficulty;
 import edu.batstateu.javajolt.enums.Topic;
 
-import java.util.Comparator;
-import java.util.EnumMap;
-
 import edu.batstateu.javajolt.enums.ChallengeTier;
 
 import java.util.Map;

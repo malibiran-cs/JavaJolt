@@ -24,7 +24,7 @@ public final class EnemyPortraitView extends CharacterPortraitView {
     }
 
     @Override
-    protected String spritePath(CharacterEmotion emotion) {
+    public String spritePath(CharacterEmotion emotion) {
         return CharacterSpriteCatalog.enemy(topic, emotion);
     }
 
