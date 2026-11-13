@@ -75,8 +75,8 @@ JavaJolt aims to:
 
 | Team Member | Role / Responsibilities |
 | --- | --- |
-| **Rodhel N. Condicion** | Lead Artist, Documentation, Overall System Testing, Co-Developer |
-| **Shakeel M. Hong** | Lead Developer, Sfx and Music Integration, Graphical User-Interface Implementation |
+| **Rodhel N. Condicion** | Lead Artist, Documentation, Overall System Testing, Co-Developer, Lead Designer|
+| **Shakeel M. Hong** | Lead Developer, Sfx and Music Integration, Graphical User-Interface Implementation, Suggestion Implementations, In-depth Polishing |
 | **Mark Angelo R. Malibiran** |Project Manager, Content Implementation,User-Interface Integration, Co-Artist, Co-Developer |
 
 ## OOP Concepts 
