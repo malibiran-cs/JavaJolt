@@ -219,6 +219,18 @@ public class AchievementsScreen extends Screen {
         filterBox.setBackground(Theme.INSET);
         filterBox.setForeground(Theme.TEXT);
 
+        // Fix the invisible arrow on the dark background
+        filterBox.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+            @Override
+            protected javax.swing.JButton createArrowButton() {
+                javax.swing.JButton b = new javax.swing.JButton("\u25BC"); // Downward triangle
+                b.setForeground(Theme.TEXT);     // Makes the arrow visible
+                b.setBackground(Theme.INSET);    // Matches dropdown background
+                b.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 5)); // Removes ugly box
+                return b;
+            }
+        });
+
         // Update cards whenever the filter changes
         filterBox.addActionListener(e -> {
 
