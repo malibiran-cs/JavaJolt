@@ -111,7 +111,129 @@ java -cp out edu.batstateu.javajolt.GameApplication
 
 Run these command from the project root, since learning content and graphical assets are loaded from project-relative folders.
 
+
 ## Screenshots
+
+The following screenshots showcase the actual JavaJolt
+application and its main features.
+
+### 1. Title Screen
+<p align="center">
+  <img src="art-source/screenshots/Title%20Screen.png"
+       alt="JavaJolt Title Screen" width="750">
+</p>
+
+### 2. Welcome Screen
+<p align="center">
+  <img src="art-source/screenshots/Welcome%20Screen.png"
+       alt="JavaJolt Welcome Screen" width="750">
+</p>
+
+### 3. Main Dashboard
+<p align="center">
+  <img src="art-source/screenshots/Dashboard.png"
+       alt="JavaJolt Main Dashboard" width="750">
+</p>
+
+### 4. Topic Selection
+<p align="center">
+  <img src="art-source/screenshots/Topic%20Selection.png"
+       alt="JavaJolt Topic Selection" width="750">
+</p>
+
+### 5. Interactive Textbook
+<p align="center">
+  <img src="art-source/screenshots/Textbook%20Screen.png"
+       alt="JavaJolt Textbook Viewer" width="750">
+</p>
+
+### 6. Quiz Gameplay
+<p align="center">
+  <img src="art-source/screenshots/Quiz%20Screen.png"
+       alt="JavaJolt Quiz Gameplay" width="750">
+</p>
+
+
+## Character Designs
+
+JavaJolt features eight original pixel-art characters
+created by our development team using Aseprite.
+
+Each character has three expressions: Idle, Correct,
+and Hurt. These expressions provide visual feedback
+during quiz battles.
+
+### Jolty — Official JavaJolt Mascot
+
+| Idle | Correct | Hurt |
+|:---:|:---:|:---:|
+| <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/mascot/idle.png" width="110"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/mascot/correct.png" width="110"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/mascot/hurt.png" width="110"> |
+
+Jolty is the player's companion throughout their
+Java programming adventure.
+
+### Topic Enemies
+
+Each of the seven Java topics has its own enemy
+character with three unique expressions.
+
+#### 1. Variables
+
+| Idle | Correct | Hurt |
+|:---:|:---:|:---:|
+| <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/variables/idle.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/variables/correct.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/variables/hurt.png" width="100"> |
+
+#### 2. Operators
+
+| Idle | Correct | Hurt |
+|:---:|:---:|:---:|
+| <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/operators/idle.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/operators/correct.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/operators/hurt.png" width="100"> |
+
+#### 3. Decisions
+
+| Idle | Correct | Hurt |
+|:---:|:---:|:---:|
+| <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/decisions/idle.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/decisions/correct.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/decisions/hurt.png" width="100"> |
+
+#### 4. Loops
+
+| Idle | Correct | Hurt |
+|:---:|:---:|:---:|
+| <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/loops/idle.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/loops/correct.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/loops/hurt.png" width="100"> |
+
+#### 5. Arrays
+
+| Idle | Correct | Hurt |
+|:---:|:---:|:---:|
+| <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/arrays/idle.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/arrays/correct.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/arrays/hurt.png" width="100"> |
+
+#### 6. Exception Handling
+
+| Idle | Correct | Hurt |
+|:---:|:---:|:---:|
+| <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/exception/idle.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/exception/correct.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/exception/hurt.png" width="100"> |
+
+#### 7. Object-Oriented Programming
+
+| Idle | Correct | Hurt |
+|:---:|:---:|:---:|
+| <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/oop/idle.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/oop/correct.png" width="100"> | <img src="src/edu/batstateu/javajolt/ui/swing/assets/characters/enemies/oop/hurt.png" width="100"> |
+
+### Character Reactions During Gameplay
+
+- **Correct answer:** Jolty shows its Correct expression,
+  while the enemy displays Hurt.
+- **Incorrect answer:** Jolty displays Hurt,
+  while the enemy shows Correct.
+- **Normal gameplay:** Both characters display
+  their Idle expressions.
+
+The character animations also include glow and shake
+effects to make quiz battles more engaging.
+
+All original editable Aseprite files are available
+in the `art-source/characters/` directory.
+
 
 
 
