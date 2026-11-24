@@ -134,9 +134,9 @@ Run these command from the project root, since learning content and graphical as
 
 JavaJolt was developed as a collaborative OOP 101 project by:
 
-**Rodhel N. Condicion**
-**Shakeel M. Hong**
-**Mark Angelo R. Malibiran**
+**Rodhel N. Condicion**,
+**Shakeel M. Hong**,
+**Mark Angelo R. Malibiran**,
 
 ---
 
