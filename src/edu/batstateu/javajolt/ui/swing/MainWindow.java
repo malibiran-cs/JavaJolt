@@ -42,6 +42,7 @@ import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import java.util.concurrent.TimeUnit;
 import edu.batstateu.javajolt.service.AnswerTimerService;
+import edu.batstateu.javajolt.ui.swing.screen.SettingsScreen;
 
 public class MainWindow extends JFrame {
     private final CardLayout cards = new CardLayout();
@@ -58,6 +59,7 @@ public class MainWindow extends JFrame {
     private final AnswerTimerService answerTimerService;
     private final TutorialCoordinator tutorialCoordinator;
     private boolean tutorialRunning;
+    private SettingsScreen settingsScreen;
     private static final int COUNTDOWN_TICK_MILLIS = 100;
     // SOUND TUNING: Milliseconds before expiry at which the countdown sound starts.
     private static final int COUNTDOWN_SOUND_LEAD_MILLIS = 3000;
@@ -79,6 +81,10 @@ public class MainWindow extends JFrame {
     private TopicSelectionScreen topicScreen;
     private int questionIndex;
     private ResultsScreen resultsScreen;
+
+    private void showSettings() {
+        showScreen(ScreenId.SETTINGS);
+    }
     private int xpAtLessonStart;
     // Power-ups are only usable while an unanswered question is active;
     // submitAnswer flips this off and showNextQuestion flips it back on.
@@ -120,9 +126,13 @@ public class MainWindow extends JFrame {
     public MainWindow(Player player, QuestionService questionService, LessonRunnerService lessonRunnerService,
             Difficulty difficulty, PowerUpService powerUpService, AnswerTimerService answerTimerService,
             SaveService saveService, TutorialCoordinator tutorialCoordinator) {
-        super("JavaJolt");
-        UiSounds.preload();
-        ButtonSounds.install();
+            super("JavaJolt");
+
+            AppSettings.applyThemeSettings();
+
+            UiSounds.preload();
+            AppSettings.applyAudioSettings();
+            ButtonSounds.install();
         this.player = player;
         this.lessonRunnerService = lessonRunnerService;
         this.difficulty = difficulty;
@@ -162,6 +172,7 @@ public class MainWindow extends JFrame {
                 this::showProgress,
                 this::showAchievements,
                 () -> startTutorial(true),
+                this::showSettings,
                 this::confirmExit
         );
 
@@ -169,6 +180,16 @@ public class MainWindow extends JFrame {
                 mainMenuScreen,
                 ScreenId.MAIN_MENU.name()
         );
+
+        settingsScreen = new SettingsScreen(
+                () -> showScreen(ScreenId.MAIN_MENU)
+        );
+
+        container.add(
+                settingsScreen,
+                ScreenId.SETTINGS.name()
+        );
+
         questionScreen = new QuestionScreen(this::submitAnswer, this::showNextQuestion,
                 () -> showScreen(ScreenId.TOPIC_SELECTION), this::usePowerUp);
         container.add(questionScreen, ScreenId.QUESTION.name());

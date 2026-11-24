@@ -28,6 +28,79 @@ public final class UiSounds {
     private static final double DECIBELS_PER_AMPLITUDE_DECADE = 20.0;
     private static final EnumMap<SoundEffect, Clip> CLIPS = new EnumMap<>(SoundEffect.class);
 
+    private static int masterVolume = 100;
+
+private static boolean soundEffectsEnabled = true;
+private static boolean buttonSoundsEnabled = true;
+private static boolean answerSoundsEnabled = true;
+private static boolean countdownSoundsEnabled = true;
+
+public static void configureAudio(
+        int volume,
+        boolean soundEffects,
+        boolean buttonSounds,
+        boolean answerSounds,
+        boolean countdownSounds) {
+
+    masterVolume = Math.max(0, Math.min(100, volume));
+
+    soundEffectsEnabled = soundEffects;
+    buttonSoundsEnabled = buttonSounds;
+    answerSoundsEnabled = answerSounds;
+    countdownSoundsEnabled = countdownSounds;
+
+    for (SoundEffect effect : SoundEffect.values()) {
+        useClip(effect, clip -> {
+            if (!isSoundEnabled(effect)) {
+                clip.stop();
+            }
+
+            applyVolume(effect, clip);
+        });
+    }
+}
+
+private static boolean isSoundEnabled(SoundEffect effect) {
+
+    if (!soundEffectsEnabled || masterVolume == 0) {
+        return false;
+    }
+
+    return switch (effect) {
+        case BUTTON_HOVER, BUTTON_CLICK ->
+                buttonSoundsEnabled;
+
+        case ANSWER_CORRECT, ANSWER_INCORRECT ->
+                answerSoundsEnabled;
+
+        case TIMER_COUNTDOWN ->
+                countdownSoundsEnabled;
+
+        default -> true;
+    };
+}
+
+private static void applyVolume(
+        SoundEffect effect, Clip clip) {
+
+    if (!clip.isControlSupported(
+            FloatControl.Type.MASTER_GAIN)) {
+        return;
+    }
+
+    FloatControl gain = (FloatControl)
+            clip.getControl(FloatControl.Type.MASTER_GAIN);
+
+    float volume = effect.getVolume()
+            * (masterVolume / 100.0f);
+
+    gain.setValue(gainForVolume(
+            volume,
+            gain.getMinimum(),
+            gain.getMaximum()
+    ));
+}
+
     private UiSounds() {
     }
 
@@ -43,27 +116,49 @@ public final class UiSounds {
         playFrom(effect, 0);
     }
 
-    public static void playFrom(SoundEffect effect, long startMillis) {
-        useClip(effect, clip -> {
-            long startMicros = TimeUnit.MILLISECONDS.toMicros(Math.max(0, startMillis));
-            if (startMicros >= clip.getMicrosecondLength()) {
-                return;
-            }
-            clip.stop();
-            clip.setMicrosecondPosition(startMicros);
-            clip.start();
-        });
+public static void playFrom(
+        SoundEffect effect, long startMillis) {
+
+    if (!isSoundEnabled(effect)) {
+        return;
     }
 
-    public static void loop(SoundEffect effect) {
-        useClip(effect, clip -> {
-            if (clip.isRunning()) {
-                return;
-            }
-            clip.setFramePosition(0);
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
-        });
+    useClip(effect, clip -> {
+
+        long startMicros = TimeUnit.MILLISECONDS
+                .toMicros(Math.max(0, startMillis));
+
+        if (startMicros >= clip.getMicrosecondLength()) {
+            return;
+        }
+
+        clip.stop();
+
+        applyVolume(effect, clip);
+
+        clip.setMicrosecondPosition(startMicros);
+        clip.start();
+    });
+}
+
+public static void loop(SoundEffect effect) {
+
+    if (!isSoundEnabled(effect)) {
+        return;
     }
+
+    useClip(effect, clip -> {
+
+        applyVolume(effect, clip);
+
+        if (clip.isRunning()) {
+            return;
+        }
+
+        clip.setFramePosition(0);
+        clip.loop(Clip.LOOP_CONTINUOUSLY);
+    });
+}
 
     public static void stop(SoundEffect effect) {
         useClip(effect, Clip::stop);
@@ -87,8 +182,7 @@ public final class UiSounds {
                 AudioInputStream audio = AudioSystem.getAudioInputStream(stream)) {
             clip = AudioSystem.getClip();
             clip.open(audio);
-            FloatControl gain = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-            gain.setValue(gainForVolume(effect.getVolume(), gain.getMinimum(), gain.getMaximum()));
+           applyVolume(effect, clip);
             CLIPS.put(effect, clip);
         } catch (IOException | UnsupportedAudioFileException | LineUnavailableException | RuntimeException e) {
             markUnavailable(effect, clip, e);

@@ -129,6 +129,12 @@ public class SwingNavigationSmokeCheck {
                 findButton(window, "Back to Main Menu").doClick();
                 assertTrue(findButton(window, "Explore Lessons") != null,
                         "Achievement gallery returns to the Main Menu");
+                findButton(window, "Settings").doClick();
+                assertTrue(findButton(window, "BACK TO DASHBOARD") != null,
+                        "Settings screen opens from the Main Menu");
+                findButton(window, "BACK TO DASHBOARD").doClick();
+                assertTrue(findButton(window, "Explore Lessons") != null,
+                        "Settings returns to the Main Menu");
                 window.dispose();
             });
         } finally {

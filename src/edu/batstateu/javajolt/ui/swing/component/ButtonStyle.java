@@ -3,21 +3,16 @@ package edu.batstateu.javajolt.ui.swing.component;
 import edu.batstateu.javajolt.ui.swing.Theme;
 import java.awt.Color;
 
-/**
- * The three button looks that exist in the current screens.
- * Each name points at a family of kit images: normal, hover and pressed.
- */
 public enum ButtonStyle {
-    PRIMARY("primary", Theme.TEXT_ON_ACCENT),
-    SECONDARY("secondary", Theme.TEXT),
-    DANGER("danger", Theme.TEXT);
+
+    PRIMARY("primary"),
+    SECONDARY("secondary"),
+    DANGER("danger");
 
     private final String assetName;
-    private final Color textColor;
 
-    ButtonStyle(String assetName, Color textColor) {
+    ButtonStyle(String assetName) {
         this.assetName = assetName;
-        this.textColor = textColor;
     }
 
     String assetName() {
@@ -25,6 +20,10 @@ public enum ButtonStyle {
     }
 
     Color textColor() {
-        return textColor;
+        return switch (this) {
+            case PRIMARY -> Theme.TEXT_ON_ACCENT;
+            case SECONDARY -> Theme.TEXT;
+            case DANGER -> new Color(0xEEF0F4);
+        };
     }
 }

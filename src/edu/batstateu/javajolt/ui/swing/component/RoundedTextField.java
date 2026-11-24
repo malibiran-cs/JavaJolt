@@ -15,6 +15,18 @@ import javax.swing.JTextField;
  * The image is 9-sliced, so the field can be any width and height.
  */
 public class RoundedTextField extends JTextField {
+    public void refreshTheme() {
+
+    setForeground(Theme.TEXT);
+    setCaretColor(Theme.ACCENT);
+
+    setSelectionColor(Theme.ACCENT);
+    setSelectedTextColor(Theme.TEXT_ON_ACCENT);
+
+    setDisabledTextColor(Theme.TEXT_MUTED);
+
+    repaint();
+}
     private static final int SLICE = 11; // slices.json: 11px on every side
 
     private final NinePatch normal = UiAssets.patch("fields/input_normal", SLICE, SLICE, SLICE, SLICE);
@@ -23,10 +35,7 @@ public class RoundedTextField extends JTextField {
     public RoundedTextField() {
         setOpaque(false);
         setFont(Theme.FONT_BODY);
-        setForeground(Theme.TEXT);
-        setCaretColor(Theme.ACCENT);
-        setSelectionColor(Theme.ACCENT);
-        setSelectedTextColor(Theme.TEXT_ON_ACCENT);
+        refreshTheme();
         setBorder(BorderFactory.createEmptyBorder(Theme.GAP_M, Theme.GAP_M, Theme.GAP_M, Theme.GAP_M));
 
         // The focus image is a different file, so repaint when focus changes.

@@ -15,7 +15,22 @@ import javax.swing.JButton;
  * 9-slice. The text is drawn by Swing on top, because the kit's buttons are
  * intentionally blank.
  */
-public class RoundedButton extends JButton {
+    public class RoundedButton extends JButton {
+
+        public void refreshTheme() {
+
+        if (style == null) {
+            return;
+        }
+
+        setForeground(
+                isEnabled()
+                        ? style.textColor()
+                        : Theme.TEXT_MUTED
+        );
+
+        repaint();
+    }
     private static final String ASSET_ROOT = "buttons/button_large_";
     private static final int SLICE = 10; // slices.json: 10px on every side
 
@@ -42,13 +57,7 @@ public class RoundedButton extends JButton {
 
         super.setEnabled(enabled);
 
-        if (style != null) {
-            setForeground(
-                    enabled
-                            ? style.textColor()
-                            : Theme.TEXT_MUTED
-            );
-        }
+        refreshTheme();
 
         setCursor(
                 Cursor.getPredefinedCursor(

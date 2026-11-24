@@ -18,7 +18,138 @@ import javax.imageio.ImageIO;
  * and {@link #PIXEL_SCALE} is used when sampling the real image. That keeps the
  * code readable and lets the UI look sharp on high-DPI displays.</p>
  */
-public final class UiAssets {
+    public final class UiAssets {
+
+        private static BufferedImage recolor(
+            BufferedImage source,
+            int oldFill,
+            int oldBorder,
+            int newFill,
+            int newBorder) {
+
+        BufferedImage result = new BufferedImage(
+                source.getWidth(),
+                source.getHeight(),
+                BufferedImage.TYPE_INT_ARGB
+        );
+
+        int fr = (oldFill >> 16) & 255;
+        int fg = (oldFill >> 8) & 255;
+        int fb = oldFill & 255;
+
+        int dr = ((oldBorder >> 16) & 255) - fr;
+        int dg = ((oldBorder >> 8) & 255) - fg;
+        int db = (oldBorder & 255) - fb;
+
+        double length = dr * dr + dg * dg + db * db;
+
+        for (int y = 0; y < source.getHeight(); y++) {
+            for (int x = 0; x < source.getWidth(); x++) {
+
+                int pixel = source.getRGB(x, y);
+
+                int alpha = (pixel >>> 24) & 255;
+
+                if (alpha == 0) {
+                    continue;
+                }
+
+                int r = (pixel >> 16) & 255;
+                int g = (pixel >> 8) & 255;
+                int b = pixel & 255;
+
+                double t = length == 0 ? 0 :
+                        ((r - fr) * dr
+                        + (g - fg) * dg
+                        + (b - fb) * db) / length;
+
+                t = Math.max(0, Math.min(1, t));
+
+                int nr = blendChannel(
+                        (newFill >> 16) & 255,
+                        (newBorder >> 16) & 255, t);
+
+                int ng = blendChannel(
+                        (newFill >> 8) & 255,
+                        (newBorder >> 8) & 255, t);
+
+                int nb = blendChannel(
+                        newFill & 255,
+                        newBorder & 255, t);
+
+                result.setRGB(x, y,
+                        (alpha << 24)
+                        | (nr << 16)
+                        | (ng << 8)
+                        | nb);
+            }
+        }
+
+        return result;
+    }
+
+    private static int blendChannel(
+            int start, int end, double amount) {
+
+        return (int) Math.round(
+                start + (end - start) * amount
+        );
+    }
+
+    public static BufferedImage lightImage(String name) {
+    return LIGHT_IMAGES.computeIfAbsent(
+            name, UiAssets::createLightImage
+    );
+}
+
+private static BufferedImage createLightImage(String name) {
+    BufferedImage source = image(name);
+
+        return switch (name) {
+
+            case "panels/panel" ->
+                recolor(source,
+                        0x202227, 0x2E3138,
+                        0xFFFFFF, 0xD5D9E0);
+
+            case "panels/panel_inset", "fields/input_normal" ->
+                recolor(source,
+                        0x2A2D33, 0x373B43,
+                        0xE8EBF0, 0xC8CDD6);
+
+            case "fields/input_focus" ->
+                recolor(source,
+                        0x2A2D33, 0xFF7A45,
+                        0xE8EBF0, 0xFF7A45);
+
+            case "panels/divider", "items/star_empty" ->
+                recolor(source,
+                        0x2E3138, 0x2E3138,
+                        0xD5D9E0, 0xD5D9E0);
+
+            case "buttons/button_large_secondary_normal" ->
+                recolor(source,
+                        0x2A2D33, 0x3A3E47,
+                        0xE8EBF0, 0xC8CDD6);
+
+            case "buttons/button_large_secondary_hover" ->
+                recolor(source,
+                        0x3F4247, 0x3A3E47,
+                        0xDCE1E8, 0xC8CDD6);
+
+            case "buttons/button_large_secondary_pressed" ->
+                recolor(source,
+                        0x25282D, 0x3A3E47,
+                        0xCDD3DC, 0xB8BEC8);
+
+            case "buttons/button_large_disabled_normal" ->
+                recolor(source,
+                        0x26282D, 0x3A3E47,
+                        0xE1E4E8, 0xCDD2DA);
+
+            default -> source;
+        };
+    }
     /** PNG_2x files are twice as large as the kit's design size. */
     public static final int PIXEL_SCALE = 2;
 
@@ -36,6 +167,7 @@ public final class UiAssets {
             Path.of("..", "assets", "Softline_UI_Kit_Flat_Night", "PNG_2x"));
 
     private static final Map<String, BufferedImage> IMAGES = new HashMap<>();
+    private static final Map<String, BufferedImage> LIGHT_IMAGES = new HashMap<>();
     private static final Map<String, NinePatch> PATCHES = new HashMap<>();
 
     private UiAssets() {
@@ -59,7 +191,14 @@ public final class UiAssets {
         if (cached != null) {
             return cached;
         }
-        NinePatch patch = new NinePatch(image(name), left, top, right, bottom);
+        NinePatch patch = new NinePatch(
+                image(name),
+                lightImage(name),
+                left,
+                top,
+                right,
+                bottom
+        );
         PATCHES.put(key, patch);
         return patch;
     }

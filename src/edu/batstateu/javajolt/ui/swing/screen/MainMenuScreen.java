@@ -83,6 +83,7 @@ public class MainMenuScreen extends Screen {
                 Runnable onProgress,
                 Runnable onAchievements,
                 Runnable onTutorial,
+                Runnable onSettings,
                 Runnable onExit) {
 
         refreshInternal(player);
@@ -94,6 +95,7 @@ public class MainMenuScreen extends Screen {
                 onProgress,
                 onAchievements,
                 onTutorial,
+                onSettings,
                 onExit
         ), BorderLayout.CENTER);
     }
@@ -449,6 +451,7 @@ private RoundedPanel createMissionCard() {
                 Runnable onProgress,
                 Runnable onAchievements,
                 Runnable onTutorial,
+                Runnable onSettings,
                 Runnable onExit) {
 
         JPanel body = new JPanel(
@@ -478,6 +481,7 @@ private RoundedPanel createMissionCard() {
                 onProgress,
                 onAchievements,
                 onTutorial,
+                onSettings,
                 onExit
         ));
 
@@ -695,6 +699,7 @@ private RoundedPanel createMissionCard() {
                 Runnable onProgress,
                 Runnable onAchievements,
                 Runnable onTutorial,
+                Runnable onSettings,
                 Runnable onExit) {
 
     // Main navigation card
@@ -767,6 +772,10 @@ private RoundedPanel createMissionCard() {
     RoundedButton tutorialButton = new RoundedButton("Tutorial", ButtonStyle.SECONDARY);
     tutorialButton.addActionListener(event -> onTutorial.run());
 
+    RoundedButton settingsButton =
+            new RoundedButton("Settings", ButtonStyle.SECONDARY);
+    settingsButton.addActionListener(e -> onSettings.run());
+
     RoundedButton exitButton =
             new RoundedButton(
                     "Exit Game",
@@ -775,7 +784,8 @@ private RoundedPanel createMissionCard() {
 
     // Keep the extra action row within the existing menu card using Theme spacing.
     for (RoundedButton button : new RoundedButton[] {
-            progressButton, saveButton, achievementsButton, tutorialButton, exitButton}) {
+            progressButton, saveButton, achievementsButton, tutorialButton,
+            settingsButton, exitButton}) {
         button.setBorder(BorderFactory.createEmptyBorder(
                 Theme.GAP_S, Theme.GAP_L, Theme.GAP_S, Theme.GAP_L));
     }
@@ -815,7 +825,7 @@ private RoundedPanel createMissionCard() {
 
     // Supporting buttons
     JPanel secondaryButtons = new JPanel(
-            new GridLayout(2, 2, Theme.GAP_S, Theme.GAP_S)
+            new GridLayout(2, 3, Theme.GAP_S, Theme.GAP_S)
     );
     secondaryButtons.setOpaque(false);
 
@@ -823,6 +833,7 @@ private RoundedPanel createMissionCard() {
     secondaryButtons.add(saveButton);
     secondaryButtons.add(achievementsButton);
     secondaryButtons.add(tutorialButton);
+    secondaryButtons.add(settingsButton);
 
     buttons.add(secondaryButtons, BorderLayout.CENTER);
     buttons.add(exitButton, BorderLayout.SOUTH);

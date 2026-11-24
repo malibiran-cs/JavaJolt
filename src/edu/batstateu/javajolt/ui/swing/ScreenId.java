@@ -10,5 +10,6 @@ public enum ScreenId {
     QUESTION,
     TEXTBOOK,
     RESULTS,
-    ACHIEVEMENTS
+    ACHIEVEMENTS,
+    SETTINGS
 }

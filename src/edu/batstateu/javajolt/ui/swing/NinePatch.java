@@ -15,13 +15,22 @@ import java.awt.image.BufferedImage;
  */
 public final class NinePatch {
     private final BufferedImage image;
+    private final BufferedImage lightImage;
     private final int left;
     private final int top;
     private final int right;
     private final int bottom;
 
-    NinePatch(BufferedImage image, int left, int top, int right, int bottom) {
+    NinePatch(
+            BufferedImage image,
+            BufferedImage lightImage,
+            int left,
+            int top,
+            int right,
+            int bottom) {
+
         this.image = image;
+        this.lightImage = lightImage;
         this.left = left;
         this.top = top;
         this.right = right;
@@ -37,6 +46,10 @@ public final class NinePatch {
         if (width <= 0 || height <= 0) {
             return;
         }
+
+        BufferedImage image = Theme.isLightMode()
+        ? this.lightImage
+        : this.image;
 
         int scale = UiAssets.PIXEL_SCALE;
         int srcLeft = left * scale;
