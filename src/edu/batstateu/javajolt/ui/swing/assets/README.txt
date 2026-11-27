@@ -31,7 +31,7 @@ panels/title_plate                WelcomeScreen (GREETINGS plate)
 panels/divider                    Divider
 fields/input_normal               RoundedTextField (not focused)
 fields/input_focus                RoundedTextField (focused)
-items/star_empty                  BadgeSlot
+items/star_empty                  Legacy kit star (retained)
 
 The *_normal, *_hover and *_pressed suffixes are chosen in
 RoundedButton.currentPatch().
@@ -63,3 +63,6 @@ These 24 PNGs were exported from the team's original Aseprite drawings.
 Editable sources live in art-source/characters at the project root.
 The unified emotion system and renderer are documented in
 CHARACTER_ART_INTEGRATION.md.
+
+Team-authored achievement badge PNGs: achievements/<achievement_enum_name_lowercase>.png
+Rendered by BadgeSlot in the gallery and dashboard.

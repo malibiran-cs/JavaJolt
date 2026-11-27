@@ -27,6 +27,7 @@ import edu.batstateu.javajolt.ui.swing.screen.MainMenuScreen;
 import edu.batstateu.javajolt.ui.swing.screen.QuestionScreen;
 import edu.batstateu.javajolt.ui.swing.screen.TextbookScreen;
 import edu.batstateu.javajolt.ui.swing.screen.TopicSelectionScreen;
+import edu.batstateu.javajolt.ui.swing.screen.TutorialChoiceScreen;
 import edu.batstateu.javajolt.ui.swing.screen.WelcomeScreen;
 import edu.batstateu.javajolt.ui.swing.screen.ResultsScreen;
 import java.awt.CardLayout;
@@ -83,6 +84,7 @@ public class MainWindow extends JFrame {
     private ResultsScreen resultsScreen;
 
     private void showSettings() {
+        settingsScreen.refreshFromPreferences();
         showScreen(ScreenId.SETTINGS);
     }
     private int xpAtLessonStart;
@@ -160,9 +162,14 @@ public class MainWindow extends JFrame {
             if (player.isTutorialCompleted()) {
                 showScreen(ScreenId.MAIN_MENU);
             } else {
-                startTutorial(false);
+                showScreen(ScreenId.TUTORIAL_CHOICE);
             }
         }), ScreenId.WELCOME.name());
+
+        container.add(new TutorialChoiceScreen(
+                () -> startTutorial(false),
+                this::skipTutorial
+        ), ScreenId.TUTORIAL_CHOICE.name());
 
 
         mainMenuScreen = new MainMenuScreen(
@@ -361,6 +368,12 @@ private boolean saveProgress() {
         );
         return false;
     }
+}
+
+private void skipTutorial() {
+    player.setTutorialCompleted(true);
+    saveProgress();
+    showScreen(ScreenId.MAIN_MENU);
 }
 
 private void saveWithFeedback() {

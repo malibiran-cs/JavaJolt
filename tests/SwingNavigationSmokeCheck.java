@@ -181,12 +181,15 @@ public class SwingNavigationSmokeCheck {
                 findEditable(window).setText("New learner");
             });
             clickLater("GET STARTED");
+            await(() -> findButton(window, "START TUTORIAL") != null);
+            assertTrue(!saves.hasSave() && !routedPlayer.isTutorialCompleted(),
+                    "name entry opens the tutorial choice without premature save");
+            clickLater("START TUTORIAL");
             await(() -> popup() != null);
-            assertTrue(!saves.hasSave() && !routedPlayer.isTutorialCompleted(), "name entry starts tutorial without premature save");
             SwingUtilities.invokeAndWait(() -> {
                 window.showScreen(ScreenId.MAIN_MENU);
                 assertTrue(popup() != null && findScreen(window, QuestionScreen.class) != null,
-                        "mandatory tutorial rejects navigation to the menu");
+                        "selected tutorial rejects navigation to the menu");
             });
             finishTutorial(true);
             SaveData first = saves.load();
@@ -199,9 +202,31 @@ public class SwingNavigationSmokeCheck {
             openRoute(new Player("Player", 0), saves, false);
             SwingUtilities.invokeAndWait(() -> {
                 findButton(window, "START GAME").doClick();
+                findEditable(window).setText("Skipping learner");
+            });
+            clickLater("GET STARTED");
+            await(() -> findButton(window, "SKIP TO DASHBOARD") != null);
+            clickLater("SKIP TO DASHBOARD");
+            await(() -> saves.hasSave() && findButton(window, "Explore Lessons") != null);
+            SaveData skipped = saves.load();
+            assertTrue(skipped.tutorialCompleted() && skipped.name().equals("Skipping learner")
+                    && skipped.xp() == 0 && skipped.score() == 0,
+                    "skipping persists tutorial completion and the new player's name without sample progress");
+            SwingUtilities.invokeAndWait(() -> {
+                assertTrue(findButton(window, "Explore Lessons") != null && popup() == null,
+                        "skipping opens the dashboard without starting the tutorial");
+                window.dispose();
+            });
+
+            Files.deleteIfExists(save);
+            openRoute(new Player("Player", 0), saves, false);
+            SwingUtilities.invokeAndWait(() -> {
+                findButton(window, "START GAME").doClick();
                 findEditable(window).setText("Interrupted learner");
             });
             clickLater("GET STARTED");
+            await(() -> findButton(window, "START TUTORIAL") != null);
+            clickLater("START TUTORIAL");
             await(() -> popup() != null);
             closeThroughConfirmation();
             SaveData interrupted = saves.load();
@@ -344,6 +369,8 @@ public class SwingNavigationSmokeCheck {
                 findEditable(window).setText("Save failure learner");
             });
             clickLater("GET STARTED");
+            await(() -> findButton(window, "START TUTORIAL") != null);
+            clickLater("START TUTORIAL");
             await(() -> popup() != null);
             finishTutorial(true, true);
             assertTrue(routedPlayer.getXp() == 0 && routedPlayer.getScore() == 0,
@@ -407,8 +434,13 @@ public class SwingNavigationSmokeCheck {
             findEditable(window).setText("Safe preview learner");
         });
         clickLater("GET STARTED");
+        await(() -> findButton(window, "START TUTORIAL") != null);
+        SwingUtilities.invokeAndWait(() -> assertTrue(findButton(window, "SKIP TO DASHBOARD") != null,
+                "actual newplayer mode offers tutorial and skip choices"));
+        clickLater("START TUTORIAL");
         await(() -> popup() != null);
-        SwingUtilities.invokeAndWait(() -> assertTrue(hasLabel(popup(), "Step 1 of 14"), "actual newplayer mode starts the same mandatory tutorial"));
+        SwingUtilities.invokeAndWait(() -> assertTrue(hasLabel(popup(), "Step 1 of 14"),
+                "actual newplayer mode starts the tutorial when selected"));
         closeThroughConfirmation();
     }
 

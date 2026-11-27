@@ -6,6 +6,7 @@ import javax.swing.JProgressBar;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.enums.Achievement;
 import edu.batstateu.javajolt.ui.swing.Theme;
+import edu.batstateu.javajolt.ui.swing.component.BadgeSlot;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
 import edu.batstateu.javajolt.ui.swing.component.RoundedButton;
 import edu.batstateu.javajolt.ui.swing.component.RoundedPanel;
@@ -377,7 +378,7 @@ public class AchievementsScreen extends Screen {
         );
 
         card.setPreferredSize(
-                new Dimension(320, 176)
+                new Dimension(320, 194)
         );
 
         card.setBorder(
@@ -458,7 +459,14 @@ public class AchievementsScreen extends Screen {
             description.setLineWrap(true);
             description.setWrapStyleWord(true);
 
-            card.add(description, BorderLayout.CENTER);
+            JPanel badgeAndDescription = new JPanel(
+                    new BorderLayout(Theme.GAP_M, 0)
+            );
+            badgeAndDescription.setOpaque(false);
+            badgeAndDescription.add(new BadgeSlot(achievement, unlocked, 100),
+                    BorderLayout.WEST);
+            badgeAndDescription.add(description, BorderLayout.CENTER);
+            card.add(badgeAndDescription, BorderLayout.CENTER);
 
 
             // =====================================

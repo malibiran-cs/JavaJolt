@@ -1,6 +1,7 @@
 package edu.batstateu.javajolt.ui.swing.component;
 
 import edu.batstateu.javajolt.ui.swing.UiAssets;
+import edu.batstateu.javajolt.ui.swing.AppSettings;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -31,7 +32,7 @@ public abstract class CharacterPortraitView extends JComponent {
     private int idleTick;
 
     private final Timer idleTimer = new Timer(IDLE_FRAME_MILLIS, event -> {
-        if (isShowing()) {
+        if (isShowing() && !AppSettings.isReducedMotionEnabled()) {
             idleTick++;
             repaint();
         }
@@ -87,8 +88,8 @@ public abstract class CharacterPortraitView extends JComponent {
     /** Hurt state with red glow and a short sideways shake. */
     public final void showHurt() {
         emotion = CharacterEmotion.HURT;
-        shakeFramesRemaining = SHAKE_FRAMES;
-        shakeTimer.restart();
+        shakeFramesRemaining = AppSettings.isReducedMotionEnabled() ? 0 : SHAKE_FRAMES;
+        if (shakeFramesRemaining > 0) shakeTimer.restart();
         flash(new Color(255, 65, 85));
     }
 
@@ -138,15 +139,15 @@ public abstract class CharacterPortraitView extends JComponent {
             int x = (getWidth() - drawWidth) / 2;
             int y = (getHeight() - drawHeight) / 2;
 
-            if (shakeFramesRemaining > 0) {
+            if (shakeFramesRemaining > 0 && !AppSettings.isReducedMotionEnabled()) {
                 x += (shakeFramesRemaining % 2 == 0) ? 4 : -4;
             }
-            if (floating) {
+            if (floating && !AppSettings.isReducedMotionEnabled()) {
                 y += (int) Math.round(Math.sin(idleTick * 0.20) * 3);
             }
 
             // Behind the transparent character: a soft green/red signal light.
-            if (glowColor != null) {
+            if (glowColor != null && !AppSettings.isReducedMotionEnabled()) {
                 drawGlow(g2, x, y, drawWidth, drawHeight, glowColor);
             }
 

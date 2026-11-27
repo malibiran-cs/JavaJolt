@@ -18,3 +18,9 @@ python tools/export_character_sprites.py
 
 The exporter supports the present source pack's single-frame RGBA layer layout.
 It also removes the white exterior background of the main mascot sprites.
+
+## Achievement badges
+
+`achievements/` holds the ten original team-authored Aseprite badge files.
+Runtime PNGs are in `src/edu/batstateu/javajolt/ui/swing/assets/achievements/`.
+Regenerate with `python tools/export_achievement_badges.py` (Pillow required only for export).

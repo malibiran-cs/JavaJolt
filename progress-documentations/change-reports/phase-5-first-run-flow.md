@@ -2,7 +2,7 @@
 
 ## 1. Summary
 
-Tutorial routing now follows the completion flag: new players enter their name first, loaded incomplete players resume the tutorial without Welcome, and complete/legacy players retain Title -> menu. Confirming the first-run wrap-up marks completion and saves immediately; replays never mark or save. The menu now offers Tutorial, navigation cannot escape an active run, and StagePreview newplayer provides the full fresh-player flow through a temporary save path. The included optional content revision adds a result-aware wrap-up and a five-second demo timer.
+Tutorial routing now follows the completion flag: new players enter their name and choose whether to start the tutorial, loaded incomplete players resume a tutorial they already started without Welcome, and complete/legacy players retain Title -> menu. Skipping marks the tutorial complete and saves immediately; confirming a started tutorial's wrap-up does the same, while replays never mark or save. The menu offers Tutorial, navigation cannot escape an active run, and StagePreview newplayer provides the full fresh-player flow through a temporary save path. The included optional content revision adds a result-aware wrap-up and a five-second demo timer.
 
 ## 2. Files
 
@@ -39,7 +39,7 @@ MainMenuScreen receives one more callback through its existing constructor/creat
 
 ## 5. Player-visible behavior changes
 
-- Fresh profile: Title -> Welcome -> mandatory tutorial -> menu.
+- Fresh profile: Title -> Welcome -> tutorial choice. Starting the tutorial leads to its wrap-up and menu; skipping goes directly to the menu and persists the choice.
 - Saved false flag: Title -> mandatory tutorial, using the saved name; the mere existence of a save no longer skips it.
 - Saved true/missing legacy flag: Title -> menu, with Tutorial available.
 - First-run completion: only Got it on the wrap-up marks/saves true; no save-success popup.
@@ -49,7 +49,7 @@ MainMenuScreen receives one more callback through its existing constructor/creat
 
 ## 6. Save compatibility
 
-Save format and legacy decoding are unchanged from Phase 2. Mid-first-run exit can save false; the next loaded launch resumes the tutorial. First completion writes the real profile with true through saveProgress; no tutorial score, XP, high scores or completions settle. Replays never save, including completion, Exit tutorial and application close. The tests use temporary fixtures and SHA-256 comparisons; no real saves/ file is opened or modified.
+Save format and legacy decoding are unchanged from Phase 2. Skipping saves the tutorial-complete flag with the entered name and no sample progress. Exiting after starting but before completing can save false; the next loaded launch resumes the tutorial. First completion writes the real profile with true through saveProgress; no tutorial score, XP, high scores or completions settle. Replays never save, including completion, Exit tutorial and application close. The tests use temporary fixtures and SHA-256 comparisons; no real saves/ file is opened or modified.
 
 ## 7. Balance values introduced or changed
 
@@ -86,11 +86,12 @@ Results pending after report creation. RUN_TESTS.bat is edited only and is not r
 ## 9. Manual test steps for the owner
 
 1. Build with section 8, then run `java -cp "$b;src" edu.batstateu.javajolt.preview.StagePreview newplayer`.
-2. Start from Title, enter a name and read the mandatory tutorial. Try the topics action and other navigation; neither should escape. Only the wrap-up confirmation completes it and returns to the menu.
-3. Repeat newplayer and close during the tutorial. The false flag may be saved only to that temporary path. Automated relaunch checks load an equivalent incomplete fixture and verify Title -> tutorial, without Welcome.
-4. Use the menu Tutorial button; finish or choose Exit tutorial and verify menu cleanup. Automated SHA-256 checks cover both routes and preserve existing progress.
-5. Run `java -cp "$b;src" edu.batstateu.javajolt.preview.StagePreview all --xp=1000` to check existing preview behavior and all four power-ups. Existing modes remain seeded/completed.
-6. Menu geometry is checked at the designed 1100x720 window size. An optional `SwingNavigationSmokeCheck --capture-menu` writes TEMP/javajolt-phase5-menu.png for visual review.
+2. Start from Title, enter a name and choose Start Tutorial. Try the topics action and other navigation; neither should escape. The wrap-up confirmation completes it and returns to the menu.
+3. Repeat with a fresh profile and choose Skip to Dashboard. Confirm the menu opens without the tutorial and that the choice is saved for the next launch.
+4. Repeat newplayer, choose Start Tutorial, and close during the tutorial. The false flag may be saved only to that temporary path. Automated relaunch checks load an equivalent incomplete fixture and verify Title -> tutorial, without Welcome.
+5. Use the menu Tutorial button; finish or choose Exit tutorial and verify menu cleanup. Automated SHA-256 checks cover both routes and preserve existing progress.
+6. Run `java -cp "$b;src" edu.batstateu.javajolt.preview.StagePreview all --xp=1000` to check existing preview behavior and all four power-ups. Existing modes remain seeded/completed.
+7. Menu geometry is checked at the designed 1100x720 window size. An optional `SwingNavigationSmokeCheck --capture-menu` writes TEMP/javajolt-phase5-menu.png for visual review.
 
 ## 10. Docs updated
 

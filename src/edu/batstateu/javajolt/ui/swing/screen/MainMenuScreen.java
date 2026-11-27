@@ -5,6 +5,7 @@ import edu.batstateu.javajolt.enums.Achievement;
 import edu.batstateu.javajolt.entity.Player;
 import edu.batstateu.javajolt.service.LevelService;
 import edu.batstateu.javajolt.ui.swing.Theme;
+import edu.batstateu.javajolt.ui.swing.component.BadgeSlot;
 import edu.batstateu.javajolt.ui.swing.component.ButtonStyle;
 import edu.batstateu.javajolt.ui.swing.component.MascotView;
 import edu.batstateu.javajolt.ui.swing.component.Divider;
@@ -62,6 +63,10 @@ public class MainMenuScreen extends Screen {
 
     return count;
 }
+
+    private final BadgeSlot firstLessonBadge = new BadgeSlot(Achievement.FIRST_STEPS, false, 48);
+    private final BadgeSlot threeLessonsBadge = new BadgeSlot(Achievement.STEADY_LEARNER, false, 48);
+    private final BadgeSlot beginnerMasterBadge = new BadgeSlot(Achievement.BEGINNER_MASTER, false, 48);
 
     private final JLabel firstLessonStatus = new JLabel("LOCKED");
     private final JLabel threeLessonsStatus = new JLabel("LOCKED");
@@ -203,18 +208,21 @@ public class MainMenuScreen extends Screen {
 
         updateMilestone(
                 firstLessonStatus,
+                firstLessonBadge,
                 Achievement.FIRST_STEPS,
                 player
         );
 
         updateMilestone(
                 threeLessonsStatus,
+                threeLessonsBadge,
                 Achievement.STEADY_LEARNER,
                 player
         );
 
         updateMilestone(
                 beginnerMasterStatus,
+                beginnerMasterBadge,
                 Achievement.BEGINNER_MASTER,
                 player
         );
@@ -224,11 +232,14 @@ public class MainMenuScreen extends Screen {
 
         private void updateMilestone(
                 JLabel status,
+                BadgeSlot badge,
                 Achievement achievement,
                 Player player) {
 
         boolean unlocked =
                 achievement.isUnlocked(player);
+
+        badge.setUnlocked(unlocked);
 
         int progress =
                 achievement.getProgress(player);
@@ -605,7 +616,8 @@ private RoundedPanel createMissionCard() {
                 createMilestoneRow(
                         "FIRST STEPS",
                         "Complete your first Beginner lesson",
-                        firstLessonStatus
+                        firstLessonStatus,
+                        firstLessonBadge
                 )
         );
 
@@ -613,7 +625,8 @@ private RoundedPanel createMissionCard() {
                 createMilestoneRow(
                         "STEADY LEARNER",
                         "Complete 3 Beginner lessons",
-                        threeLessonsStatus
+                        threeLessonsStatus,
+                        threeLessonsBadge
                 )
         );
 
@@ -621,7 +634,8 @@ private RoundedPanel createMissionCard() {
                 createMilestoneRow(
                         "BEGINNER MASTER",
                         "Complete all 7 Beginner lessons",
-                        beginnerMasterStatus
+                        beginnerMasterStatus,
+                        beginnerMasterBadge
                 )
         );
 
@@ -633,7 +647,8 @@ private RoundedPanel createMissionCard() {
     private JPanel createMilestoneRow(
             String name,
             String description,
-            JLabel status) {
+            JLabel status,
+            BadgeSlot badge) {
 
         JPanel card = new JPanel(
                 new BorderLayout(Theme.GAP_M, 0)
@@ -647,7 +662,7 @@ private RoundedPanel createMissionCard() {
                                 Theme.INSET_BORDER
                         ),
                         BorderFactory.createEmptyBorder(
-                                12, 14, 12, 14
+                                6, 10, 6, 10
                         )
                 )
         );
@@ -671,7 +686,11 @@ private RoundedPanel createMissionCard() {
         );
         descriptionLabel.setForeground(Theme.TEXT_MUTED);
 
-        information.add(nameLabel);
+        JPanel titleRow = new JPanel(new BorderLayout(Theme.GAP_S, 0));
+        titleRow.setOpaque(false);
+        titleRow.add(nameLabel, BorderLayout.CENTER);
+        titleRow.add(status, BorderLayout.EAST);
+        information.add(titleRow);
         information.add(
                 Box.createVerticalStrut(Theme.GAP_S)
         );
@@ -683,10 +702,8 @@ private RoundedPanel createMissionCard() {
                 )
         );
 
-        status.setForeground(Theme.TEXT_MUTED);
-
+        card.add(badge, BorderLayout.WEST);
         card.add(information, BorderLayout.CENTER);
-        card.add(status, BorderLayout.EAST);
 
         return card;
     }
